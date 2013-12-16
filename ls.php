@@ -15,7 +15,7 @@ if(isset($_POST['dir'])) {
 }
 
 if(strpos($subdir, '.') !== FALSE) {
-  echo ". not allowed in directory!";
+  echo json_encode(array("error" => ". not allowed in directory!"));
   exit(0);
 }
 
@@ -28,50 +28,41 @@ if($subdir == "/") {
 }
 $dir .= $subdir;
 $dir = realpath($dir);
-$titledir = $subdir;
-if($titledir == "") {
-	$titledir = "/";
+
+if(!file_exists($dir)) {
+  echo json_encode(array("error" => "$subdir does not exist."));
+  exit(0);
 }
 
-?>
-
-
-<!DOCTYPE html>
-<html>
-<head>
-<title><?php echo $titledir; ?></title>
-</head>
-<body>
-
-<?php
-echo "<p>Directory: " . $titledir . "\n<p>\n";
-echo "<br/>\n";
+$dir_arr = array();
 
 if($dh = opendir($dir)) {
   while(($dirent = readdir($dh)) !== FALSE) {
-    if($dirent == ".") {
-    	continue;
+    if($dirent == "." || $dirent == "..") {
+      continue;
     }
-    if($dirent == ".." && $dir == $uploaddir) {
-    	continue;
+    $type = "f";
+    $thename = $dirent;
+    if(is_dir($dir . "/" . $dirent)) {
+      $type = "d";
     }
-    $realpath = realpath($dir . "/" . $dirent);
-    $isdir = (is_dir($realpath));
-    echo "<p>";
-    if($isdir) {
-	$qdir = str_replace($uploaddir, "", $realpath);
-	echo "<a href=\"ls.php?dir=$qdir\">";
-    }
-    echo "$dirent";
-    if($isdir) {
-      echo "</a>";
-    }
-    echo "</p>\n";
+    $dir_arr[] = array("name" => $thename, "type" => $type);
   }
-  
   closedir($dh);
 }
-?>
 
-</body>
-</html>
+$dirname = $subdir;
+if($dirname == "") {
+  $dirname = "/";
+}
+
+$parentdir = "/";
+if($dir != $uploaddir) {
+  $parentdir = str_replace($uploaddir, "", dirname($dir));
+  if($parentdir == "") {
+    $parentdir = "/";
+  }
+}
+echo json_encode(array($dirname => $dir_arr, "name" => $subdir, "parent" => $parentdir));
+
+?>
