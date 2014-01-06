@@ -1,0 +1,89 @@
+<project>
+
+	<tstamp>
+	    <format property="BUILD_TIME" pattern="yyyy-MM-dd HH:mm"/>
+    </tstamp>
+
+	<property name="version" value="1.0-beta"/>
+	<property name="test.dir" value="test"/>
+	<property name="build.classes.dir" value="build/classes"/>
+	<property name="build.jar.dir" value="build/jar"/>
+	<property name="main.class" value="com.davecoss.java.HTTPSClient"/>
+	<property name="TODO.test.class" value="com.davecoss.java.TestRunner"/>
+  <property name="lib.dir" value="lib"/>
+  <property name="jar.name" value="uploader.jar"/>
+
+  <path id="classpath">
+    <fileset dir="${lib.dir}" includes="**/*.jar"/>
+  </path>
+
+  <path id="testpath">
+    <fileset dir="${test.dir}" includes="**/*.jar"/>
+  </path>
+
+  <path id="targetclasspath">
+    <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    <fileset dir="build/jar" includes="*.jar"/>
+  </path>
+
+    <target name="clean">
+        <delete dir="build"/>
+    </target>
+
+    <target name="classpath">
+    	<pathconvert property="classpathexpanded" refid="targetclasspath"/>
+    	<echo message="${classpathexpanded}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${lib.dir}"/>
+        <javac srcdir="src" destdir="${build.classes.dir}" classpathref="classpath" debug="on">
+            <compilerarg value="-Xlint:unchecked" />
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile">
+	    <propertyfile file="${build.classes.dir}/com/davecoss/java/build.info">
+			<entry key="build_date" value="${BUILD_TIME}"/>
+			<entry key="version" value="${version}"/>
+	    </propertyfile>
+        <mkdir dir="${build.jar.dir}"/>
+        <jar destfile="${build.jar.dir}/${jar.name}" basedir="${build.classes.dir}">
+	    <fileset dir="src" includes="**/*.java"/>
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="test" depends="jar">
+      <javac srcdir="test" destdir="${build.classes.dir}" classpathref="targetclasspath" debug="on">
+         <compilerarg value="-Xlint:unchecked"/>
+      </javac>
+      <jar destfile="${build.jar.dir}/test.jar" basedir="${build.classes.dir}">
+	 <fileset dir="src" includes="${build.classes.dir}/**/Test*.class"/>
+         <manifest>
+		 <attribute name="Main-Class" value="${test.class}"/>
+         </manifest>
+      </jar>
+      <java fork="true" classpathref="targetclasspath" classname="${test.class}"/>
+   </target>
+
+   <target name="javadoc">
+     <mkdir dir="docs/api"/>
+     <javadoc
+        destdir="docs/api"
+        author="true"
+        version="true"
+        use="true"
+        windowtitle="javalib API">
+
+       <fileset dir="src" defaultexcludes="yes"/>
+
+       <doctitle><![CDATA[<h1>javalib</h1>]]></doctitle>
+       <bottom><![CDATA[<i>Last build: ${BUILD_TIME} Copyright &#169; 2013 David Coss. All Rights Reserved.</i>]]></bottom>
+     </javadoc>
+   </target>
+
+</project>
