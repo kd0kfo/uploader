@@ -71,6 +71,8 @@ if($dh = opendir($dir)) {
   
   closedir($dh);
 }
+
+footer();
 ?>
 
 </body>

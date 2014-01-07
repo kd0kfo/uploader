@@ -18,6 +18,7 @@ $upload_error_msgs = array(
 function footer() {
 	global $UPLOADER_VERSION;
 	$theuser = get_current_user();
+	site_footer();
 	echo <<<EOF
 <br/>
 <p>Uploader version $UPLOADER_VERSION</p>
