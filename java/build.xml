@@ -8,8 +8,8 @@
 	<property name="test.dir" value="test"/>
 	<property name="build.classes.dir" value="build/classes"/>
 	<property name="build.jar.dir" value="build/jar"/>
-	<property name="main.class" value="com.davecoss.java.HTTPSClient"/>
-	<property name="TODO.test.class" value="com.davecoss.java.TestRunner"/>
+	<property name="main.class" value="com.davecoss.java.http.HTTPSClient"/>
+	<property name="TODO.test.class" value="com.davecoss.java.http.TestRunner"/>
   <property name="lib.dir" value="lib"/>
   <property name="jar.name" value="uploader.jar"/>
 
@@ -44,7 +44,7 @@
     </target>
 
     <target name="jar" depends="compile">
-	    <propertyfile file="${build.classes.dir}/com/davecoss/java/build.info">
+	    <propertyfile file="${build.classes.dir}/com/davecoss/java/http/build.info">
 			<entry key="build_date" value="${BUILD_TIME}"/>
 			<entry key="version" value="${version}"/>
 	    </propertyfile>
@@ -77,7 +77,7 @@
         author="true"
         version="true"
         use="true"
-        windowtitle="javalib API">
+        windowtitle="com.davecoss.java.http API">
 
        <fileset dir="src" defaultexcludes="yes"/>
 

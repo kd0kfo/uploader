@@ -1,10 +1,12 @@
-package com.davecoss.java;
+package com.davecoss.java.http;
 
 import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.net.URI;
+
 import javax.net.ssl.SSLContext;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -21,13 +23,22 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -79,10 +90,32 @@ public class HTTPSClient {
                 SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
 	}
 	
-	public void startClient() {
+	public void startClient() throws IOException {
+		if(httpclient != null)
+			httpclient.close();
 		httpclient = HttpClients.custom()
                 .setSSLSocketFactory(sslsf)
                 .build();
+	}
+	
+	public void startClient(CredentialsProvider creds, URI uri) throws IOException {
+		if(httpclient != null)
+			httpclient.close();
+		httpclient = HttpClients.custom()
+                .setSSLSocketFactory(sslsf)
+                .setDefaultCredentialsProvider(creds)
+                .build();
+		
+		// Create AuthCache instance
+        AuthCache authCache = new BasicAuthCache();
+        // Generate BASIC scheme object and add it to the local
+        // auth cache
+        BasicScheme basicAuth = new BasicScheme();
+        authCache.put(new HttpHost(uri.getHost(),uri.getPort()), basicAuth);
+
+        // Add AuthCache to the execution context
+        HttpClientContext localContext = HttpClientContext.create();
+        localContext.setAuthCache(authCache);
 	}
 	
 	public CloseableHttpResponse doGet(String url) throws IOException {
@@ -114,8 +147,11 @@ public class HTTPSClient {
 
     public final static void main(String[] cli_args) throws Exception {
     	
+    	Console console = System.console();
+    	
     	// Define args
 		Options options = new Options();
+		options.addOption("basic", false, "Use basic authentication. (Default: off");
 		options.addOption("d", false, "Set Debug Level (Default:  ERROR)");
 		options.addOption("f", true, "POST File");
 		options.addOption("ssl", true, "Specify Keystore");
@@ -133,11 +169,23 @@ public class HTTPSClient {
 			System.exit(1);
 		}
 		String[] args = cmd.getArgs();
-		
+		URI uri = new URI(args[0]);
+    	
 		// Parse args
 		String keystoreFilename = null;
 		HttpEntity mpEntity = null;
-	    if(cmd.hasOption("d")) {
+		CredentialsProvider credsProvider = null;
+		if(cmd.hasOption("basic")) {
+			String username = console.readLine("Username: ");
+			char[] password = console.readPassword("Password: ");
+			credsProvider = new BasicCredentialsProvider();
+	        credsProvider.setCredentials(
+	                new AuthScope(uri.getHost(), uri.getPort()),
+	                new UsernamePasswordCredentials(username, new String(password)));
+	        for(int idx = 0;idx < password.length;idx++)
+	        	password[idx] = 0;
+		}
+		if(cmd.hasOption("d")) {
 			Log.setLevel(LogHandler.Level.DEBUG);
 		}
 		if(cmd.hasOption("f")) {
@@ -153,12 +201,9 @@ public class HTTPSClient {
 		}
 
     	HTTPSClient client = null;
-    	String url = args[0];
     	
     	if(keystoreFilename != null) {
-	    	Console console = System.console();
-	    	
-	    	System.out.print("Passphrase? ");
+	    	System.out.print("Keystore Passphrase? ");
 	    	char[] passphrase = console.readPassword();
 	    	
 	    	client = new HTTPSClient(keystoreFilename, passphrase);
@@ -168,9 +213,11 @@ public class HTTPSClient {
     		client = new HTTPSClient();
     	}
     	
+    	if(credsProvider != null)
+    		client.startClient(credsProvider, uri);
     	
         try {
-        	CloseableHttpResponse response = client.doPost(url, mpEntity);
+        	CloseableHttpResponse response = client.doPost(uri.toURL().toString(), mpEntity);
         	try {
                 HttpEntity entity = response.getEntity();
 
