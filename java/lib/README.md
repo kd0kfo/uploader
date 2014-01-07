@@ -9,4 +9,4 @@ The java project has been built and tested with the following jar files:
 * httpclient-4.3.1.jar
 * httpcore-4.3.jar
 * httpmime-4.3.1.jar
-
+* javalib-1.0.b.jar

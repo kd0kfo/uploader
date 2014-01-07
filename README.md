@@ -16,6 +16,8 @@ Requires
 
 Requires Apache Common and HttpComponents libraries. See java/lib/README.md for as list of tested jar files.
 
+Requires my utility java library, javalib, which can be found at https://github.com/kd0kfo/javalib.
+
 Build
 ~~~~~
 
