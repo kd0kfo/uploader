@@ -1,17 +1,18 @@
 <project>
+	<property name="packagename" value="uploader"/>
+	<property name="version" value="1.0.b"/>
+	<property name="main.class" value="com.davecoss.java.http.HTTPSClient"/>
+	<property name="TODO.test.class" value="com.davecoss.java.http.TestRunner"/>
 
 	<tstamp>
 	    <format property="BUILD_TIME" pattern="yyyy-MM-dd HH:mm"/>
     </tstamp>
 
-	<property name="version" value="1.0.b"/>
 	<property name="test.dir" value="test"/>
 	<property name="build.classes.dir" value="build/classes"/>
 	<property name="build.jar.dir" value="build/jar"/>
-	<property name="main.class" value="com.davecoss.java.http.HTTPSClient"/>
-	<property name="TODO.test.class" value="com.davecoss.java.http.TestRunner"/>
-  <property name="lib.dir" value="lib"/>
-  <property name="jar.name" value="uploader-${version}.jar"/>
+	<property name="lib.dir" value="lib"/>
+  <property name="jar.name" value="${packagename}-${version}.jar"/>
 
   <path id="classpath">
     <fileset dir="${lib.dir}" includes="**/*.jar"/>
@@ -55,6 +56,17 @@
                 <attribute name="Main-Class" value="${main.class}"/>
             </manifest>
         </jar>
+    </target>
+
+    <target name="tgz" depends="jar,javadoc">
+      <tar destfile="${packagename}-${version}.tgz" compression="gzip" longfile="gnu">
+	<tarfileset dir="docs" preserveLeadingSlashes="false" includes="**/*" prefix="docs"/>
+	<tarfileset dir="${build.jar.dir}"
+		    preserveLeadingSlashes="false">
+	  <include name="${jar.name}"/>
+	</tarfileset>
+	<tarfileset dir="lib" preserveLeadingSlashes="false" includes="**/*.jar" prefix="lib"/>
+      </tar>
     </target>
 
     <target name="test" depends="jar">
