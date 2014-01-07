@@ -89,11 +89,11 @@
         author="true"
         version="true"
         use="true"
-        windowtitle="com.davecoss.java.http API">
+        windowtitle="${packagename} API">
 
        <fileset dir="src" defaultexcludes="yes"/>
 
-       <doctitle><![CDATA[<h1>javalib</h1>]]></doctitle>
+       <doctitle><![CDATA[<h1>${packagename}</h1>]]></doctitle>
        <bottom><![CDATA[<i>Last build: ${BUILD_TIME} Copyright &#169; 2013 David Coss. All Rights Reserved.</i>]]></bottom>
      </javadoc>
    </target>
