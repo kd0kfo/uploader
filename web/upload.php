@@ -1,3 +1,16 @@
+<?php
+$doctype = "html";
+
+if(isset($_GET['doctype'])) {
+	$doctype = $_GET['doctype'];
+}
+if(isset($_POST['doctype'])) {
+	$doctype = $_POST['doctype'];
+}
+
+if($doctype == "html") {
+	
+echo <<<EOF
 <!DOCTYPE html>
 <html>
 <body>
@@ -11,8 +24,8 @@ enctype="multipart/form-data">
 <br/>
 <input type="submit" name="submit" value="Submit">
 </form>
-
-<?php
+EOF;
+}
 
 require_once("includes.php");
 
@@ -54,8 +67,12 @@ if(isset($_FILES) && count($_FILES) != 0) {
 	}
 }
 
-?>
-<?php footer(); ?>
+if($doctype == "html") {
+	footer();
+echo <<<EOF
 </body>
 </html>
+EOF;
+}
 
+?>

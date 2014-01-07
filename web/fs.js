@@ -1,0 +1,56 @@
+function loadPageVar (sVar) {
+  return decodeURI(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(sVar).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+}
+var dirname = loadPageVar("dir");
+if(dirname == "") {
+    dirname = "/";
+}
+
+function hoverin() {
+    $(this).css("font-style", "italic").css("color", "red");
+}
+
+function hoverout() {
+    $(this).css("font-style", "normal").css("color", "black");
+}
+
+function updateDir(thedirname) {
+    window.document.title = thedirname;
+    $("#heading").text("Contents of " + thedirname);
+    $.getJSON("ls.php", {"dir": thedirname}, function(data) {
+	    $("#contents").text("");
+	    if(data['error']) {
+		$("#contents").text("ERROR: " + data['error']);
+	    }
+	    else if(data[thedirname]) {
+		if(thedirname != "/") {
+		    var parentdir = $("<p/>", {class: "d"});
+		    parentdir.text("Up to " + data["parent"]);
+		    parentdir.click(function() {updateDir(data["parent"]);});
+		    parentdir.hover(hoverin,
+				    hoverout);
+		    $("#contents").append(parentdir);
+		}
+		var debug = $("#debug");
+		$.each(data[thedirname], function(key, val) {
+			if(val["name"] == thedirname) {
+			    return 1;
+			}
+			var text = thedirname;
+			if(thedirname != "/") {
+			    text = text + "/";
+			}
+			text = text + val["name"];
+			var dirent = $("<p/>", {class: val["type"]});
+			dirent.text(text);
+			if(val["type"] == "d") {
+			    dirent.click(function() {updateDir($(this).text().trim());});
+			    dirent.hover(hoverin,
+					 hoverout);
+			}
+			$("#contents").append(dirent);
+		    });
+	    }
+	});
+}
+
