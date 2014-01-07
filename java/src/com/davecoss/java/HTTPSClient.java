@@ -3,7 +3,6 @@ package com.davecoss.java;
 import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
 import javax.net.ssl.SSLContext;
@@ -11,11 +10,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.davecoss.java.ConsoleLog;
 import com.davecoss.java.LogHandler;
 
@@ -31,16 +26,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.conn.ssl.TrustStrategy;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.HttpEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.ContentBody;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 public class HTTPSClient {
@@ -127,8 +116,6 @@ public class HTTPSClient {
     	
     	// Define args
 		Options options = new Options();
-		int debug_level = 1;
-		boolean should_daemon = false;
 		options.addOption("d", false, "Set Debug Level (Default:  ERROR)");
 		options.addOption("f", true, "POST File");
 		options.addOption("ssl", true, "Specify Keystore");
