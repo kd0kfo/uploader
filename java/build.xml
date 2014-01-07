@@ -60,12 +60,13 @@
 
     <target name="tgz" depends="jar,javadoc">
       <tar destfile="${packagename}-${version}.tgz" compression="gzip" longfile="gnu">
-	<tarfileset dir="docs" preserveLeadingSlashes="false" includes="**/*" prefix="docs"/>
+	<tarfileset dir="docs" preserveLeadingSlashes="false" includes="**/*" prefix="${packagename}-${version}/docs"/>
 	<tarfileset dir="${build.jar.dir}"
+		    prefix="${packagename}-${version}"
 		    preserveLeadingSlashes="false">
 	  <include name="${jar.name}"/>
 	</tarfileset>
-	<tarfileset dir="lib" preserveLeadingSlashes="false" includes="**/*.jar" prefix="lib"/>
+	<tarfileset dir="lib" preserveLeadingSlashes="false" includes="**/*.jar" prefix="${packagename}-${version}/lib"/>
       </tar>
     </target>
 
