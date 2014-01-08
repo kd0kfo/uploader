@@ -1,7 +1,7 @@
 uploader
 ========
 
-Simple PHP File Uploader
+Simple File Uploader System
 
 Java
 ====
