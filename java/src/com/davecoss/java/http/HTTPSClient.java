@@ -52,6 +52,7 @@ public class HTTPSClient {
 	private static LogHandler Log = new ConsoleLog("HTTPSClient");
 
 	public static final CLIOptionTuple[] optionTuples = {new CLIOptionTuple("basic", false, "Use basic authentication. (Default: off"),
+		new CLIOptionTuple("console", true, "Write to the console and upload the file name provided as an argument to the -console flag."),
 		new CLIOptionTuple("d", false, "Set Debug Level (Default:  ERROR)"),
 		new CLIOptionTuple("f", true, "POST File"),
 		new CLIOptionTuple("ssl", true, "Specify Keystore")};
@@ -184,6 +185,22 @@ public class HTTPSClient {
 		EntityUtils.consume(entity);
 	}
 	
+	public void postFile(String url, File thefile) throws IOException {
+		Log.error("Posting " + thefile.getName() + " to " + url);
+		MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
+		FileBody fb = new FileBody(thefile);
+		entityBuilder.addPart("file", fb);
+		HttpEntity mpEntity = entityBuilder.build();
+		Log.debug("Attaching File " + thefile.getName());
+
+    	CloseableHttpResponse response = this.doPost(url, mpEntity);
+    	try {
+    		readResponse(response);
+    	} finally {
+            response.close();
+        }
+	}
+	
     public final static void main(String[] cli_args) throws Exception {
     	
     	Console console = System.console();
@@ -205,6 +222,7 @@ public class HTTPSClient {
 		String keystoreFilename = null;
 		CredentialsProvider credsProvider = null;
 		ArrayList<File> filesToUpload = new ArrayList<File>();
+		UploadOutputStream consoleUploader = null;
 		if(cmd.hasOption("basic")) {
 			String username = console.readLine("Username: ");
 			char[] password = console.readPassword("Password: ");
@@ -244,23 +262,24 @@ public class HTTPSClient {
     		client.startClient(credsProvider, uri);
     	
     	
+    	// Running on Console?
+    	if(cmd.hasOption("console")) {
+			consoleUploader = new UploadOutputStream(cmd.getOptionValue("console"), client, uri.toURL().toString());
+		}
+    	
         try {
-        	if(filesToUpload.size() > 0) {
+        	if(consoleUploader != null) {
+        		String line = null;
+        		while((line = console.readLine("> ")) != null) {
+        			consoleUploader.write(line.getBytes());
+        			consoleUploader.write('\n');
+        		}
+        		consoleUploader.close();
+        	}
+        	else if(filesToUpload.size() > 0) {
 		    	Iterator<File> files = filesToUpload.iterator();
 		    	while(files.hasNext()) {
-		    		File thefile = files.next();
-		    		MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
-		    		FileBody fb = new FileBody(thefile);
-		    		entityBuilder.addPart("file", fb);
-		    		HttpEntity mpEntity = entityBuilder.build();
-		    		Log.debug("Attaching File " + thefile.getName());
-	
-		        	CloseableHttpResponse response = client.doPost(uri.toURL().toString(), mpEntity);
-		        	try {
-		        		readResponse(response);
-		        	} finally {
-		                response.close();
-		            }
+		    		client.postFile(uri.toURL().toString(), files.next());
 		    	}
 	    	} else {
 	    		CloseableHttpResponse response = client.doGet(uri.toURL().toString());
