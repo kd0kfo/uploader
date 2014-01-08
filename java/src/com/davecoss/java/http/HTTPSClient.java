@@ -13,8 +13,12 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import com.davecoss.java.ConsoleLog;
 import com.davecoss.java.LogHandler;
+import com.davecoss.java.utils.CLIOptionTuple;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -46,6 +50,12 @@ import org.apache.http.util.EntityUtils;
 public class HTTPSClient {
 	
 	private static LogHandler Log = new ConsoleLog("HTTPSClient");
+
+	public static final CLIOptionTuple[] optionTuples = {new CLIOptionTuple("basic", false, "Use basic authentication. (Default: off"),
+		new CLIOptionTuple("d", false, "Set Debug Level (Default:  ERROR)"),
+		new CLIOptionTuple("f", true, "POST File"),
+		new CLIOptionTuple("ssl", true, "Specify Keystore")};
+
 	
 	private SSLContext sslcontext = null;
 	private SSLConnectionSocketFactory sslsf = null;
@@ -144,24 +154,44 @@ public class HTTPSClient {
 		if(httpclient != null)
 			httpclient.close();
 	}
+	
+	public static CommandLine parseCommandLine(String[] cli_args) throws ParseException {
+		// Define args
+		Options options = new Options();
+		for(CLIOptionTuple option : optionTuples )
+			options.addOption(option.name, option.hasArg, option.helpMessage);
+		
+		CommandLineParser parser = new GnuParser();
+		
+		return parser.parse( options, cli_args);
+	}
 
+	public static void readResponse(CloseableHttpResponse response) throws IOException {
+	    byte[] buf = new byte[4096];
+	    int amount_read = -1;
+
+		HttpEntity entity = response.getEntity();
+		
+	    System.out.println("----------------------------------------");
+		System.out.println(response.getStatusLine());
+		if (entity != null) {
+		    System.out.println("Response content length: " + entity.getContentLength());
+		    InputStream htmlcontent = entity.getContent();
+		    while((amount_read = htmlcontent.read(buf, 0, 4096)) != -1) {
+		    	System.out.write(buf, 0, amount_read);
+		    }
+		}
+		EntityUtils.consume(entity);
+	}
+	
     public final static void main(String[] cli_args) throws Exception {
     	
     	Console console = System.console();
-    	
-    	// Define args
-		Options options = new Options();
-		options.addOption("basic", false, "Use basic authentication. (Default: off");
-		options.addOption("d", false, "Set Debug Level (Default:  ERROR)");
-		options.addOption("f", true, "POST File");
-		options.addOption("ssl", true, "Specify Keystore");
+    	CommandLine cmd = null;
 		
-		CommandLineParser parser = new GnuParser();
-		CommandLine cmd = null;
-		try
-		{
-			cmd = parser.parse( options, cli_args);
-		}
+    	try {
+    		cmd = parseCommandLine(cli_args);
+    	}
 		catch(ParseException pe)
 		{
 			System.err.println("Error parsing command line arguments.");
@@ -173,8 +203,8 @@ public class HTTPSClient {
     	
 		// Parse args
 		String keystoreFilename = null;
-		HttpEntity mpEntity = null;
 		CredentialsProvider credsProvider = null;
+		ArrayList<File> filesToUpload = new ArrayList<File>();
 		if(cmd.hasOption("basic")) {
 			String username = console.readLine("Username: ");
 			char[] password = console.readPassword("Password: ");
@@ -189,12 +219,9 @@ public class HTTPSClient {
 			Log.setLevel(LogHandler.Level.DEBUG);
 		}
 		if(cmd.hasOption("f")) {
-			MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
-			File thefile = new File(cmd.getOptionValue("f"));
-			FileBody fb = new FileBody(thefile);
-			entityBuilder.addPart("file", fb);
-			mpEntity = entityBuilder.build();
-			Log.debug("Attaching File " + thefile.getName());
+			for(String filename : cmd.getOptionValues("f")) {
+				filesToUpload.add(new File(filename));
+			}
 		}
 		if(cmd.hasOption("ssl")) {
 			keystoreFilename = cmd.getOptionValue("ssl");
@@ -216,26 +243,33 @@ public class HTTPSClient {
     	if(credsProvider != null)
     		client.startClient(credsProvider, uri);
     	
+    	
         try {
-        	CloseableHttpResponse response = client.doPost(uri.toURL().toString(), mpEntity);
-        	try {
-                HttpEntity entity = response.getEntity();
-
-                System.out.println("----------------------------------------");
-                System.out.println(response.getStatusLine());
-                if (entity != null) {
-                    System.out.println("Response content length: " + entity.getContentLength());
-                    InputStream htmlcontent = entity.getContent();
-                    byte[] buf = new byte[4096];
-                    int amount_read = -1;
-                    while((amount_read = htmlcontent.read(buf, 0, 4096)) != -1) {
-                    	System.out.write(buf, 0, amount_read);
-                    }
-                }
-                EntityUtils.consume(entity);
-            } finally {
-                response.close();
-            }
+        	if(filesToUpload.size() > 0) {
+		    	Iterator<File> files = filesToUpload.iterator();
+		    	while(files.hasNext()) {
+		    		File thefile = files.next();
+		    		MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
+		    		FileBody fb = new FileBody(thefile);
+		    		entityBuilder.addPart("file", fb);
+		    		HttpEntity mpEntity = entityBuilder.build();
+		    		Log.debug("Attaching File " + thefile.getName());
+	
+		        	CloseableHttpResponse response = client.doPost(uri.toURL().toString(), mpEntity);
+		        	try {
+		        		readResponse(response);
+		        	} finally {
+		                response.close();
+		            }
+		    	}
+	    	} else {
+	    		CloseableHttpResponse response = client.doGet(uri.toURL().toString());
+	        	try {
+	        		readResponse(response);
+	        	} finally {
+	                response.close();
+	            }
+	    	}
         } finally {
             client.close();
         }
