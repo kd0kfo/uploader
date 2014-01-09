@@ -25,4 +25,60 @@ function footer() {
 EOF;
 }
 
+function get_requested_filename() {
+	$filename = "";
+
+	if(isset($_GET['filename'])) {
+		$filename = $_GET['filename'];
+	}
+	if(isset($_POST['filename'])) {
+		$filename = $_POST['filename'];
+	}
+
+	return $filename;
+}
+
+function json_error($msg, $status) {
+	echo json_encode(array("status" => $status, "message" => $msg));
+}
+
+function json_exit($msg, $status) {
+	json_error($msg, $status);
+	exit($status);
+}
+
+function resolve_dir($relpath) {
+	global $uploaddir;
+	if(strpos($relpath, '.') !== FALSE) {
+	  echo json_encode(array("error" => ". not allowed in directory!"));
+	  exit(0);
+	}
+
+	$dir = $uploaddir;
+	if(substr($relpath,0,1) != "/") { 
+	  $dir = "/$dir";
+	}
+	if($relpath == "/") {
+		$relpath = "";
+	}
+	$dir .= $relpath;
+	$dir = realpath($dir);
+
+	if(!file_exists($dir)) {
+	  echo json_encode(array("error" => "$relpath does not exist."));
+	  exit(0);
+	}	
+
+	return $dir;
+}
+
+function append_path($dir, $to_append) {
+	$retval = $dir;
+	if($to_append[0] != "/") {
+		$retval .= "/";
+	}
+	$retval .= $to_append;
+
+	return $retval;
+}
 ?>

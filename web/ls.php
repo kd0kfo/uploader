@@ -14,25 +14,7 @@ if(isset($_POST['dir'])) {
   $subdir = $_POST['dir'];
 }
 
-if(strpos($subdir, '.') !== FALSE) {
-  echo json_encode(array("error" => ". not allowed in directory!"));
-  exit(0);
-}
-
-$dir = $uploaddir;
-if(substr($subdir,0,1) != "/") { 
-  $dir = "/$dir";
-}
-if($subdir == "/") {
-	$subdir = "";
-}
-$dir .= $subdir;
-$dir = realpath($dir);
-
-if(!file_exists($dir)) {
-  echo json_encode(array("error" => "$subdir does not exist."));
-  exit(0);
-}
+$dir = resolve_dir($subdir);
 
 $dir_arr = array();
 
