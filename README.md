@@ -1,7 +1,7 @@
 uploader
 ========
 
-Simple PHP File Uploader
+Simple File Uploader System
 
 Java
 ====
@@ -23,3 +23,9 @@ Build
 -----
 
 To build, in java/ directory, run "ant jar". Required libraries must be placed in java/lib/ directory.
+
+
+Build Status
+------------
+
+[![Build Status](https://travis-ci.org/kd0kfo/uploader.png?branch=master)](https://travis-ci.org/kd0kfo/uploader)
