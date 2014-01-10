@@ -1,7 +1,7 @@
 <?php 
 
 require_once("includes.php");
-require_once("MD5.php");
+require_once("classes.php");
 
 
 

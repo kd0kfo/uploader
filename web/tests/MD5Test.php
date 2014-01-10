@@ -1,6 +1,6 @@
 <?php
 
-require_once("MD5.php");
+require_once("classes.php");
 
 class MD5Test extends PHPUnit_Framework_TestCase {
 
