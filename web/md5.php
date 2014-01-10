@@ -3,7 +3,6 @@
 require_once("includes.php");
 require_once("MD5.php");
 
-header("Content-type: application/json");
 
 
 $filename = get_requested_filename();
