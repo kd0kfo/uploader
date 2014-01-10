@@ -1,0 +1,3 @@
+function init_fs() {
+	localStorage['contentdir'] = '/content';
+}

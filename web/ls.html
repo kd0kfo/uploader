@@ -2,6 +2,7 @@
 <head>
 <title></title>
 <script src="//code.jquery.com/jquery-1.10.2.min.js" language="javascript"></script>
+<script src="site.js" language="javascript"></script>
 <script src="fs.js" language="javascript"></script>
 </head>
 <body>
@@ -10,13 +11,14 @@
 <div id="debug"></div>
 </body>
 <script>
-     $(document).ready(function() {
-	     
-	     window.document.title = dirname;
-	     
-	     
-	     updateDir(dirname);
-
-	 });// End of document.ready
+$(document).ready(function() {
+	init_fs();
+	var dirname = loadPageVar("dir");
+	if(dirname == "") {
+	    dirname = "/";
+	}
+	window.document.title = dirname;
+	updateDir(dirname);
+});// End of document.ready
 </script>
 </html>

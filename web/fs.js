@@ -1,10 +1,6 @@
 function loadPageVar (sVar) {
   return decodeURI(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(sVar).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
 }
-var dirname = loadPageVar("dir");
-if(dirname == "") {
-    dirname = "/";
-}
 
 function hoverin() {
     $(this).css("font-style", "italic").css("color", "red");
@@ -45,9 +41,11 @@ function updateDir(thedirname) {
 			dirent.text(text);
 			if(val["type"] == "d") {
 			    dirent.click(function() {updateDir($(this).text().trim());});
-			    dirent.hover(hoverin,
-					 hoverout);
+			} else {
+			    dirent.click(function() {window.open(localStorage['contentdir'] + text, thedirname);});
 			}
+			dirent.hover(hoverin, hoverout);
+
 			$("#contents").append(dirent);
 		    });
 	    }
