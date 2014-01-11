@@ -17,17 +17,28 @@ class WebFile {
 		$this->base_dir = resolve_dir($dir);
 		$this->filepath = append_path($this->base_dir, basename($this->orig_filename));
 	}
+	
+	function is_file() {
+		return is_file($this->filepath);
+	}
+	
+	function is_dir() {
+		return is_dir($this->filepath);
+	}
 
 	function get_base_dir() {
 		return $this->base_dir;
 	}
 
 	function get_json() {
+		global $uploaddir;
+		
 		if(!file_exists($this->filepath)) {
 			json_exit("Missing file: " . $this->orig_filename, 1);
 		}
 
-		return json_encode(array("name" => $this->orig_filename, "size" => filesize($this->filepath), "parent" => $this->base_dir));
+		$parent = clear_uploaddir($this->base_dir);
+		return json_encode(array("name" => $this->orig_filename, "size" => filesize($this->filepath), "parent" => $parent));
 	}
 }
 

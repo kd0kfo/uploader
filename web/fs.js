@@ -16,38 +16,41 @@ function updateDir(thedirname) {
     $.getJSON("ls.php", {"dir": thedirname}, function(data) {
 	    $("#contents").text("");
 	    if(data['error']) {
-		$("#contents").text("ERROR: " + data['error']);
+	    	$("#contents").text("ERROR: " + data['error']);
 	    }
-	    else if(data[thedirname]) {
-		if(thedirname != "/") {
-		    var parentdir = $("<p/>", {class: "d"});
-		    parentdir.text("Up to " + data["parent"]);
-		    parentdir.click(function() {updateDir(data["parent"]);});
-		    parentdir.hover(hoverin,
-				    hoverout);
-		    $("#contents").append(parentdir);
-		}
-		var debug = $("#debug");
-		$.each(data[thedirname], function(key, val) {
-			if(val["name"] == thedirname) {
-			    return 1;
-			}
-			var text = thedirname;
+	    else if(data['type'] == "f") {
+	    	$("#contents").text("File: " + data['name']);
+	    }
+	    else if(data['type'] == "d") {
 			if(thedirname != "/") {
-			    text = text + "/";
+			    var parentdir = $("<p/>", {class: "d"});
+			    parentdir.text("Up to " + data["parent"]);
+			    parentdir.click(function() {updateDir(data["parent"]);});
+			    parentdir.hover(hoverin,
+					    hoverout);
+			    $("#contents").append(parentdir);
 			}
-			text = text + val["name"];
-			var dirent = $("<p/>", {class: val["type"]});
-			dirent.text(text);
-			if(val["type"] == "d") {
-			    dirent.click(function() {updateDir($(this).text().trim());});
-			} else {
-			    dirent.click(function() {window.open(localStorage['contentdir'] + text, thedirname);});
-			}
-			dirent.hover(hoverin, hoverout);
-
-			$("#contents").append(dirent);
-		    });
+			var debug = $("#debug");
+			$.each(data['dirents'], function(key, val) {
+				if(val["name"] == thedirname) {
+				    return 1;
+				}
+				var text = thedirname;
+				if(thedirname != "/") {
+				    text = text + "/";
+				}
+				text = text + val["name"];
+				var dirent = $("<p/>", {class: val["type"]});
+				dirent.text(text);
+				if(val["type"] == "d") {
+				    dirent.click(function() {updateDir($(this).text().trim());});
+				} else {
+				    dirent.click(function() {window.open(localStorage['contentdir'] + text, thedirname);});
+				}
+				dirent.hover(hoverin, hoverout);
+	
+				$("#contents").append(dirent);
+			    });
 	    }
 	});
 }

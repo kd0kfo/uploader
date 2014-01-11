@@ -19,8 +19,11 @@ $filename = get_requested_filename();
 // If file, dump file JSON data. Otherwise use directory setup.
 if(strlen($filename) != 0) {
 	$thefile = new WebFile($filename);
-	echo $thefile->get_json();
-	exit(0);
+	if($thefile->is_file()) {
+		echo $thefile->get_json();
+		exit(0);
+	}
+	$subdir = $filename;
 }
 
 
@@ -49,11 +52,11 @@ if($dirname == "") {
 
 $parentdir = "/";
 if($dir != $uploaddir) {
-  $parentdir = str_replace($uploaddir, "", dirname($dir));
+  $parentdir = clear_uploaddir(dirname($dir));
   if($parentdir == "") {
-    $parentdir = "/";
+  	$parentdir = "/";
   }
 }
-echo json_encode(array($dirname => $dir_arr, "name" => $subdir, "parent" => $parentdir));
+echo json_encode(array("dirents" => $dir_arr, "name" => $subdir, "parent" => $parentdir, "type" => "d"));
 
 ?>

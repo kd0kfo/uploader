@@ -81,4 +81,9 @@ function append_path($dir, $to_append) {
 
 	return $retval;
 }
+
+function clear_uploaddir($path) {
+	global $uploaddir;
+	return str_replace($uploaddir, "", $path);
+}
 ?>
