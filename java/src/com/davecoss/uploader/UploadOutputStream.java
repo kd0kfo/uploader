@@ -1,4 +1,4 @@
-package com.davecoss.java.http;
+package com.davecoss.uploader;
 
 import java.io.BufferedOutputStream;
 import java.io.File;

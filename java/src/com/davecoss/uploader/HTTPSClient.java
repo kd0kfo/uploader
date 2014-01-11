@@ -1,10 +1,13 @@
-package com.davecoss.java.http;
+package com.davecoss.uploader;
 
+import java.io.BufferedReader;
 import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.URI;
 
 import javax.net.ssl.SSLContext;
@@ -156,36 +159,40 @@ public class HTTPSClient {
 			httpclient.close();
 	}
 	
-	public static CommandLine parseCommandLine(String[] cli_args) throws ParseException {
+	public static CommandLine parseCommandLine(String[] cli_args, CLIOptionTuple[] optionArray) throws ParseException {
 		// Define args
 		Options options = new Options();
-		for(CLIOptionTuple option : optionTuples )
+		for(CLIOptionTuple option : optionArray )
 			options.addOption(option.name, option.hasArg, option.helpMessage);
 		
 		CommandLineParser parser = new GnuParser();
 		
 		return parser.parse( options, cli_args);
 	}
+	
+	public static CommandLine parseCommandLine(String[] cli_args) throws ParseException {
+		return parseCommandLine(cli_args, optionTuples);
+	}
 
-	public static void readResponse(CloseableHttpResponse response) throws IOException {
+	public static void printResponse(CloseableHttpResponse response, PrintStream output) throws IOException {
 	    byte[] buf = new byte[4096];
 	    int amount_read = -1;
 
 		HttpEntity entity = response.getEntity();
 		
-	    System.out.println("----------------------------------------");
-		System.out.println(response.getStatusLine());
+	    output.println("----------------------------------------");
+	    output.println(response.getStatusLine());
 		if (entity != null) {
-		    System.out.println("Response content length: " + entity.getContentLength());
+			output.println("Response content length: " + entity.getContentLength());
 		    InputStream htmlcontent = entity.getContent();
 		    while((amount_read = htmlcontent.read(buf, 0, 4096)) != -1) {
-		    	System.out.write(buf, 0, amount_read);
+		    	output.write(buf, 0, amount_read);
 		    }
 		}
 		EntityUtils.consume(entity);
 	}
 	
-	public void postFile(String url, File thefile) throws IOException {
+	public CloseableHttpResponse postFile(String url, File thefile) throws IOException {
 		Log.error("Posting " + thefile.getName() + " to " + url);
 		MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
 		FileBody fb = new FileBody(thefile);
@@ -193,12 +200,47 @@ public class HTTPSClient {
 		HttpEntity mpEntity = entityBuilder.build();
 		Log.debug("Attaching File " + thefile.getName());
 
-    	CloseableHttpResponse response = this.doPost(url, mpEntity);
-    	try {
-    		readResponse(response);
-    	} finally {
-            response.close();
-        }
+    	return this.doPost(url, mpEntity);
+    	
+	}
+	
+	public static CredentialsProvider createCredentialsProvider(String username, char[] password, URI uri) throws IOException {
+		CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        credsProvider.setCredentials(
+                new AuthScope(uri.getHost(), uri.getPort()),
+                new UsernamePasswordCredentials(username, new String(password)));
+        
+        return credsProvider;
+	}
+	
+	public static CredentialsProvider createCredentialsProvider(Console console, URI uri) throws IOException {
+		String username = console.readLine("Username: ");
+		char[] password = console.readPassword("Password: ");
+		
+		CredentialsProvider retval = null;
+		try {
+			retval = createCredentialsProvider(username, password, uri);
+		} finally {
+			for(int idx = 0;idx < password.length;idx++)
+	        	password[idx] = 0;
+		}
+		return retval;
+		
+	}
+	
+	public static CredentialsProvider createCredentialsProvider(PrintStream output, InputStream input, URI uri) throws IOException {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+		String username = reader.readLine();
+		char[] password = reader.readLine().trim().toCharArray();
+		
+		CredentialsProvider retval = null;
+		try {
+			retval = createCredentialsProvider(username, password, uri);
+		} finally {
+			for(int idx = 0;idx < password.length;idx++)
+	        	password[idx] = 0;
+		}
+		return retval;
 	}
 	
     public final static void main(String[] cli_args) throws Exception {
@@ -224,14 +266,7 @@ public class HTTPSClient {
 		ArrayList<File> filesToUpload = new ArrayList<File>();
 		UploadOutputStream consoleUploader = null;
 		if(cmd.hasOption("basic")) {
-			String username = console.readLine("Username: ");
-			char[] password = console.readPassword("Password: ");
-			credsProvider = new BasicCredentialsProvider();
-	        credsProvider.setCredentials(
-	                new AuthScope(uri.getHost(), uri.getPort()),
-	                new UsernamePasswordCredentials(username, new String(password)));
-	        for(int idx = 0;idx < password.length;idx++)
-	        	password[idx] = 0;
+			credsProvider = createCredentialsProvider(console, uri);
 		}
 		if(cmd.hasOption("d")) {
 			Log.setLevel(LogHandler.Level.DEBUG);
@@ -278,13 +313,19 @@ public class HTTPSClient {
         	}
         	else if(filesToUpload.size() > 0) {
 		    	Iterator<File> files = filesToUpload.iterator();
+		    	CloseableHttpResponse response = null;
 		    	while(files.hasNext()) {
-		    		client.postFile(uri.toURL().toString(), files.next());
+		    		try {
+		    			response = client.postFile(uri.toURL().toString(), files.next());
+		    			printResponse(response, System.out);
+		        	} finally {
+		                response.close();
+		            }
 		    	}
 	    	} else {
 	    		CloseableHttpResponse response = client.doGet(uri.toURL().toString());
 	        	try {
-	        		readResponse(response);
+	        		printResponse(response, System.out);
 	        	} finally {
 	                response.close();
 	            }

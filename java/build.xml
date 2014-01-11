@@ -1,8 +1,8 @@
 <project>
 	<property name="packagename" value="uploader"/>
 	<property name="version" value="1.0.b"/>
-	<property name="main.class" value="com.davecoss.java.http.HTTPSClient"/>
-	<property name="TODO.test.class" value="com.davecoss.java.http.TestRunner"/>
+	<property name="main.class" value="com.davecoss.uploader.utils.UploaderConsole"/>
+	<property name="TODO.test.class" value="com.davecoss.uploader.TestRunner"/>
 
 	<tstamp>
 	    <format property="BUILD_TIME" pattern="yyyy-MM-dd HH:mm"/>
@@ -45,7 +45,7 @@
     </target>
 
     <target name="jar" depends="compile">
-	    <propertyfile file="${build.classes.dir}/com/davecoss/java/http/build.info">
+	    <propertyfile file="${build.classes.dir}/com/davecoss/uploader/build.info">
 			<entry key="build_date" value="${BUILD_TIME}"/>
 			<entry key="version" value="${version}"/>
 	    </propertyfile>
@@ -69,6 +69,10 @@
 	<tarfileset dir="lib" preserveLeadingSlashes="false" includes="**/*.jar" prefix="${packagename}-${version}/lib"/>
       </tar>
     </target>
+
+    <target name="run" depends="compile">
+      <java classname="${main.class}" fork="true" classpathref="targetclasspath"/>
+    </target> 
 
     <target name="test" depends="jar">
       <javac srcdir="test" destdir="${build.classes.dir}" classpathref="targetclasspath" debug="on">
