@@ -24,7 +24,7 @@ class MD5 {
 
 	function get_json() {
 		if(!file_exists($this->filepath)) {
-			json_error("Missing file: " . $this->orig_filename, 1);
+			json_exit("Missing file: " . $this->orig_filename, 1);
 		}
 
 		$md5 = md5_file($this->filepath);
