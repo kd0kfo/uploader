@@ -31,7 +31,7 @@ import com.davecoss.uploader.WebFileException;
 
 public class UploaderConsole {
 
-	public enum Commands {LS};
+	public enum Commands {LS, MD5};
 	
 	private static LogHandler Log =  new ConsoleLog("UploaderConsole");
 	private static final JSONParser jsonParser = new JSONParser();
@@ -118,7 +118,9 @@ public class UploaderConsole {
     			continue;
     		if(line.toLowerCase().equals("exit"))
     			break;
-    		String[] tokens = line.split(" ");
+    		String[] tokens = line.trim().split(" ");
+    		for(int idx = 0;idx < tokens.length;idx++)
+    			tokens[idx] = tokens[idx].trim();
     		uc.runCommand(tokens);
     	}
     	
@@ -153,18 +155,23 @@ public class UploaderConsole {
 		if(curr == null)
 			throw new IOException("Missing Base URI for Communication");
 		
+		String path = "/";
+		if(numArgs > 0)
+			path = tokens[1];
 		CloseableHttpResponse response = null;
 		switch(command) {
 		case LS:
 		{
-			String path = "/";
-			if(numArgs > 0)
-				path = tokens[1];
 			curr = new URL(curr, "/ls.php?filename=" + path);
 			response = client.doGet(curr.toString());
 			JSONObject json;
 			try {
 				json = responseJSON(response);
+				if(json.containsKey("error"))
+				{
+					console.printf("Error: %s\n", (String)json.get("error"));
+					break;
+				}
 				WebFile file = WebFile.fromJSON(json);
 				if(file == null)
 					break;
@@ -172,6 +179,30 @@ public class UploaderConsole {
 					console.printf("%s\n", file.dirListing());
 				else if(json.containsKey("dirents"))
 					printDir((JSONArray)json.get("dirents"), console);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			break;
+		}
+		case MD5:
+		{
+			curr = new URL(curr, "/md5.php?filename=" + path);
+			response = client.doGet(curr.toString());
+			JSONObject json;
+			try {
+				json = responseJSON(response);
+				if(json.containsKey("error"))
+				{
+					console.printf("Error: %s\n", (String)json.get("error"));
+					break;
+				}
+				if(json.containsKey("md5"))
+				{
+					console.printf("%s", (String)json.get("md5"));
+					if(json.containsKey("filename"))
+						console.printf("\t%s", (String)json.get("filename"));
+					console.printf("\n");
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
