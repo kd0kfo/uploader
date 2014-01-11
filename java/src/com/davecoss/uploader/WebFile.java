@@ -4,11 +4,13 @@ import org.json.simple.JSONObject;
 
 public class WebFile {
 	public final String name;
+	public final long size;
 	public final String type;
 	
-	public WebFile(String name, String type) {
+	public WebFile(String name, String type, long size) {
 		this.name = name;
 		this.type = type;
+		this.size = size;
 	}
 	
 	public static WebFile fromJSON(JSONObject json) throws WebFileException {
@@ -17,7 +19,11 @@ public class WebFile {
 		
 		String name = (String)json.get("name");
 		String type = (String)json.get("type");
-		return new WebFile(name, type);
+		long size = 0;
+		if(json.containsKey("size")) {
+			size = (Long)json.get("size");
+		}
+		return new WebFile(name, type, size);
 	}
 
 	public String humanType() {
@@ -26,6 +32,10 @@ public class WebFile {
 		if(type.equals("d"))
 			return "directory";
 		return "unknown";
+	}
+
+	public String dirListing() {
+		return humanType() + "\t" + size + "\t" + name;
 	}
 	
 	

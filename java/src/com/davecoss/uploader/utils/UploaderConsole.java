@@ -160,14 +160,18 @@ public class UploaderConsole {
 			String path = "/";
 			if(numArgs > 0)
 				path = tokens[1];
-			curr = new URL(curr, "/ls.php?dir=" + path);
+			curr = new URL(curr, "/ls.php?filename=" + path);
 			response = client.doGet(curr.toString());
 			JSONObject json;
 			try {
 				json = responseJSON(response);
-				console.printf("JSON: %s\n", json.toJSONString());
-				if(json.containsKey(path))
-					printDir((JSONArray)json.get(path), console);
+				WebFile file = WebFile.fromJSON(json);
+				if(file == null)
+					break;
+				if(file.type.equals("f"))
+					console.printf("FILE: %s\n", file.dirListing());
+				else if(json.containsKey("dirents"))
+					printDir((JSONArray)json.get("dirents"), console);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -193,7 +197,7 @@ public class UploaderConsole {
 		while(it.hasNext()) {
 			dirent = (JSONObject)it.next();
 			WebFile file = WebFile.fromJSON(dirent);
-			console.printf("%s\t%s\n", file.humanType(), file.name);
+			console.printf("%s\n", file.dirListing());
 		}
 	}
 }

@@ -50,7 +50,7 @@ function updateDir(thedirname) {
 				dirent.hover(hoverin, hoverout);
 	
 				$("#contents").append(dirent);
-			    });
+			});
 	    }
 	});
 }

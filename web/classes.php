@@ -38,7 +38,7 @@ class WebFile {
 		}
 
 		$parent = clear_uploaddir($this->base_dir);
-		return json_encode(array("name" => $this->orig_filename, "size" => filesize($this->filepath), "parent" => $parent));
+		return json_encode(array("name" => $this->orig_filename, "type" => "f", "size" => filesize($this->filepath), "parent" => $parent));
 	}
 }
 
