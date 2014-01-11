@@ -169,7 +169,7 @@ public class UploaderConsole {
 				if(file == null)
 					break;
 				if(file.type.equals("f"))
-					console.printf("FILE: %s\n", file.dirListing());
+					console.printf("%s\n", file.dirListing());
 				else if(json.containsKey("dirents"))
 					printDir((JSONArray)json.get("dirents"), console);
 			} catch (Exception e) {
