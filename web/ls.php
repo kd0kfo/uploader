@@ -1,6 +1,7 @@
 <?php
 
 require_once("includes.php");
+require_once("classes.php");
 
 # Create path based on uploaddir in site.inc
 # and value of 'dir' in GET or POST (prefer POST)
@@ -14,8 +15,16 @@ if(isset($_POST['dir'])) {
   $subdir = $_POST['dir'];
 }
 
-$dir = resolve_dir($subdir);
+$filename = get_requested_filename();
+// If file, dump file JSON data. Otherwise use directory setup.
+if(strlen($filename) != 0) {
+	$thefile = new WebFile($filename);
+	echo $thefile->get_json();
+	exit(0);
+}
 
+
+$dir = resolve_dir($subdir);
 $dir_arr = array();
 
 if($dh = opendir($dir)) {

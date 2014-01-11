@@ -165,6 +165,7 @@ public class UploaderConsole {
 			JSONObject json;
 			try {
 				json = responseJSON(response);
+				console.printf("JSON: %s\n", json.toJSONString());
 				if(json.containsKey(path))
 					printDir((JSONArray)json.get(path), console);
 			} catch (Exception e) {
