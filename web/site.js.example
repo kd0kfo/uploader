@@ -1,3 +1,7 @@
 function init_fs() {
 	localStorage['contentdir'] = '/content';
 }
+
+function site_footer() {
+	return "<p><a href=\"/\">Return to main page</a></p>";
+}
