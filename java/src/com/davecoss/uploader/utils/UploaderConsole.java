@@ -31,7 +31,7 @@ import com.davecoss.uploader.WebFileException;
 
 public class UploaderConsole {
 
-	public enum Commands {LS, MD5};
+	public enum Commands {LS, MD5, MERGE, DELETE};
 	
 	private static LogHandler Log =  new ConsoleLog("UploaderConsole");
 	private static final JSONParser jsonParser = new JSONParser();
@@ -208,6 +208,24 @@ public class UploaderConsole {
 			}
 			break;
 		}
+		case MERGE: case DELETE:
+			if(command == Commands.MERGE)
+				curr = new URL(curr, "/merge.php?filename=" + path);
+			else
+				curr = new URL(curr, "/delete.php?filename=" + path);
+			response = client.doGet(curr.toString());
+			JSONObject json;
+			try {
+				json = responseJSON(response);
+				if(json.containsKey("status") && ((Long)json.get("status")) != 0)
+				{
+					console.printf("Merge failed: ");
+				}
+				if(json.containsKey("message"))
+					console.printf("%s\n", (String)json.get("message"));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		if(response != null)
