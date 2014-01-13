@@ -131,7 +131,7 @@ public class HTTPSClient {
         HttpClientContext localContext = HttpClientContext.create();
         localContext.setAuthCache(authCache);
 	}
-	
+
 	public CloseableHttpResponse doGet(String url) throws IOException {
 		HttpGet httpget = new HttpGet(url);
 	    

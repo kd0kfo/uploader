@@ -5,11 +5,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
@@ -17,11 +20,13 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.util.EntityUtils;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.davecoss.java.BuildInfo;
 import com.davecoss.java.ConsoleLog;
 import com.davecoss.java.LogHandler;
 import com.davecoss.java.utils.CLIOptionTuple;
@@ -31,13 +36,14 @@ import com.davecoss.uploader.WebFileException;
 
 public class UploaderConsole {
 
-	public enum Commands {LS, MD5, MERGE, DELETE};
+	public enum Commands {DELETE, HELP, LS, MD5, MERGE, SERVERINFO, EXIT};
 	
 	private static LogHandler Log =  new ConsoleLog("UploaderConsole");
 	private static final JSONParser jsonParser = new JSONParser();
 	
 	private final Console console;
 	private URI baseURI = null;
+	private JSONObject serverInfo = null;
 	private HTTPSClient client = null;
 	
 	public UploaderConsole(Console console) {
@@ -53,7 +59,7 @@ public class UploaderConsole {
 	}
 	
 	public static void main(String[] cliArgs) throws Exception {
-		
+
 		final Console console = System.console();
 
 		CLIOptionTuple[] optionTuples = HTTPSClient.optionTuples;
@@ -72,6 +78,8 @@ public class UploaderConsole {
     	
     	String[] args = cmd.getArgs();
     	URI uri = new URI(args[0]);
+	
+		printVersionInfo(uri);
 
     	// Parse args
 		String keystoreFilename = null;
@@ -111,6 +119,7 @@ public class UploaderConsole {
     	UploaderConsole uc = new UploaderConsole(console);
     	uc.setClient(client);
     	uc.setBaseURI(uri);
+	uc.downloadConfig(uri.toString() + "/info.php");
     	
     	String line = null;
     	while((line = console.readLine("> ")) != null) {
@@ -134,6 +143,55 @@ public class UploaderConsole {
 
 	public void setBaseURI(URI baseURI) {
 		this.baseURI = baseURI;
+	}
+
+	public void printHelp(PrintStream output, String[] queries) {
+		if(queries == null)
+		{
+			Commands[] cmds = Commands.values();
+			queries = new String[cmds.length];
+			for(int idx = 0;idx < cmds.length;idx++)
+				queries[idx] = cmds[idx].name();
+		}
+		if(output == null)
+			output = System.out;
+
+		Commands cmd = Commands.HELP;
+		String msg = "";
+		for(String query : queries) {
+			msg = query.toLowerCase() + " -- ";
+			query = query.toUpperCase();
+			try {
+				cmd = Commands.valueOf(query);
+			} catch(IllegalArgumentException iae) {
+				output.println("Known command " + query);
+				continue;
+			}
+			switch(cmd) {
+			case DELETE:
+				msg += "Delete specified file";
+				break;
+			case EXIT:
+				msg += "Leave the console.";
+				break;
+			case HELP:
+				msg += "Get help for a given command";
+				break;
+			case LS:
+				msg += "List file(s) for the provided path";
+				break;
+			case MD5:
+				msg += "Print the MD5 hash for the specified file";
+				break;
+			case MERGE:
+				msg += "Merge all files with the specified prefix";
+				break;
+			case SERVERINFO:
+				msg += "Prints information about the server";
+				break;
+			}
+			output.println(msg);
+		}
 	}
 	
 	public void runCommand(String[] tokens) throws MalformedURLException, IOException {
@@ -160,6 +218,14 @@ public class UploaderConsole {
 			path = tokens[1];
 		CloseableHttpResponse response = null;
 		switch(command) {
+		case HELP:
+		{
+			String[] query = null;
+			if(numArgs > 0)
+				query = Arrays.copyOfRange(tokens, 1, tokens.length);
+			printHelp(System.out, query);
+			break;
+		}
 		case LS:
 		{
 			curr = new URL(curr, "/ls.php?filename=" + path);
@@ -209,6 +275,7 @@ public class UploaderConsole {
 			break;
 		}
 		case MERGE: case DELETE:
+		{
 			if(command == Commands.MERGE)
 				curr = new URL(curr, "/merge.php?filename=" + path);
 			else
@@ -227,18 +294,54 @@ public class UploaderConsole {
 				e.printStackTrace();
 			}
 		}
+		case SERVERINFO:
+		{
+			if(serverInfo == null)
+				break;
+			Iterator it = serverInfo.keySet().iterator();
+			String key = null;
+			while(it.hasNext()) {
+				key = (String)it.next();
+				console.printf("%s: %s\n", key, (String)serverInfo.get(key));
+			}
+			break;
+		}
+		}
 		
 		if(response != null)
 			response.close();
 	}
 
+	public void downloadConfig(String url) throws IOException {
+		CloseableHttpResponse response = client.doGet(url);
+		JSONObject json = null;
+		try {
+			json = responseJSON(response);
+		} catch(org.json.simple.parser.ParseException pe) {
+			throw new IOException("Unable to load server config", pe);
+		} finally {
+			if(response != null)
+				response.close();
+		}
+	
+		this.serverInfo = json;
+		if(!this.serverInfo.containsKey("contentdir"))
+			throw new IOException("Unable to get a valid server configuration.");
+	}
+
 	public static JSONObject responseJSON(HttpResponse response) throws IOException, org.json.simple.parser.ParseException {
 		HttpEntity entity = response.getEntity();
-		InputStream jsoncontent = entity.getContent();
-		
-		return (JSONObject) jsonParser.parse(new InputStreamReader(jsoncontent));
+		JSONObject retval = null;
+		try {
+			InputStream jsoncontent = entity.getContent();
+			retval = (JSONObject) jsonParser.parse(new InputStreamReader(jsoncontent));
+		} finally {
+			if(entity != null)
+				EntityUtils.consume(entity);
+		}
+		return retval;
 	}
-	
+
 	public static void printDir(JSONArray dirents, Console console) throws WebFileException {
 		@SuppressWarnings("rawtypes")
 		Iterator it = dirents.iterator();
@@ -248,5 +351,19 @@ public class UploaderConsole {
 			WebFile file = WebFile.fromJSON(dirent);
 			console.printf("%s\n", file.dirListing());
 		}
+	}
+
+	public static void printVersionInfo(URI uri) {
+		BuildInfo bi = new BuildInfo(HTTPSClient.class);
+		String msg = "Running Uploader Console version " + bi.get_version();
+
+		Properties props = bi.get_build_properties();
+		if(props.containsKey("build_date"))
+			msg += "  Built on " + props.get("build_date");
+
+		System.out.println(msg);
+
+		if(uri != null)
+			System.out.println("Connecting to " + uri.toString());
 	}
 }
