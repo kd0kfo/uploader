@@ -57,6 +57,6 @@ if($dir != $uploaddir) {
   	$parentdir = "/";
   }
 }
-echo json_encode(array("dirents" => $dir_arr, "name" => $subdir, "parent" => $parentdir, "type" => "d"));
+echo json_encode(array("dirents" => $dir_arr, "name" => $subdir, "parent" => clear_uploaddir($parentdir), "type" => "d"));
 
 ?>
