@@ -37,7 +37,7 @@ import com.davecoss.uploader.WebFileException;
 
 public class UploaderConsole {
 
-	public enum Commands {DELETE, GET, HELP, JSON, LS, MD5, MERGE, SERVERINFO, EXIT};
+	public enum Commands {DELETE, GET, HELP, JSON, LS, MD5, MERGE, PUT, SERVERINFO, EXIT};
 	
 	private static LogHandler Log =  new ConsoleLog("UploaderConsole");
 	private static final JSONParser jsonParser = new JSONParser();
@@ -193,6 +193,9 @@ public class UploaderConsole {
 			case MERGE:
 				msg += "Merge all files with the specified prefix";
 				break;
+			case PUT:
+				msg += "Put a file on the server.";
+				break;
 			case SERVERINFO:
 				msg += "Prints information about the server";
 				break;
@@ -225,14 +228,17 @@ public class UploaderConsole {
 			path = tokens[1];
 		CloseableHttpResponse response = null;
 		switch(command) {
-		case GET:
+		case GET: case PUT:
 		{
 			if(numArgs == 0)
 			{
-				System.out.println("Missing file to download");
+				System.out.println("Missing file");
 				break;
 			}
-			downloadFile(path, null);
+			if(command == Commands.GET)
+				downloadFile(path, null);
+			else if(command == Commands.PUT)
+				putFile(new File(path));
 			break;
 		}
 		case HELP:
@@ -344,6 +350,15 @@ public class UploaderConsole {
 		}
 		
 		closeResponse(response);
+	}
+
+	private void putFile(File file) throws IOException {
+		if(!file.exists())
+		{
+			System.out.println("File not found: " + file.getPath());
+			return;
+		}
+		client.postFile(baseURI.toString() + "/upload.php", file);
 	}
 
 	private void downloadFile(String source, File dest) throws IOException {
