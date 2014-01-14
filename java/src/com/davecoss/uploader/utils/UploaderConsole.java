@@ -37,7 +37,7 @@ import com.davecoss.uploader.WebFileException;
 
 public class UploaderConsole {
 
-	public enum Commands {DELETE, GET, HELP, JSON, LS, MD5, MERGE, PUT, SERVERINFO, EXIT};
+	public enum Commands {DELETE, GET, HELP, JSON, LS, MD5, MERGE, MOVE, PUT, SERVERINFO, EXIT};
 	
 	private static LogHandler Log =  new ConsoleLog("UploaderConsole");
 	private static final JSONParser jsonParser = new JSONParser();
@@ -193,6 +193,9 @@ public class UploaderConsole {
 			case MERGE:
 				msg += "Merge all files with the specified prefix";
 				break;
+			case MOVE:
+				msg += "Move file.";
+				break;
 			case PUT:
 				msg += "Put a file on the server.";
 				break;
@@ -333,6 +336,16 @@ public class UploaderConsole {
 				e.printStackTrace();
 			}
 		}
+		case MOVE:
+		{
+			if(numArgs < 2)
+			{
+				System.out.println("move requires a source and destination path");
+				break;
+			}
+			moveFile(tokens[1], tokens[2]);
+			break;
+		}
 		case SERVERINFO:
 		{
 			if(serverInfo == null)
@@ -350,6 +363,37 @@ public class UploaderConsole {
 		}
 		
 		closeResponse(response);
+	}
+
+	private void moveFile(String source, String destination) throws IOException {
+		// Get info for file and verify that it is a file.
+		String sourceURL = baseURI.toString() + "/ls.php?filename=" + source;
+		CloseableHttpResponse response = client.doGet(sourceURL);
+		JSONObject json = null;
+		try {
+			json = responseJSON(response);
+			String type = (String)json.get("type");
+			if(!type.equals("f"))
+			{
+				System.out.println("Can only move files. Cannot move " + source);
+				return;
+			}
+			closeResponse(response);
+			
+			sourceURL = baseURI.toString() + "/move.php?source=" + source + "&destination=" + destination;
+			response = client.doGet(sourceURL);
+			json = responseJSON(response);
+			if(json.containsKey("status") && ((Long)json.get("status")) != 0)
+			{
+				System.out.println("Move failed: " + (String)json.get("message"));
+			}
+			
+		} catch (org.json.simple.parser.ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			closeResponse(response);
+		}
 	}
 
 	private void putFile(File file) throws IOException {
