@@ -335,6 +335,7 @@ public class UploaderConsole {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			break;
 		}
 		case MOVE:
 		{
