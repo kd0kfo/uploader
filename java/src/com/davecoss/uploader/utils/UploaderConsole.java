@@ -2,6 +2,7 @@ package com.davecoss.uploader.utils;
 
 import java.io.Console;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -36,7 +37,7 @@ import com.davecoss.uploader.WebFileException;
 
 public class UploaderConsole {
 
-	public enum Commands {DELETE, HELP, LS, MD5, MERGE, SERVERINFO, EXIT};
+	public enum Commands {DELETE, GET, HELP, JSON, LS, MD5, MERGE, SERVERINFO, EXIT};
 	
 	private static LogHandler Log =  new ConsoleLog("UploaderConsole");
 	private static final JSONParser jsonParser = new JSONParser();
@@ -119,7 +120,7 @@ public class UploaderConsole {
     	UploaderConsole uc = new UploaderConsole(console);
     	uc.setClient(client);
     	uc.setBaseURI(uri);
-	uc.downloadConfig(uri.toString() + "/info.php");
+    	uc.downloadConfig(uri.toString() + "/info.php");
     	
     	String line = null;
     	while((line = console.readLine("> ")) != null) {
@@ -174,8 +175,14 @@ public class UploaderConsole {
 			case EXIT:
 				msg += "Leave the console.";
 				break;
+			case GET:
+				msg += "Download file to current working directory";
+				break;
 			case HELP:
 				msg += "Get help for a given command";
+				break;
+			case JSON:
+				msg += "Get raw json file info for path";
 				break;
 			case LS:
 				msg += "List file(s) for the provided path";
@@ -218,12 +225,38 @@ public class UploaderConsole {
 			path = tokens[1];
 		CloseableHttpResponse response = null;
 		switch(command) {
+		case GET:
+		{
+			if(numArgs == 0)
+			{
+				System.out.println("Missing file to download");
+				break;
+			}
+			downloadFile(path, null);
+			break;
+		}
 		case HELP:
 		{
 			String[] query = null;
 			if(numArgs > 0)
 				query = Arrays.copyOfRange(tokens, 1, tokens.length);
 			printHelp(System.out, query);
+			break;
+		}
+		case JSON:
+		{
+			if(numArgs == 0)
+				break;
+			try {
+				curr = new URL(curr, "/ls.php?filename=" + tokens[1]);
+				response = client.doGet(curr);
+				JSONObject json = responseJSON(response);
+				System.out.println(json.toJSONString());
+			} catch (org.json.simple.parser.ParseException e) {
+				e.printStackTrace();
+			} finally {
+				closeResponse(response);
+			}
 			break;
 		}
 		case LS:
@@ -298,7 +331,7 @@ public class UploaderConsole {
 		{
 			if(serverInfo == null)
 				break;
-			Iterator it = serverInfo.keySet().iterator();
+			Iterator<Object> it = serverInfo.keySet().iterator();
 			String key = null;
 			while(it.hasNext()) {
 				key = (String)it.next();
@@ -306,10 +339,63 @@ public class UploaderConsole {
 			}
 			break;
 		}
+		case EXIT:
+			break;
 		}
 		
-		if(response != null)
-			response.close();
+		closeResponse(response);
+	}
+
+	private void downloadFile(String source, File dest) throws IOException {
+		if(dest == null)
+		{
+			// if Dest is null, simply use the name of the source file.
+			dest = new File(source);
+			dest = new File(dest.getName());
+		}
+		
+		// Get info for file and verify that it is a file.
+		String contentdir = (String)serverInfo.get("contentdir");
+		String sourceURL = baseURI.toString() + "/ls.php?filename=" + source;
+		CloseableHttpResponse response = client.doGet(sourceURL);
+		HttpEntity entity = null;
+		JSONObject json = null;
+		InputStream input = null;
+		FileOutputStream output = null;
+		try {
+			json = responseJSON(response);
+			String type = (String)json.get("type");
+			if(!type.equals("f"))
+			{
+				System.out.println("Cannot download " + source);
+				return;
+			}
+			sourceURL = baseURI.toString() + contentdir + (String)json.get("parent") + "/" + (String)json.get("name");
+			System.out.println("Path: " + sourceURL);
+			closeResponse(response);
+			
+			// Download content.
+			response = client.doGet(sourceURL);
+			entity = response.getEntity();
+			
+			// Write content to file
+			input = entity.getContent();
+			output = new FileOutputStream(dest);
+			byte[] buffer = new byte[4096];
+			int amountRead = -1;
+			while((amountRead = input.read(buffer, 0, 4096)) != -1)
+				output.write(buffer,0, amountRead);
+		} catch(org.json.simple.parser.ParseException pe) {
+			throw new IOException("Error getting file information", pe);
+		} finally {
+			// Cleanup
+			if(entity != null)
+				EntityUtils.consume(entity);
+			closeResponse(response);
+			if(output != null)
+				output.close();
+		}
+		
 	}
 
 	public void downloadConfig(String url) throws IOException {
@@ -320,8 +406,7 @@ public class UploaderConsole {
 		} catch(org.json.simple.parser.ParseException pe) {
 			throw new IOException("Unable to load server config", pe);
 		} finally {
-			if(response != null)
-				response.close();
+			closeResponse(response);
 		}
 	
 		this.serverInfo = json;
@@ -365,5 +450,10 @@ public class UploaderConsole {
 
 		if(uri != null)
 			System.out.println("Connecting to " + uri.toString());
+	}
+	
+	private void closeResponse(CloseableHttpResponse response) throws IOException {
+		if(response != null)
+			response.close();
 	}
 }

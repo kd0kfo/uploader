@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.URI;
+import java.net.URL;
 
 import javax.net.ssl.SSLContext;
 import java.security.KeyManagementException;
@@ -141,6 +142,14 @@ public class HTTPSClient {
         
 	}
 	
+	public CloseableHttpResponse doGet(URL url) throws IOException {
+		return doGet(url.toString());
+	}
+	
+	public CloseableHttpResponse doGet(URI uri) throws IOException {
+		return doGet(uri.toURL());
+	}
+	
 	public CloseableHttpResponse doPost(String url, HttpEntity mpEntity) throws IOException {
 		HttpPost httppost = new HttpPost(url);
 	    
@@ -153,6 +162,13 @@ public class HTTPSClient {
         
 	}
 
+	public CloseableHttpResponse doPost(URL url, HttpEntity mpEntity) throws IOException {
+		return doPost(url.toString(), mpEntity);
+	}
+	
+	public CloseableHttpResponse doPost(URI uri, HttpEntity mpEntity) throws IOException {
+		return doPost(uri.toString(), mpEntity);
+	}
 	
 	public void close() throws IOException {
 		if(httpclient != null)
