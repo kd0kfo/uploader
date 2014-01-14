@@ -25,17 +25,22 @@ function footer() {
 EOF;
 }
 
+
+function get_requested_string($name) {
+	$retval = "";
+	
+	if(isset($_GET[$name])) {
+		$retval = $_GET[$name];
+	}
+	if(isset($_POST[$name])) {
+		$retval = $_POST[$name];
+	}
+	
+	return $retval;
+}
+
 function get_requested_filename() {
-	$filename = "";
-
-	if(isset($_GET['filename'])) {
-		$filename = $_GET['filename'];
-	}
-	if(isset($_POST['filename'])) {
-		$filename = $_POST['filename'];
-	}
-
-	return $filename;
+	return get_requested_string("filename");
 }
 
 function json_error($msg, $status) {

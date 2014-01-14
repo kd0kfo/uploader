@@ -25,9 +25,17 @@ class WebFile {
 	function is_dir() {
 		return is_dir($this->filepath);
 	}
+	
+	function exists() {
+		return file_exists($this->filepath);
+	}
 
 	function get_base_dir() {
 		return $this->base_dir;
+	}
+	
+	function move_to($destination) {
+		return rename($this->filepath, $destination->filepath);
 	}
 
 	function get_json() {
