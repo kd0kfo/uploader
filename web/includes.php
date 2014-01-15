@@ -25,6 +25,14 @@ function footer() {
 EOF;
 }
 
+function json_error($msg, $status) {
+	echo json_encode(array("status" => $status, "message" => $msg));
+}
+
+function json_exit($msg, $status) {
+	json_error($msg, $status);
+	exit($status);
+}
 
 function get_requested_string($name) {
 	$retval = "";
@@ -43,20 +51,10 @@ function get_requested_filename() {
 	return get_requested_string("filename");
 }
 
-function json_error($msg, $status) {
-	echo json_encode(array("status" => $status, "message" => $msg));
-}
-
-function json_exit($msg, $status) {
-	json_error($msg, $status);
-	exit($status);
-}
-
 function resolve_dir($relpath) {
 	global $uploaddir;
 	if(strpos($relpath, '.') !== FALSE) {
-	  echo json_encode(array("error" => ". not allowed in directory!"));
-	  exit(0);
+	  json_exit("'.' is not allowed in directory! Requested $relpath", 1);
 	}
 
 	$dir = $uploaddir;
@@ -70,8 +68,7 @@ function resolve_dir($relpath) {
 	$dir = realpath($dir);
 
 	if(!file_exists($dir)) {
-	  echo json_encode(array("error" => "$relpath does not exist."));
-	  exit(0);
+	  json_exit("$relpath does not exist.", 1);
 	}	
 
 	return $dir;

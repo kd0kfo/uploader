@@ -37,11 +37,12 @@ import com.davecoss.uploader.WebFileException;
 
 public class UploaderConsole {
 
-	public enum Commands {DELETE, GET, HELP, JSON, LS, MD5, MERGE, MOVE, PUT, SERVERINFO, EXIT};
+	public enum Commands {DELETE, GET, HELP, HISTORY, JSON, LS, MD5, MERGE, MKDIR, MOVE, PUT, SERVERINFO, EXIT};
 	
 	private static LogHandler Log =  new ConsoleLog("UploaderConsole");
 	private static final JSONParser jsonParser = new JSONParser();
 	
+	private ArrayList<String> history = new ArrayList<String>();
 	private final Console console;
 	private URI baseURI = null;
 	private JSONObject serverInfo = null;
@@ -124,14 +125,30 @@ public class UploaderConsole {
     	
     	String line = null;
     	while((line = console.readLine("> ")) != null) {
+		line = line.trim();
     		if(line.length() == 0)
     			continue;
-    		if(line.toLowerCase().equals("exit"))
+
+		// If first character is a '!', lookup history based on index that follows '!'
+		if(line.charAt(0) == '!') {
+			String historyId = line.substring(1);
+			line = uc.getPastCommand(historyId);
+			if(line == null) {
+				console.printf("List '%s' is not in the history list\n", historyId);
+				continue;
+			}
+		}
+    		String[] tokens = line.split(" ");
+		String smallCmd = tokens[0].toLowerCase();
+    		if(!smallCmd.equals("history"))
+			uc.history.add(line);
+		if(smallCmd.equals("exit"))
     			break;
-    		String[] tokens = line.trim().split(" ");
-    		for(int idx = 0;idx < tokens.length;idx++)
-    			tokens[idx] = tokens[idx].trim();
-    		uc.runCommand(tokens);
+    		try {
+			uc.runCommand(tokens);
+		} catch(IOException ie) {
+			ie.printStackTrace();
+		}
     	}
     	
     	if(client != null)
@@ -181,6 +198,9 @@ public class UploaderConsole {
 			case HELP:
 				msg += "Get help for a given command";
 				break;
+			case HISTORY:
+				msg += "Print list of commands run";
+				break;
 			case JSON:
 				msg += "Get raw json file info for path";
 				break;
@@ -192,6 +212,9 @@ public class UploaderConsole {
 				break;
 			case MERGE:
 				msg += "Merge all files with the specified prefix";
+				break;
+			case MKDIR:
+				msg += "Make a directory";
 				break;
 			case MOVE:
 				msg += "Move file.";
@@ -222,9 +245,10 @@ public class UploaderConsole {
 			return;
 		}
 		
-		URL curr = getBaseURI().toURL();
-		if(curr == null)
+		URI baseuri = getBaseURI();
+		if(baseuri == null)
 			throw new IOException("Missing Base URI for Communication");
+		String currURL = baseuri.toString();
 		
 		String path = "/";
 		if(numArgs > 0)
@@ -252,13 +276,20 @@ public class UploaderConsole {
 			printHelp(System.out, query);
 			break;
 		}
+		case HISTORY:
+		{
+			
+			for(int counter = 0;counter < history.size();counter++)
+				console.printf("%d: %s\n", counter, history.get(counter));
+			break;
+		}
 		case JSON:
 		{
 			if(numArgs == 0)
 				break;
 			try {
-				curr = new URL(curr, "/ls.php?filename=" + tokens[1]);
-				response = client.doGet(curr);
+				currURL += "/ls.php?filename=" + tokens[1];
+				response = client.doGet(currURL);
 				JSONObject json = responseJSON(response);
 				System.out.println(json.toJSONString());
 			} catch (org.json.simple.parser.ParseException e) {
@@ -270,14 +301,14 @@ public class UploaderConsole {
 		}
 		case LS:
 		{
-			curr = new URL(curr, "/ls.php?filename=" + path);
-			response = client.doGet(curr.toString());
+			currURL += "/ls.php?filename=" + path;
+			response = client.doGet(currURL);
 			JSONObject json;
 			try {
 				json = responseJSON(response);
-				if(json.containsKey("error"))
+				if(json.containsKey("message"))
 				{
-					console.printf("Error: %s\n", (String)json.get("error"));
+					System.out.println((String)json.get("message"));
 					break;
 				}
 				WebFile file = WebFile.fromJSON(json);
@@ -294,14 +325,14 @@ public class UploaderConsole {
 		}
 		case MD5:
 		{
-			curr = new URL(curr, "/md5.php?filename=" + path);
-			response = client.doGet(curr.toString());
+			currURL += "/md5.php?filename=" + path;
+			response = client.doGet(currURL);
 			JSONObject json;
 			try {
 				json = responseJSON(response);
-				if(json.containsKey("error"))
+				if(json.containsKey("status") && ((Long)json.get("status")) != 0)
 				{
-					console.printf("Error: %s\n", (String)json.get("error"));
+					console.printf("Error: %s\n", (String)json.get("message"));
 					break;
 				}
 				if(json.containsKey("md5"))
@@ -319,16 +350,16 @@ public class UploaderConsole {
 		case MERGE: case DELETE:
 		{
 			if(command == Commands.MERGE)
-				curr = new URL(curr, "/merge.php?filename=" + path);
+				currURL += "/merge.php?filename=" + path;
 			else
-				curr = new URL(curr, "/delete.php?filename=" + path);
-			response = client.doGet(curr.toString());
+				currURL += "/delete.php?filename=" + path;
+			response = client.doGet(currURL);
 			JSONObject json;
 			try {
 				json = responseJSON(response);
 				if(json.containsKey("status") && ((Long)json.get("status")) != 0)
 				{
-					console.printf("Merge failed: ");
+					console.printf("%s failed: ", command.name().toLowerCase());
 				}
 				if(json.containsKey("message"))
 					console.printf("%s\n", (String)json.get("message"));
@@ -347,10 +378,21 @@ public class UploaderConsole {
 			moveFile(tokens[1], tokens[2]);
 			break;
 		}
+		case MKDIR:
+		{
+			if(numArgs == 0)
+			{
+				System.out.println("mkdir requires a directory name");
+				break;
+			}
+			mkdir(tokens[1]);
+			break;
+		}
 		case SERVERINFO:
 		{
 			if(serverInfo == null)
 				break;
+			@SuppressWarnings("unchecked")
 			Iterator<Object> it = serverInfo.keySet().iterator();
 			String key = null;
 			while(it.hasNext()) {
@@ -366,6 +408,25 @@ public class UploaderConsole {
 		closeResponse(response);
 	}
 
+	private void mkdir(String newDirectory) throws IOException {
+		String dirURL = baseURI.toString() + "/mkdir.php?dirname=" + newDirectory;
+		CloseableHttpResponse response = client.doGet(dirURL);
+		JSONObject json = null;
+		try {
+			json = responseJSON(response);
+			if(json.containsKey("status") && ((Long)json.get("status")) != 0)
+			{
+				System.out.println("Error making directory: " + newDirectory);
+				System.out.println("Reason: " + (String)json.get("message"));
+				return;
+			}
+		} catch(org.json.simple.parser.ParseException pe) {
+			throw new IOException("Error making directory", pe);
+		} finally {
+			closeResponse(response);
+		}
+	}
+
 	private void moveFile(String source, String destination) throws IOException {
 		// Get info for file and verify that it is a file.
 		String sourceURL = baseURI.toString() + "/ls.php?filename=" + source;
@@ -373,6 +434,11 @@ public class UploaderConsole {
 		JSONObject json = null;
 		try {
 			json = responseJSON(response);
+			if(json.containsKey("status") && ((Long)json.get("status")) != 0)
+			{
+				System.out.println("Move failed: " + (String)json.get("message"));
+				return;
+			}	
 			String type = (String)json.get("type");
 			if(!type.equals("f"))
 			{
@@ -515,5 +581,17 @@ public class UploaderConsole {
 	private void closeResponse(CloseableHttpResponse response) throws IOException {
 		if(response != null)
 			response.close();
+	}
+
+	private String getPastCommand(String idxString) {
+		String retval = null;
+		try {
+			int idx = Integer.parseInt(idxString);
+			if(idx < history.size() && idx >= 0)
+				retval = history.get(idx);
+		} catch(NumberFormatException nfe) {
+			retval = null;
+		}
+		return retval;
 	}
 }

@@ -1,27 +1,15 @@
 <?php 
 
-header("Content-type: application/json");
-
 require_once("includes.php");
+require_once("classes.php");
 
 $filename = get_requested_filename();
 if(strlen($filename) == 0) {
 	json_exit("Missing file name", 1);
 }
 
-$orig_filename = $filename;
-$dir = dirname($filename);
-if($dir == ".") {
-	$dir = "/";
-}
-$dir = resolve_dir($dir);
-$filename = append_path($dir, $orig_filename);
-
-if(!file_exists($filename)) {
-	json_exit("Missing file: $orig_filename", 1);
-}
-
-$retval = unlink($filename);
+$file = new WebFile($filename);
+$retval = $file->unlink();
 if($retval) {
 	json_exit("Deleted $orig_filename", 0);
 } else {

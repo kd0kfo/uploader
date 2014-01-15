@@ -30,6 +30,13 @@ class WebFile {
 		return file_exists($this->filepath);
 	}
 
+	function unlink() {
+		if($this->is_dir()) {
+			return rmdir($this->filepath);
+		}
+		return unlink($this->filepath);
+	}
+
 	function get_base_dir() {
 		return $this->base_dir;
 	}
@@ -67,8 +74,13 @@ class MD5 {
 		if(!file_exists($thefile->filepath)) {
 			json_exit("Missing file: " . $thefile->orig_filename, 1);
 		}
-	
+		if($thefile->is_dir()) {	
+			json_exit("Could not get MD5 sum for " . $thefile->orig_filename . " because it is a directory.", 1);
+		}
 		$md5 = md5_file($thefile->filepath);
+		if(!$md5) {
+			json_exit("Could not get MD5 sum for " . $thefile->orig_filename, 1);
+		}
 		return json_encode(array("md5" => $md5, "filename" => $thefile->orig_filename));
 	}
 }
