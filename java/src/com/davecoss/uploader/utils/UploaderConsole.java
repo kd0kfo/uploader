@@ -37,7 +37,7 @@ import com.davecoss.uploader.WebFileException;
 
 public class UploaderConsole {
 
-	public enum Commands {DELETE, GET, HELP, HISTORY, JSON, LS, MD5, MERGE, MKDIR, MOVE, PUT, SERVERINFO, EXIT};
+	public enum Commands {DELETE, GET, HELP, HISTORY, JSON, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO, EXIT};
 	
 	private static LogHandler Log =  new ConsoleLog("UploaderConsole");
 	private static final JSONParser jsonParser = new JSONParser();
@@ -82,6 +82,7 @@ public class UploaderConsole {
     	URI uri = new URI(args[0]);
 	
 		printVersionInfo(uri);
+		System.out.println("Run \"help\" to get a list of commands.");
 
     	// Parse args
 		String keystoreFilename = null;
@@ -216,7 +217,7 @@ public class UploaderConsole {
 			case MKDIR:
 				msg += "Make a directory";
 				break;
-			case MOVE:
+			case MV:
 				msg += "Move file.";
 				break;
 			case PUT:
@@ -368,11 +369,11 @@ public class UploaderConsole {
 			}
 			break;
 		}
-		case MOVE:
+		case MV:
 		{
 			if(numArgs < 2)
 			{
-				System.out.println("move requires a source and destination path");
+				System.out.println("mv requires a source and destination path");
 				break;
 			}
 			moveFile(tokens[1], tokens[2]);
