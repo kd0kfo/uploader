@@ -9,7 +9,10 @@ if(strlen($filename) == 0) {
 }
 
 $file = new WebFile($filename);
-$retval = $file->unlink();
+$retval = false;
+if($file->exists()) {
+	$retval = $file->unlink();
+}
 if($retval) {
 	json_exit("Deleted $orig_filename", 0);
 } else {
