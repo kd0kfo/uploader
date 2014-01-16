@@ -441,7 +441,7 @@ public class UploaderConsole {
 			}	
 			closeResponse(response);
 			
-			sourceURL = baseURI.toString() + "/move.php?source=" + source + "&destination=" + destination;
+			sourceURL = baseURI.toString() + "/mv.php?source=" + source + "&destination=" + destination;
 			response = client.doGet(sourceURL);
 			json = responseJSON(response);
 			if(json.containsKey("status") && ((Long)json.get("status")) != 0)
