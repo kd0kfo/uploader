@@ -13,7 +13,7 @@ function hoverout() {
 function updateDir(thedirname) {
     window.document.title = thedirname;
     $("#heading").text("Contents of " + thedirname);
-    $.getJSON("ls.php", {"dir": thedirname}, function(data) {
+    $.getJSON("ls.php", {"filename": thedirname}, function(data) {
 	    $("#contents").text("");
 	    if(data['error']) {
 	    	$("#contents").text("ERROR: " + data['error']);
@@ -48,7 +48,6 @@ function updateDir(thedirname) {
 				    dirent.click(function() {window.open(localStorage['contentdir'] + text, thedirname);});
 				}
 				dirent.hover(hoverin, hoverout);
-	
 				$("#contents").append(dirent);
 			});
 	    }

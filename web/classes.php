@@ -30,6 +30,24 @@ class WebFile {
 		return file_exists($this->filepath);
 	}
 
+	function size() {
+		if(!$this->exists()) {
+			return -1;
+		}
+		if($this->is_file()) {
+			return filesize($this->filepath);
+		}
+		$count = 0;
+		$dh = opendir($this->filepath);
+		if($dh) {
+			while(($dirent = readdir($dh)) !== false) {
+				$count++;
+			}	
+			closedir($dh);
+		}
+		return $count - 2;
+	}
+
 	function unlink() {
 		if($this->is_dir()) {
 			return rmdir($this->filepath);
@@ -45,6 +63,13 @@ class WebFile {
 		return rename($this->filepath, $destination->filepath);
 	}
 
+	function type() {
+		if($this->is_dir()) {
+			return "d";
+		}
+		return "f";
+	}
+
 	function get_json() {
 		global $uploaddir;
 		
@@ -53,7 +78,29 @@ class WebFile {
 		}
 
 		$parent = clear_uploaddir($this->base_dir);
-		return json_encode(array("name" => basename($this->orig_filename), "type" => "f", "size" => filesize($this->filepath), "parent" => $parent));
+		if(strlen($parent) == 0) {
+			$parent = "/";
+		}
+		$info = array("name" => basename($this->orig_filename), "type" => $this->type(), "size" => $this->size(), "parent" => $parent);
+		if($this->is_dir()) {
+			$dir_arr = array();
+			$web_dirname = dirname($this->orig_filename);
+			if($web_dirname == ".") {
+				$web_dirname = "";
+			}
+			if($dh = opendir($this->filepath)) {
+			  while(($dirent = readdir($dh)) !== FALSE) {
+			    if($dirent == "." || $dirent == "..") {
+			      continue;
+			    }
+			    $childfile = new WebFile($this->orig_filename . "/" . $dirent);
+			    $dir_arr[] = array("name" => basename($childfile->orig_filename), "type" => $childfile->type(), "size" => $childfile->size());
+			  }
+			  closedir($dh);
+			 }	
+			$info["dirents"] = $dir_arr;
+		}
+		return json_encode($info);
 	}
 }
 

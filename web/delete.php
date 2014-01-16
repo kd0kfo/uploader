@@ -14,9 +14,9 @@ if($file->exists()) {
 	$retval = $file->unlink();
 }
 if($retval) {
-	json_exit("Deleted $orig_filename", 0);
+	json_exit("Deleted " . $file->orig_filename, 0);
 } else {
-	json_exit("Failed to delete $orig_filename", 1);
+	json_exit("Failed to delete " . $file->orig_filename, 1);
 }
 
 ?>

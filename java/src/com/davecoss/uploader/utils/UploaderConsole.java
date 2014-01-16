@@ -37,7 +37,7 @@ import com.davecoss.uploader.WebFileException;
 
 public class UploaderConsole {
 
-	public enum Commands {DELETE, GET, HELP, HISTORY, JSON, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO, EXIT};
+	public enum Commands {RM, GET, HELP, HISTORY, JSON, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO, EXIT};
 	
 	private static LogHandler Log =  new ConsoleLog("UploaderConsole");
 	private static final JSONParser jsonParser = new JSONParser();
@@ -187,7 +187,7 @@ public class UploaderConsole {
 				continue;
 			}
 			switch(cmd) {
-			case DELETE:
+			case RM:
 				msg += "Delete specified file";
 				break;
 			case EXIT:
@@ -315,9 +315,8 @@ public class UploaderConsole {
 				WebFile file = WebFile.fromJSON(json);
 				if(file == null)
 					break;
-				if(file.type.equals("f"))
-					console.printf("%s\n", file.dirListing());
-				else if(json.containsKey("dirents"))
+				console.printf("%s\n", file.dirListing());
+				if(json.containsKey("dirents"))
 					printDir((JSONArray)json.get("dirents"), console);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -348,7 +347,7 @@ public class UploaderConsole {
 			}
 			break;
 		}
-		case MERGE: case DELETE:
+		case MERGE: case RM:
 		{
 			if(command == Commands.MERGE)
 				currURL += "/merge.php?filename=" + path;
@@ -440,12 +439,6 @@ public class UploaderConsole {
 				System.out.println("Move failed: " + (String)json.get("message"));
 				return;
 			}	
-			String type = (String)json.get("type");
-			if(!type.equals("f"))
-			{
-				System.out.println("Can only move files. Cannot move " + source);
-				return;
-			}
 			closeResponse(response);
 			
 			sourceURL = baseURI.toString() + "/move.php?source=" + source + "&destination=" + destination;
