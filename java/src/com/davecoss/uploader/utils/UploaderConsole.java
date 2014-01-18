@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,7 +28,7 @@ import org.json.simple.parser.JSONParser;
 
 import com.davecoss.java.BuildInfo;
 import com.davecoss.java.ConsoleLog;
-import com.davecoss.java.LogHandler.Level;
+import com.davecoss.java.LogHandler;
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CLIOptionTuple;
 import com.davecoss.uploader.HTTPSClient;
@@ -38,9 +37,9 @@ import com.davecoss.uploader.WebFileException;
 
 public class UploaderConsole {
 
-	public enum Commands {RM, GET, HELP, HISTORY, JSON, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO, EXIT};
+	public enum Commands {DEBUG, RM, GET, HELP, HISTORY, JSON, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO, EXIT};
 	
-	private static Logger Log = ConsoleLog.getInstance("UploaderConsole");
+	private static Logger L = ConsoleLog.getInstance("UploaderConsole");
 	private static final JSONParser jsonParser = new JSONParser();
 	
 	private ArrayList<String> history = new ArrayList<String>();
@@ -114,7 +113,9 @@ public class UploaderConsole {
 			credsProvider = HTTPSClient.createCredentialsProvider(console, uri);
 		}
 		if(cmd.hasOption("d")) {
-			Log.setLevel(Level.DEBUG);
+			if(cmd.hasOption("d")) {
+				L.setLevel(Logger.parseLevel(cmd.getOptionValue("d").toUpperCase()));
+			}
 		}
 		if(cmd.hasOption("f")) {
 			for(String filename : cmd.getOptionValues("f")) {
@@ -209,6 +210,16 @@ public class UploaderConsole {
 				continue;
 			}
 			switch(cmd) {
+			case DEBUG:
+			{
+				msg += "Set debug level. Options are ";
+				LogHandler.Level[] levels = LogHandler.Level.values();
+				int idx = 0;
+				for(;idx<levels.length - 1;idx++)
+					msg += levels[idx].name().toLowerCase() + ", ";
+				msg += levels[idx].name().toLowerCase();
+				break;
+			}	
 			case RM:
 				msg += "Delete specified file";
 				break;
@@ -278,6 +289,22 @@ public class UploaderConsole {
 			path = tokens[1];
 		CloseableHttpResponse response = null;
 		switch(command) {
+		case DEBUG:
+		{
+			if(numArgs == 0)
+			{
+				console.printf("Missing argument for debug\n");
+				break;
+			}
+			try {
+				LogHandler.Level level = Logger.parseLevel(tokens[1].toUpperCase());
+				L.setLevel(level);
+			} catch(Exception e) {
+				console.printf("Invalid debug level name: %s\n", tokens[1]);
+				L.debug("Invalid debug level", e);
+			}
+			break;
+		}
 		case GET: case PUT:
 		{
 			if(numArgs == 0)

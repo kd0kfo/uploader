@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import com.davecoss.java.ConsoleLog;
-import com.davecoss.java.LogHandler;
+import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CLIOptionTuple;
 
 import org.apache.commons.cli.CommandLine;
@@ -53,11 +53,11 @@ import org.apache.http.util.EntityUtils;
 
 public class HTTPSClient {
 	
-	private static LogHandler Log = ConsoleLog.getInstance("HTTPSClient");
+	private static Logger L = Logger.getInstance();
 
 	public static final CLIOptionTuple[] optionTuples = {new CLIOptionTuple("basic", false, "Use basic authentication. (Default: off"),
 		new CLIOptionTuple("console", true, "Write to the console and upload the file name provided as an argument to the -console flag."),
-		new CLIOptionTuple("d", false, "Set Debug Level (Default:  ERROR)"),
+		new CLIOptionTuple("d", true, "Set Debug Level (Default:  ERROR)"),
 		new CLIOptionTuple("f", true, "POST File"),
 		new CLIOptionTuple("ssl", true, "Specify Keystore")};
 
@@ -136,7 +136,7 @@ public class HTTPSClient {
 	public CloseableHttpResponse doGet(String url) throws IOException {
 		HttpGet httpget = new HttpGet(url);
 	    
-        System.out.println("executing request " + httpget.getRequestLine());
+        L.info("executing request " + httpget.getRequestLine());
 
         return httpclient.execute(httpget);
         
@@ -209,12 +209,12 @@ public class HTTPSClient {
 	}
 	
 	public CloseableHttpResponse postFile(String url, File thefile) throws IOException {
-		Log.error("Posting " + thefile.getName() + " to " + url);
+		L.error("Posting " + thefile.getName() + " to " + url);
 		MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
 		FileBody fb = new FileBody(thefile);
 		entityBuilder.addPart("file", fb);
 		HttpEntity mpEntity = entityBuilder.build();
-		Log.debug("Attaching File " + thefile.getName());
+		L.debug("Attaching File " + thefile.getName());
 
     	return this.doPost(url, mpEntity);
     	
@@ -260,7 +260,7 @@ public class HTTPSClient {
 	}
 	
     public final static void main(String[] cli_args) throws Exception {
-    	
+    	L = ConsoleLog.getInstance("HTTPSClient");
     	Console console = System.console();
     	CommandLine cmd = null;
 		
@@ -285,7 +285,7 @@ public class HTTPSClient {
 			credsProvider = createCredentialsProvider(console, uri);
 		}
 		if(cmd.hasOption("d")) {
-			Log.setLevel(LogHandler.Level.DEBUG);
+			L.setLevel(Logger.parseLevel(cmd.getOptionValue("d").toUpperCase()));
 		}
 		if(cmd.hasOption("f")) {
 			for(String filename : cmd.getOptionValues("f")) {
