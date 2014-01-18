@@ -60,16 +60,37 @@ public class UploaderConsole {
 		this.client = client;
 	}
 	
+	public static void printUsage(PrintStream out) {
+		out.println("Usage: UploaderConsole [-basic] [-d LEVEL] [-ssl KEYSTORE] <URL>");
+		out.println("Options:");
+		out.println("-basic\t\tUses basic authentication.");
+		out.println("-d LEVEL\tSets the debug level. (Default: ERROR)");
+		out.println("-ssl KEYSTORE\tUses KEYSTORE to validate SSL certficates");
+	}
+	
 	public static void main(String[] cliArgs) throws Exception {
 
 		final Console console = System.console();
+		
+		if(cliArgs.length == 0) {
+			System.out.println("For help and usage information, use the -help flag.");
+			System.exit(1);
+		}
 
-		CLIOptionTuple[] optionTuples = HTTPSClient.optionTuples;
+		CLIOptionTuple[] optionTuples = Arrays.copyOf(HTTPSClient.optionTuples,
+				HTTPSClient.optionTuples.length + 1);
+		optionTuples[optionTuples.length - 1] = new CLIOptionTuple("help", false, "Print help and usage information");
+		
 		
 		CommandLine cmd = null;
 		
     	try {
     		cmd = HTTPSClient.parseCommandLine(cliArgs, optionTuples);
+    		if(cmd.hasOption("help"))
+    		{
+    			printUsage(System.out);
+    			System.exit(0);
+    		}
     	}
 		catch(ParseException pe)
 		{
