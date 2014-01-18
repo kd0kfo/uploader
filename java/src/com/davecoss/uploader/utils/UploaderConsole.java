@@ -29,7 +29,8 @@ import org.json.simple.parser.JSONParser;
 
 import com.davecoss.java.BuildInfo;
 import com.davecoss.java.ConsoleLog;
-import com.davecoss.java.LogHandler;
+import com.davecoss.java.LogHandler.Level;
+import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CLIOptionTuple;
 import com.davecoss.uploader.HTTPSClient;
 import com.davecoss.uploader.WebFile;
@@ -39,7 +40,7 @@ public class UploaderConsole {
 
 	public enum Commands {RM, GET, HELP, HISTORY, JSON, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO, EXIT};
 	
-	private static LogHandler Log =  new ConsoleLog("UploaderConsole");
+	private static Logger Log = ConsoleLog.getInstance("UploaderConsole");
 	private static final JSONParser jsonParser = new JSONParser();
 	
 	private ArrayList<String> history = new ArrayList<String>();
@@ -113,7 +114,7 @@ public class UploaderConsole {
 			credsProvider = HTTPSClient.createCredentialsProvider(console, uri);
 		}
 		if(cmd.hasOption("d")) {
-			Log.setLevel(LogHandler.Level.DEBUG);
+			Log.setLevel(Level.DEBUG);
 		}
 		if(cmd.hasOption("f")) {
 			for(String filename : cmd.getOptionValues("f")) {

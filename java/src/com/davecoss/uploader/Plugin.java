@@ -17,7 +17,7 @@ import com.davecoss.java.plugin.PluginInitException;
 import com.davecoss.java.plugin.StoragePlugin;
 
 public class Plugin implements StoragePlugin {
-
+	
 	private HTTPSClient client;
 	
 	@Override

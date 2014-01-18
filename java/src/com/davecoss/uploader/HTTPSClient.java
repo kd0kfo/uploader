@@ -53,7 +53,7 @@ import org.apache.http.util.EntityUtils;
 
 public class HTTPSClient {
 	
-	private static LogHandler Log = new ConsoleLog("HTTPSClient");
+	private static LogHandler Log = ConsoleLog.getInstance("HTTPSClient");
 
 	public static final CLIOptionTuple[] optionTuples = {new CLIOptionTuple("basic", false, "Use basic authentication. (Default: off"),
 		new CLIOptionTuple("console", true, "Write to the console and upload the file name provided as an argument to the -console flag."),
