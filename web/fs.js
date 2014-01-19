@@ -15,8 +15,8 @@ function updateDir(thedirname) {
     $("#heading").text("Contents of " + thedirname);
     $.getJSON("ls.php", {"filename": thedirname}, function(data) {
 	    $("#contents").text("");
-	    if(data['error']) {
-	    	$("#contents").text("ERROR: " + data['error']);
+	    if(data['status'] && data['status'] != 0) {
+	    	$("#contents").text("ERROR: " + data['message']);
 	    }
 	    else if(data['type'] == "f") {
 	    	$("#contents").text("File: " + data['name']);

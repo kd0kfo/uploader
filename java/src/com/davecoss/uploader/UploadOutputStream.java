@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+
+import org.apache.http.client.methods.CloseableHttpResponse;
+
 import com.davecoss.java.Logger;
 
 public class UploadOutputStream extends OutputStream {
@@ -16,7 +19,7 @@ public class UploadOutputStream extends OutputStream {
 	private File tempfile;
 	private FileOutputStream stream;
 	private HTTPSClient client;
-	private int buffersize = 1024;
+	private int bufferSize = 1024;
 	private int bytesWritten = 0;
 	
 	public UploadOutputStream(HTTPSClient client, String destinationURL) throws IOException {
@@ -39,12 +42,12 @@ public class UploadOutputStream extends OutputStream {
 	}
 	
 	public int setBufferSize(int newsize) {
-		buffersize = newsize;
-		return buffersize;
+		bufferSize = newsize;
+		return bufferSize;
 	}
 	
 	public int getBufferSize() {
-		return buffersize;
+		return bufferSize;
 	}
 	
 	
@@ -66,26 +69,30 @@ public class UploadOutputStream extends OutputStream {
 		stream.close();
 		
 		// Move file to what it should be when uploaded
-		File newfile = new File(tempfile.getParentFile(), baseFilename + "." + String.valueOf(currIndex));
+		File newfile = new File(tempfile.getParentFile(), String.format("%s.%d", baseFilename, currIndex++));
 		L.info(String.format("Renaming %s to %s", tempfile.getAbsolutePath(), newfile.getAbsolutePath()));
 		if(!tempfile.renameTo(newfile)) {
+			L.debug("Rename failed for " + newfile.getName());
+			stream = null;
 			throw new IOException("Could not rename " + tempfile.getName() + " to " + newfile.getName());
 		}
 		
 		// Upload it
-		client.postFile(this.destinationURL, newfile);
-		
+		CloseableHttpResponse response = client.postFile(this.destinationURL, newfile);
+		HTTPSClient.closeResponse(response);
 		// Cleanup
 		newfile.delete();
 		L.info("Cleaned up " + newfile.getName());
-		currIndex++;
 		bytesWritten = 0;
 		stream = null;
 	}
 	
 	@Override
 	public void close() throws IOException {
+		// See if flush is in order.
 		flush();
+		
+		// Tie up any loose ends
 		stream = null;
 	}
 	
@@ -93,7 +100,7 @@ public class UploadOutputStream extends OutputStream {
 	public void write(int b) throws IOException {
 		if(stream == null)
 			stream = new FileOutputStream(tempfile);
-		if(bytesWritten == buffersize)
+		if(bytesWritten == bufferSize)
 			flush();
 		stream.write(b);
 	}
@@ -104,25 +111,31 @@ public class UploadOutputStream extends OutputStream {
 		int currWriteAmount = 0;
 		int totalAmountWritten = 0;
 		
-		if(stream == null)
-			stream = new FileOutputStream(tempfile);
 		while(amountToWrite > 0) {
-			if(bytesWritten == buffersize)
+			// If buffer's full, flush.
+			if(bytesWritten == bufferSize)
 				flush();
-			if(amountToWrite == buffersize)
-				currWriteAmount = buffersize - 1;
+			
+			// Figure out how much to write on this pass.
+			if(amountToWrite  > bufferSize - bytesWritten)
+				currWriteAmount = bufferSize - bytesWritten;
 			else
-				currWriteAmount = (amountToWrite % buffersize);
-			if(bytesWritten + currWriteAmount > buffersize)
-				currWriteAmount = buffersize - bytesWritten;
+				currWriteAmount = amountToWrite;
+			
+			// If stream is closed, open a new one.
+			if(stream == null)
+				stream = new FileOutputStream(tempfile);
+			// Do write.
 			stream.write(buf, offset + totalAmountWritten, currWriteAmount);
 			
+			// Update counters.
 			totalAmountWritten += currWriteAmount;
 			bytesWritten += currWriteAmount;
 			amountToWrite -= currWriteAmount;
+			L.debug(String.format("Wrote %d bytes %d remaining. (Offset: %d, Length: %d)", currWriteAmount, amountToWrite, offset + totalAmountWritten, len));
 		}
 		
-		if(bytesWritten == buffersize) {
+		if(bytesWritten == bufferSize) {
 			flush();
 		}
 	}

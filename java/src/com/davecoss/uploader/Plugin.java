@@ -62,12 +62,16 @@ public class Plugin implements StoragePlugin {
 		
 		try {
 			client.startClient(HTTPSClient.createCredentialsProvider(console, uri), uri);
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			throw new PluginInitException("Error loading credentials", ioe);
+			webfs = new WebFS(client);
+			webfs.setClient(client);
+			webfs.setBaseURI(uri);
+			webfs.downloadConfig();
+		} catch (Exception e) {
+			throw new PluginInitException("Error starting WebFS", e);
 		}
+		System.out.println("Version: " + webfs.getServerInfo().get("version"));
 		
-		webfs.setClient(client);
+		
 		baseURI = webfs.getBaseURI().toString();
 		if(baseURI.charAt(baseURI.length() - 1) == '/')
 			baseURI = baseURI.substring(0, baseURI.length() - 1);
@@ -175,6 +179,9 @@ public class Plugin implements StoragePlugin {
 		try {
 			WebFile file = webfs.ls(uri.getPath());
 			return file != null;
+		} catch(WebFileException wfe) {
+			L.info("Caught WebFileException and assuming it means there is now file. Message: " + wfe.getMessage());
+			return false;
 		} catch (Exception e) {
 			throw new PluginException("Error getting file information for " + uri.toString(), e);
 		}
@@ -230,7 +237,8 @@ public class Plugin implements StoragePlugin {
 	public OutputStream getOutputStream(URI uri) throws PluginException {
 		L.debug("Called getOutputStream");
 		try {
-			return new UploadOutputStream(uri.getPath(), webfs.getClient(), baseURI + "/upload.php");
+			File filepath = new File(uri.getPath());
+			return new UploadOutputStream(filepath.getName(), webfs.getClient(), baseURI + "/upload.php?fanout=1");
 		} catch (IOException e) {
 			throw new PluginException("Error opening Upload Stream", e);
 		}

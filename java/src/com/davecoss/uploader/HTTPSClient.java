@@ -178,6 +178,11 @@ public class HTTPSClient {
 		return doPost(uri.toString(), mpEntity);
 	}
 	
+	public static void closeResponse(CloseableHttpResponse response) throws IOException {
+		if(response != null)
+			response.close();
+	}
+
 	public void close() throws IOException {
 		if(httpclient != null)
 			httpclient.close();

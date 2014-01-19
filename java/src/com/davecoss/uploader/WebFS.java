@@ -65,7 +65,7 @@ public class WebFS {
 		} catch(org.json.simple.parser.ParseException pe) {
 			throw new IOException("Unable to load server config", pe);
 		} finally {
-			closeResponse(response);
+			HTTPSClient.closeResponse(response);
 		}
 	
 		this.serverInfo = json;
@@ -84,11 +84,6 @@ public class WebFS {
 				EntityUtils.consume(entity);
 		}
 		return retval;
-	}
-
-	private void closeResponse(CloseableHttpResponse response) throws IOException {
-		if(response != null)
-			response.close();
 	}
 
 	public void downloadFile(String source, File dest) throws IOException {
@@ -117,7 +112,7 @@ public class WebFS {
 			}
 			sourceURL = baseURI.toString() + contentdir + (String)json.get("parent") + "/" + (String)json.get("name");
 			System.out.println("Path: " + sourceURL);
-			closeResponse(response);
+			HTTPSClient.closeResponse(response);
 			
 			// Download content.
 			response = client.doGet(sourceURL);
@@ -136,7 +131,7 @@ public class WebFS {
 			// Cleanup
 			if(entity != null)
 				EntityUtils.consume(entity);
-			closeResponse(response);
+			HTTPSClient.closeResponse(response);
 			if(output != null)
 				output.close();
 		}
@@ -158,7 +153,7 @@ public class WebFS {
 		try {
 			response = client.postFile(baseURI.toString() + "/upload.php", file);
 		} finally {
-			closeResponse(response);
+			HTTPSClient.closeResponse(response);
 		}
 		return json;
 	}
@@ -191,7 +186,7 @@ public class WebFS {
 		} catch (org.json.simple.parser.ParseException e) {
 			e.printStackTrace();
 		} finally {
-			closeResponse(response);
+			HTTPSClient.closeResponse(response);
 		}
 		return json;
 	}
