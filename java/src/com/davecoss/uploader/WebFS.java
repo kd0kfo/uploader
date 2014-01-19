@@ -52,8 +52,13 @@ public class WebFS {
 		this.serverInfo = serverInfo;
 	}
 
-	public void downloadConfig(String url) throws IOException {
-		CloseableHttpResponse response = client.doGet(url);
+	public void close() throws IOException {
+		if(client != null)
+			client.close();
+	}
+	
+	public void downloadConfig() throws IOException {
+		CloseableHttpResponse response = client.doGet(baseURI.toString() + "/info.php");
 		JSONObject json = null;
 		try {
 			json = responseJSON(response);
@@ -191,10 +196,11 @@ public class WebFS {
 		return json;
 	}
 
-	public JSONObject ls(String path) throws IOException {
+	public WebFile ls(String path) throws IOException, WebFileException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("filename", path);
-		return jsonGet("ls.php", args);
+		JSONObject json = jsonGet("ls.php", args);
+		return WebFile.fromJSON(json);
 	}
 
 	public JSONObject md5(String path) throws IOException {

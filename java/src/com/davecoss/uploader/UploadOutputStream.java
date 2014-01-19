@@ -1,13 +1,15 @@
 package com.davecoss.uploader;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import com.davecoss.java.Logger;
 
 public class UploadOutputStream extends OutputStream {
 
+	static Logger L = Logger.getInstance();
+	
 	private int currIndex = 0;
 	private String baseFilename;
 	private String destinationURL;
@@ -31,6 +33,9 @@ public class UploadOutputStream extends OutputStream {
 		stream = new FileOutputStream(tempfile);
 		this.client = client;
 		this.destinationURL = destinationURL;
+		
+		while(this.baseFilename.charAt(0) == '/')
+			this.baseFilename = this.baseFilename.substring(1);
 	}
 	
 	public int setBufferSize(int newsize) {
@@ -45,6 +50,12 @@ public class UploadOutputStream extends OutputStream {
 	
 	@Override 
 	public void flush() throws IOException {
+		if(stream == null)
+		{
+			L.info("No stream to flush");
+			return;
+		}
+		L.info("Flushing Contents of UploadOutputStream");
 		// Null check
 		if(client == null)
 			throw new IOException("Client not connected.");
@@ -55,7 +66,8 @@ public class UploadOutputStream extends OutputStream {
 		stream.close();
 		
 		// Move file to what it should be when uploaded
-		File newfile = new File(baseFilename + "." + String.valueOf(currIndex));
+		File newfile = new File(tempfile.getParentFile(), baseFilename + "." + String.valueOf(currIndex));
+		L.info(String.format("Renaming %s to %s", tempfile.getAbsolutePath(), newfile.getAbsolutePath()));
 		if(!tempfile.renameTo(newfile)) {
 			throw new IOException("Could not rename " + tempfile.getName() + " to " + newfile.getName());
 		}
@@ -65,13 +77,16 @@ public class UploadOutputStream extends OutputStream {
 		
 		// Cleanup
 		newfile.delete();
+		L.info("Cleaned up " + newfile.getName());
 		currIndex++;
 		bytesWritten = 0;
+		stream = null;
 	}
 	
 	@Override
 	public void close() throws IOException {
 		flush();
+		stream = null;
 	}
 	
 	@Override

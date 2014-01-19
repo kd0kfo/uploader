@@ -1,5 +1,6 @@
 package com.davecoss.uploader;
 
+import java.awt.FlowLayout;
 import java.io.BufferedReader;
 import java.io.Console;
 import java.io.File;
@@ -12,6 +13,13 @@ import java.net.URI;
 import java.net.URL;
 
 import javax.net.ssl.SSLContext;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -232,6 +240,33 @@ public class HTTPSClient {
 	public static CredentialsProvider createCredentialsProvider(Console console, URI uri) throws IOException {
 		String username = console.readLine("Username: ");
 		char[] password = console.readPassword("Password: ");
+		
+		CredentialsProvider retval = null;
+		try {
+			retval = createCredentialsProvider(username, password, uri);
+		} finally {
+			for(int idx = 0;idx < password.length;idx++)
+	        	password[idx] = 0;
+		}
+		return retval;
+		
+	}
+	
+	public static CredentialsProvider createCredentialsProvider(JDialog parent, URI uri) throws IOException {
+		JTextField unameField = new JTextField(10);
+		JLabel uLabel = new JLabel("Username:");
+		JPasswordField jPassphrase = new JPasswordField(10);
+		JLabel label = new JLabel("Passphrase: ");
+		label.setLabelFor(jPassphrase);
+		JPanel textPane = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		textPane.add(uLabel);
+		textPane.add(unameField);
+        textPane.add(label);
+        textPane.add(jPassphrase);
+		JOptionPane.showMessageDialog(parent, textPane);
+		
+		char[] password = jPassphrase.getPassword();
+		String username = unameField.getText();
 		
 		CredentialsProvider retval = null;
 		try {

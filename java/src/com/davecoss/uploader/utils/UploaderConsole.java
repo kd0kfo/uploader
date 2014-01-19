@@ -28,7 +28,7 @@ import com.davecoss.uploader.WebFileException;
 
 public class UploaderConsole {
 
-	public enum Commands {DEBUG, RM, GET, HELP, HISTORY, JSON, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO, EXIT};
+	public enum Commands {DEBUG, RM, GET, HELP, HISTORY, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO, EXIT};
 	
 	private static Logger L = ConsoleLog.getInstance("UploaderConsole");
 	
@@ -119,35 +119,39 @@ public class UploaderConsole {
     	
     	uc.webfs = new WebFS(client);
     	uc.webfs.setBaseURI(uri);
-    	uc.webfs.downloadConfig(uri.toString() + "/info.php");
+    	uc.webfs.downloadConfig();
     	
     	String line = null;
-    	while((line = console.readLine("> ")) != null) {
-		line = line.trim();
-    		if(line.length() == 0)
-    			continue;
-
-		// If first character is a '!', lookup history based on index that follows '!'
-		if(line.charAt(0) == '!') {
-			String historyId = line.substring(1);
-			line = uc.getPastCommand(historyId);
-			if(line == null) {
-				console.printf("List '%s' is not in the history list\n", historyId);
+		while ((line = console.readLine("> ")) != null) {
+			line = line.trim();
+			if (line.length() == 0)
 				continue;
+
+			// If first character is a '!', lookup history based on index that
+			// follows '!'
+			if (line.charAt(0) == '!') {
+				String historyId = line.substring(1);
+				line = uc.getPastCommand(historyId);
+				if (line == null) {
+					console.printf("List '%s' is not in the history list\n",
+							historyId);
+					continue;
+				}
 			}
-		}
-    		String[] tokens = line.split(" ");
-		String smallCmd = tokens[0].toLowerCase();
-    		if(!smallCmd.equals("history"))
-			uc.history.add(line);
-		if(smallCmd.equals("exit"))
-    			break;
-    		try {
-			uc.runCommand(tokens);
-		} catch(IOException ie) {
-			ie.printStackTrace();
-		}
-    	}
+			String[] tokens = line.split(" ");
+			String smallCmd = tokens[0].toLowerCase();
+			if (!smallCmd.equals("history"))
+				uc.history.add(line);
+			if (smallCmd.equals("exit"))
+				break;
+			try {
+				uc.runCommand(tokens);
+			} catch (Exception e) {
+				String msg = "Error running command: " + e.getMessage();
+				System.out.println(msg);
+				L.debug(msg, e);
+			}
+		}// end command while loop
     	
     	if(client != null)
     		client.close();
@@ -201,9 +205,6 @@ public class UploaderConsole {
 			case HISTORY:
 				msg += "Print list of commands run";
 				break;
-			case JSON:
-				msg += "Get raw json file info for path";
-				break;
 			case LS:
 				msg += "List file(s) for the provided path";
 				break;
@@ -230,7 +231,7 @@ public class UploaderConsole {
 		}
 	}
 	
-	public void runCommand(String[] tokens) throws MalformedURLException, IOException {
+	public void runCommand(String[] tokens) throws MalformedURLException, IOException, WebFileException {
 		if(tokens == null || tokens.length == 0)
 			return;
 		
@@ -293,36 +294,21 @@ public class UploaderConsole {
 				System.out.printf("%d: %s\n", counter, history.get(counter));
 			break;
 		}
-		case JSON:
-		{
-			if(numArgs == 0)
-				break;
-			JSONObject json = webfs.ls(path);
-			if(json == null)
-				System.out.println("[]");
-			else
-				System.out.println(json.toJSONString());
-			break;
-		}
 		case LS:
 		{
 			if(numArgs == 0)
 				path = "/";
-			JSONObject json = webfs.ls(path);
-			try {
-				if(json.containsKey("message"))
-				{
-					System.out.println((String)json.get("message"));
+			WebFile webfile = webfs.ls(path);
+			if(webfile == null)
 					break;
-				}
-				WebFile file = WebFile.fromJSON(json);
-				if(file == null)
+			System.out.println(webfile.dirListing());
+			if(webfile.isDirectory()) {
+				WebFile[] dirents = webfile.listFiles();
+				if(dirents == null)
 					break;
-				System.out.printf("%s\n", file.dirListing());
-				if(json.containsKey("dirents"))
-					printDir((JSONArray)json.get("dirents"));
-			} catch (Exception e) {
-				e.printStackTrace();
+				int size = dirents.length;
+				for(int idx = 0;idx<size;idx++)
+					System.out.println(dirents[idx].dirListing());
 			}
 			break;
 		}
