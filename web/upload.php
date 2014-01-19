@@ -47,7 +47,8 @@ if(isset($_FILES) && count($_FILES) != 0) {
 		}
 		$newpath = $uploaddir . "/";
 		$filename = basename($file["name"]);
-		if(isset($_POST['fanout'])) {
+		$fanout = get_requested_string("fanout");
+		if(strlen($fanout) != 0) {
 			$subdir = substr($filename, 0, 2);
 			$newpath = $newpath . $subdir . "/";
 			if(!file_exists($newpath)) {
