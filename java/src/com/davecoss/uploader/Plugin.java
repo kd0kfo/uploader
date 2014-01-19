@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collection;
 
 import javax.swing.JDialog;
 
@@ -19,6 +18,7 @@ import com.davecoss.java.plugin.StoragePlugin;
 public class Plugin implements StoragePlugin {
 	
 	private HTTPSClient client;
+	private File jarfile;
 	
 	@Override
 	public void init(Console console) throws PluginInitException {
@@ -76,18 +76,6 @@ public class Plugin implements StoragePlugin {
 	}
 
 	@Override
-	public Collection<String> list_functions() throws PluginException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean has_function(String function_name) throws PluginException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
 	public void destroy() throws PluginException {
 		if(client != null)
 		{
@@ -103,14 +91,13 @@ public class Plugin implements StoragePlugin {
 
 	@Override
 	public File get_jarfile() {
-		// TODO Auto-generated method stub
-		return null;
+		return jarfile;
 	}
 
 	@Override
 	public File set_jarfile(File file) {
-		// TODO Auto-generated method stub
-		return null;
+		jarfile = file;
+		return jarfile;
 	}
 
 	@Override
@@ -120,7 +107,6 @@ public class Plugin implements StoragePlugin {
 
 	@Override
 	public URI mkdir(String path) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
