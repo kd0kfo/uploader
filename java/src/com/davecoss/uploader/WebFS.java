@@ -138,12 +138,9 @@ public class WebFS {
 		
 	}
 
-	public JSONObject putFile(File file) throws IOException {
+	public WebResponse putFile(File file) throws IOException {
 		if(!file.exists())
-		{
-			System.out.println("File not found: " + file.getPath());
-			return null;
-		}
+			return new WebResponse(1, "File not found: " + file.getPath());
 		
 		JSONObject json = null;
 		HashMap<String, Object> values = new HashMap<String, Object>();
@@ -155,7 +152,7 @@ public class WebFS {
 		} finally {
 			HTTPSClient.closeResponse(response);
 		}
-		return json;
+		return WebResponse.fromJSON(json);
 	}
 
 	
@@ -194,39 +191,47 @@ public class WebFS {
 	public WebFile ls(String path) throws IOException, WebFileException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("filename", path);
-		JSONObject json = jsonGet("ls.php", args);
-		return WebFile.fromJSON(json);
+		return WebFile.fromJSON(jsonGet("ls.php", args));
 	}
 
-	public JSONObject md5(String path) throws IOException {
+	/**
+	 * Returns either the MD5 has as string or null if it could not be found.
+	 * @param path
+	 * @return
+	 * @throws IOException
+	 */
+	public String md5(String path) throws IOException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("filename", path);
-		return jsonGet("md5.php", args);
+		JSONObject json = jsonGet("md5.php", args);
+		if(json == null || !json.containsKey("md5"))
+			return null;
+		return (String)json.get("md5");
 	}
 
-	public JSONObject merge(String path) throws IOException {
+	public WebResponse merge(String path) throws IOException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("filename", path);
-		return jsonGet("merge.php", args);
+		return WebResponse.fromJSON(jsonGet("merge.php", args));
 	}
 	
-	public JSONObject remove(String path) throws IOException {
+	public WebResponse remove(String path) throws IOException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("filename", path);
-		return jsonGet("delete.php", args);
+		return WebResponse.fromJSON(jsonGet("delete.php", args));
 	}
 
-	public JSONObject move(String src, String dest) throws IOException {
+	public WebResponse move(String src, String dest) throws IOException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("source", src);
 		args.put("destination", dest);
-		return jsonGet("mv.php", args);
+		return WebResponse.fromJSON(jsonGet("mv.php", args));
 	}
 	
-	public JSONObject mkdir(String newdir) throws IOException {
+	public WebResponse mkdir(String newdir) throws IOException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("dirname", newdir);
-		return jsonGet("mkdir.php", args);
+		return WebResponse.fromJSON(jsonGet("mkdir.php", args));
 	}
 	
 }

@@ -366,6 +366,10 @@ public class HTTPSClient {
         			consoleUploader.write('\n');
         		}
         		consoleUploader.close();
+        		
+        		WebFS webfs = new WebFS(client);
+        		webfs.setBaseURI(uri);
+        		webfs.merge(cmd.getOptionValue("console"));
         	}
         	else if(filesToUpload.size() > 0) {
 		    	Iterator<File> files = filesToUpload.iterator();

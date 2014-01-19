@@ -25,6 +25,7 @@ import com.davecoss.uploader.HTTPSClient;
 import com.davecoss.uploader.WebFS;
 import com.davecoss.uploader.WebFile;
 import com.davecoss.uploader.WebFileException;
+import com.davecoss.uploader.WebResponse;
 
 public class UploaderConsole {
 
@@ -316,44 +317,24 @@ public class UploaderConsole {
 		{
 			if(numArgs == 0)
 				break;
-			JSONObject json = webfs.md5(path);
-			try {
-				if(json.containsKey("status") && ((Long)json.get("status")) != 0)
-				{
-					System.out.printf("Error: %s\n", (String)json.get("message"));
-					break;
-				}
-				if(json.containsKey("md5"))
-				{
-					System.out.printf("%s", (String)json.get("md5"));
-					if(json.containsKey("filename"))
-						System.out.printf("\t%s", (String)json.get("filename"));
-					System.out.printf("\n");
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
+			String md5hash = webfs.md5(path);
+			if(md5hash == null) {
+				System.out.println("Error get md5 hash for " + path);
+			} else {
+				System.out.printf("%s\t%s\n", md5hash, path);
 			}
 			break;
 		}
 		case MERGE: case RM:
 		{
-			JSONObject json = null;
+			WebResponse status = null;
 			if(command == Commands.MERGE)
-				json = webfs.merge(path);
+				status = webfs.merge(path);
 			else
-				json = webfs.remove(path);
-			if(json == null)
+				status = webfs.remove(path);
+			if(status == null)
 				break;
-			try {
-				if(json.containsKey("status") && ((Long)json.get("status")) != 0)
-				{
-					System.out.printf("%s failed: ", command.name().toLowerCase());
-				}
-				if(json.containsKey("message"))
-					System.out.printf("%s\n", (String)json.get("message"));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			System.out.println(status.message);
 			break;
 		}
 		case MV:
@@ -363,9 +344,9 @@ public class UploaderConsole {
 				System.out.println("mv requires a source and destination path");
 				break;
 			}
-			JSONObject json = webfs.move(tokens[1], tokens[2]);
-			if(json != null && json.containsKey("status") && ((Long)json.get("status")) != 0)
-				System.out.printf("Error moving file: %s\n", (String)json.get("message"));
+			WebResponse status = webfs.move(tokens[1], tokens[2]);
+			if(status.status != 0)
+				System.out.printf("Error moving file: %s\n", status.message);
 			break;
 		}
 		case MKDIR:
