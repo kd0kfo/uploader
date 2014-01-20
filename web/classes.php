@@ -117,7 +117,7 @@ class MD5 {
 	}
 	
 	function get_md5() {
-		return md5_file($thefile->filepath);
+		return md5_file($this->the_file->filepath);
 	}
 	
 	function get_json() {
