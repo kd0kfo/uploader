@@ -245,10 +245,15 @@ public class Plugin implements StoragePlugin {
 				}
 		}
 		try {
-			L.info("saveStream is about to clean " + destination);
-			WebResponse response = webfs.clean((new File(destination.getPath())).getName());
+			L.info("saveStream is about to merge " + destination);
+			File filepath = new File(destination.getPath());
+			String name = filepath.getName();
+			WebResponse response = webfs.merge(name);
 			if(response.status != 0)
+			{
 				L.debug("Unable to clean upload segemnts for destination: " + response.message);
+				tempFiles.remove(name);
+			}
 		} catch (IOException e) {
 			L.error("Unable to clean upload segemnts for destination: " + e.getMessage());
 		}
