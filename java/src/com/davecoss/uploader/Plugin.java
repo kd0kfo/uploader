@@ -9,6 +9,9 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -27,6 +30,7 @@ public class Plugin implements StoragePlugin {
 	private WebFS webfs = null;
 	private File jarfile = null;
 	private String baseURI = "";
+	private ArrayList<String> tempFiles = new ArrayList<String>();
 	
 	@Override
 	public void init(Console console) throws PluginInitException {
@@ -129,6 +133,22 @@ public class Plugin implements StoragePlugin {
 		if(webfs != null)
 		{
 			try {
+				if(tempFiles != null && tempFiles.size() > 0)
+				{
+					Iterator<String> it = tempFiles.iterator();
+					while(it.hasNext()) {
+						String tempFile = it.next();
+						WebResponse response = webfs.merge(tempFile);
+						if(response.status != 0)
+						{
+							L.warn(String.format("Could not merge temporary files for %s. Reason: %s", tempFile, response.message));
+							continue;
+						}
+						webfs.clean(tempFile);
+						if(response.status != 0)
+							L.warn(String.format("Could not clean temporary files for %s. Reason: %s", tempFile, response.message));
+					}
+				}
 				webfs.close();
 			} catch (IOException ioe) {
 				ioe.printStackTrace();
@@ -206,6 +226,7 @@ public class Plugin implements StoragePlugin {
 	@Override
 	public URI saveStream(InputStream input, int amount_to_read, URI destination)
 			throws PluginException {
+		L.info("calling saveStream");
 		OutputStream output = getOutputStream(destination);
 		byte[] buffer = new byte[4096];
 		int amountRead = -1;
@@ -223,6 +244,14 @@ public class Plugin implements StoragePlugin {
 					throw new PluginException("Error uploading stream", ioe);
 				}
 		}
+		try {
+			L.info("saveStream is about to clean " + destination);
+			WebResponse response = webfs.clean((new File(destination.getPath())).getName());
+			if(response.status != 0)
+				L.debug("Unable to clean upload segemnts for destination: " + response.message);
+		} catch (IOException e) {
+			L.error("Unable to clean upload segemnts for destination: " + e.getMessage());
+		}
 		return destination;
 	}
 
@@ -238,7 +267,9 @@ public class Plugin implements StoragePlugin {
 		L.debug("Called getOutputStream");
 		try {
 			File filepath = new File(uri.getPath());
-			return new UploadOutputStream(filepath.getName(), webfs.getClient(), baseURI + "/upload.php?fanout=1");
+			String name = filepath.getName();
+			tempFiles.add(String.format("/%s/%s", name.substring(0, 2), name));// account for fanout, add directory
+			return new UploadOutputStream(name, webfs.getClient(), baseURI + "/upload.php?fanout=1");
 		} catch (IOException e) {
 			throw new PluginException("Error opening Upload Stream", e);
 		}
