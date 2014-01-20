@@ -116,6 +116,10 @@ class MD5 {
 		return $this->the_file;
 	}
 	
+	function get_md5() {
+		return md5_file($thefile->filepath);
+	}
+	
 	function get_json() {
 		$thefile = $this->the_file;
 		if(!file_exists($thefile->filepath)) {
@@ -124,7 +128,7 @@ class MD5 {
 		if($thefile->is_dir()) {	
 			json_exit("Could not get MD5 sum for " . $thefile->orig_filename . " because it is a directory.", 1);
 		}
-		$md5 = md5_file($thefile->filepath);
+		$md5 = $this->get_md5();
 		if(!$md5) {
 			json_exit("Could not get MD5 sum for " . $thefile->orig_filename, 1);
 		}

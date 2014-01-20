@@ -355,7 +355,7 @@ public class HTTPSClient {
     	
     	// Running on Console?
     	if(cmd.hasOption("console")) {
-			consoleUploader = new UploadOutputStream(cmd.getOptionValue("console"), client, uri.toURL().toString());
+			consoleUploader = new UploadOutputStream(cmd.getOptionValue("console"), client, uri.toURL().toString() + "/upload.php");
 		}
     	
         try {
@@ -367,9 +367,15 @@ public class HTTPSClient {
         		}
         		consoleUploader.close();
         		
+        		String consoleFilename = cmd.getOptionValue("console");
         		WebFS webfs = new WebFS(client);
         		webfs.setBaseURI(uri);
-        		webfs.merge(cmd.getOptionValue("console"));
+        		WebResponse status = webfs.merge(consoleFilename);
+        		if(status.status == 0)
+        		{
+        			status = webfs.clean(consoleFilename);
+        			L.info("Cleaned up segments. Status: " + status.message);
+        		}
         	}
         	else if(filesToUpload.size() > 0) {
 		    	Iterator<File> files = filesToUpload.iterator();

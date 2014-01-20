@@ -233,5 +233,18 @@ public class WebFS {
 		args.put("dirname", newdir);
 		return WebResponse.fromJSON(jsonGet("mkdir.php", args));
 	}
+
+	public WebResponse clean(String filename, String md5hash) throws IOException {
+		HashMap<String, String> args = new HashMap<String, String>();
+		if(md5hash != null && md5hash.length() > 0) {
+			args.put("md5", md5hash);
+		}
+		args.put("filename", filename);
+		return WebResponse.fromJSON(jsonGet("clean.php", args));
+	}
+	
+	public WebResponse clean(String filename) throws IOException {
+		return clean(filename, null);
+	}
 	
 }
