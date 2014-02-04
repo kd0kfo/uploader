@@ -17,8 +17,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.davecoss.java.Logger;
 
 public class WebFS {
+	static Logger L = Logger.getInstance();
 	
 	private URI baseURI = null;
 	private JSONObject serverInfo = null;
