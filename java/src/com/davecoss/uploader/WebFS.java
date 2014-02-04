@@ -15,6 +15,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 
 public class WebFS {
@@ -149,6 +150,9 @@ public class WebFS {
 		CloseableHttpResponse response = null;
 		try {
 			response = client.postFile(baseURI.toString() + "/upload.php", file);
+			json = (JSONObject)jsonParser.parse("{\"status\": 0, \"message\": \"Upload does not yet return JSON\"}");
+		} catch (ParseException e) {
+			L.error("Error parsing JSON for putFile");
 		} finally {
 			HTTPSClient.closeResponse(response);
 		}
