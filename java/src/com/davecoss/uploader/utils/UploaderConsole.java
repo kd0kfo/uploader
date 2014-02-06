@@ -21,6 +21,7 @@ import com.davecoss.java.ConsoleLog;
 import com.davecoss.java.LogHandler;
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CLIOptionTuple;
+import com.davecoss.java.utils.CredentialPair;
 import com.davecoss.uploader.HTTPSClient;
 import com.davecoss.uploader.WebFS;
 import com.davecoss.uploader.WebFile;
@@ -86,7 +87,14 @@ public class UploaderConsole {
 		CredentialsProvider credsProvider = null;
 		ArrayList<File> filesToUpload = new ArrayList<File>();
 		if(cmd.hasOption("basic")) {
-			credsProvider = HTTPSClient.createCredentialsProvider(console, uri);
+			CredentialPair creds = null;
+			try {
+				creds = CredentialPair.fromInputStream(System.in);
+				credsProvider = HTTPSClient.createCredentialsProvider(creds, uri);
+			} finally {
+				if(creds != null)
+					creds.destroyCreds();
+			}
 		}
 		if(cmd.hasOption("d")) {
 			if(cmd.hasOption("d")) {

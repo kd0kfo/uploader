@@ -1,24 +1,15 @@
 package com.davecoss.uploader;
 
-import java.awt.FlowLayout;
-import java.io.BufferedReader;
 import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URL;
 
 import javax.net.ssl.SSLContext;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
 
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -31,6 +22,7 @@ import java.util.Iterator;
 import com.davecoss.java.ConsoleLog;
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CLIOptionTuple;
+import com.davecoss.java.utils.CredentialPair;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -242,60 +234,9 @@ public class HTTPSClient {
         return credsProvider;
 	}
 	
-	public static CredentialsProvider createCredentialsProvider(Console console, URI uri) throws IOException {
-		String username = console.readLine("Username: ");
-		char[] password = console.readPassword("Password: ");
-		
+	public static CredentialsProvider createCredentialsProvider(CredentialPair creds, URI uri) throws IOException {
 		CredentialsProvider retval = null;
-		try {
-			retval = createCredentialsProvider(username, password, uri);
-		} finally {
-			for(int idx = 0;idx < password.length;idx++)
-	        	password[idx] = 0;
-		}
-		return retval;
-		
-	}
-	
-	public static CredentialsProvider createCredentialsProvider(JDialog parent, URI uri) throws IOException {
-		JTextField unameField = new JTextField(10);
-		JLabel uLabel = new JLabel("Username:");
-		JPasswordField jPassphrase = new JPasswordField(10);
-		JLabel label = new JLabel("Passphrase: ");
-		label.setLabelFor(jPassphrase);
-		JPanel textPane = new JPanel(new FlowLayout(FlowLayout.CENTER));
-		textPane.add(uLabel);
-		textPane.add(unameField);
-        textPane.add(label);
-        textPane.add(jPassphrase);
-		JOptionPane.showMessageDialog(parent, textPane);
-		
-		char[] password = jPassphrase.getPassword();
-		String username = unameField.getText();
-		
-		CredentialsProvider retval = null;
-		try {
-			retval = createCredentialsProvider(username, password, uri);
-		} finally {
-			for(int idx = 0;idx < password.length;idx++)
-	        	password[idx] = 0;
-		}
-		return retval;
-		
-	}
-	
-	public static CredentialsProvider createCredentialsProvider(PrintStream output, InputStream input, URI uri) throws IOException {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-		String username = reader.readLine();
-		char[] password = reader.readLine().trim().toCharArray();
-		
-		CredentialsProvider retval = null;
-		try {
-			retval = createCredentialsProvider(username, password, uri);
-		} finally {
-			for(int idx = 0;idx < password.length;idx++)
-	        	password[idx] = 0;
-		}
+		retval = createCredentialsProvider(creds.getUsername(), creds.getPassphrase(), uri);
 		return retval;
 	}
 	
@@ -322,7 +263,9 @@ public class HTTPSClient {
 		ArrayList<File> filesToUpload = new ArrayList<File>();
 		UploadOutputStream consoleUploader = null;
 		if(cmd.hasOption("basic")) {
-			credsProvider = createCredentialsProvider(console, uri);
+			CredentialPair creds = CredentialPair.fromInputStream(System.in);
+			credsProvider = createCredentialsProvider(creds, uri);
+			creds.destroyCreds();
 		}
 		if(cmd.hasOption("d")) {
 			L.setLevel(Logger.parseLevel(cmd.getOptionValue("d").toUpperCase()));

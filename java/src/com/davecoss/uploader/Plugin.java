@@ -22,6 +22,8 @@ import com.davecoss.java.Logger;
 import com.davecoss.java.plugin.PluginException;
 import com.davecoss.java.plugin.PluginInitException;
 import com.davecoss.java.plugin.StoragePlugin;
+import com.davecoss.java.utils.CredentialPair;
+import com.davecoss.java.utils.JDialogCredentialPair;
 
 public class Plugin implements StoragePlugin {
 	
@@ -64,14 +66,19 @@ public class Plugin implements StoragePlugin {
 			client = new HTTPSClient();
 		}
 		
+		CredentialPair creds = null;
 		try {
-			client.startClient(HTTPSClient.createCredentialsProvider(console, uri), uri);
+			creds = CredentialPair.fromInputStream(System.in);
+			client.startClient(HTTPSClient.createCredentialsProvider(creds, uri), uri);
 			webfs = new WebFS(client);
 			webfs.setClient(client);
 			webfs.setBaseURI(uri);
 			webfs.downloadConfig();
 		} catch (Exception e) {
 			throw new PluginInitException("Error starting WebFS", e);
+		} finally {
+			if(creds != null)
+				creds.destroyCreds();
 		}
 		System.out.println("Version: " + webfs.getServerInfo().get("version"));
 		
@@ -116,14 +123,19 @@ public class Plugin implements StoragePlugin {
 			client = new HTTPSClient();
 		}
 		
+		CredentialPair creds = null;
 		try {
 			URI uri = new URI(baseURI);
-			client.startClient(HTTPSClient.createCredentialsProvider(parent, uri), uri);
+			creds = JDialogCredentialPair.showInputDialog(parent);
+			client.startClient(HTTPSClient.createCredentialsProvider(creds, uri), uri);
 			webfs = new WebFS(client);
 			webfs.setBaseURI(uri);
 			webfs.downloadConfig();
 		} catch (Exception e) {
 			throw new PluginInitException("Error starting WebFS", e);
+		} finally {
+			if(creds != null)
+				creds.destroyCreds();
 		}
 		System.out.println("Version: " + webfs.getServerInfo().get("version"));
 	}
