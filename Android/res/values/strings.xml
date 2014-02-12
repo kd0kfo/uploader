@@ -9,5 +9,7 @@
     <string name="username">Username</string>
     <string name="logon">Logon</string>
     <string name="menu_logon">Logon</string>
+    <string name="keystoreLabel">Keystore File and Passphrase</string>
+    <string name="usernameLabel">Username and Passphrase</string>
 
 </resources>
