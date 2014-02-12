@@ -84,7 +84,7 @@ public class WebFS {
 			retval = (JSONObject) jsonParser.parse(new InputStreamReader(jsoncontent));
 		} finally {
 			if(entity != null)
-				EntityUtils.consume(entity);
+				entity.consumeContent();
 		}
 		return retval;
 	}

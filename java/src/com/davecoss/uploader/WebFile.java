@@ -38,7 +38,7 @@ public class WebFile {
 		if(!json.containsKey("name") || !json.containsKey("type"))
 			throw new  WebFileException("Missing WebFile JSON Element");
 		
-		String parent = (String)json.get("parent");
+		String parent = (String)json.get("parent"); // TODO: Change these strings to static final fields.
 		String name = (String)json.get("name");
 		String type = (String)json.get("type");
 		long size = 0;
@@ -53,7 +53,12 @@ public class WebFile {
 		WebFile[] dirents = new WebFile[rawDirents.size()];
 		int dirEntSize = dirents.length;
 		for(int idx = 0;idx<dirEntSize;idx++)
-			dirents[idx] = WebFile.fromJSON((JSONObject)rawDirents.get(idx));
+		{
+			JSONObject currFile = (JSONObject)rawDirents.get(idx);
+			if(!currFile.containsKey("parent"))
+				currFile.put("parent", name);
+			dirents[idx] = WebFile.fromJSON(currFile);
+		}
 		return new WebFile(parent, name, type, size, dirents);
 	}
 	
