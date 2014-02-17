@@ -66,9 +66,18 @@ public class HTTPSClient {
 	private SSLConnectionSocketFactory sslsf = null;
 	private CloseableHttpClient httpclient = null;
 	private KeyStore keystore = null;
+	private String keystoreType = KeyStore.getDefaultType();
 	
 	public HTTPSClient() {
 		httpclient = HttpClients.createDefault();
+	}
+	
+	public HTTPSClient(String keystoreFilename, char[] passphrase, String keystoreType) throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+		this.keystoreType = keystoreType;
+		loadKeystore(keystoreFilename, passphrase);
+		buildContext();
+		initSSLSocketFactory();
+		startClient();
 	}
 	
 	public HTTPSClient(String keystoreFilename, char[] passphrase) throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
@@ -79,7 +88,7 @@ public class HTTPSClient {
 	}
 	
 	public void loadKeystore(String keystoreFilename, char[] passphrase) throws IOException, CertificateException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		keystore  = KeyStore.getInstance(KeyStore.getDefaultType());
+		keystore  = KeyStore.getInstance(keystoreType);
         FileInputStream instream = new FileInputStream(new File(keystoreFilename));
         try {
             keystore.load(instream, passphrase);

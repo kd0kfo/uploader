@@ -31,10 +31,17 @@ public class WebFile {
 			this.dirents = dirents;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static WebFile fromJSON(JSONObject json) throws WebFileException {
 		if(json == null)
 			return null;
 
+		if(json.containsKey("status")) {
+			long status = (Long)json.get("status");
+			if(status != 0) {
+				throw new WebFileException((String)json.get("message"));
+			}
+		}
 		if(!json.containsKey("name") || !json.containsKey("type"))
 			throw new  WebFileException("Missing WebFile JSON Element");
 		
@@ -52,11 +59,12 @@ public class WebFile {
 		JSONArray rawDirents = (JSONArray)json.get("dirents");
 		WebFile[] dirents = new WebFile[rawDirents.size()];
 		int dirEntSize = dirents.length;
+		String parentAbsPath = WebFile.join(parent, name);
 		for(int idx = 0;idx<dirEntSize;idx++)
 		{
 			JSONObject currFile = (JSONObject)rawDirents.get(idx);
 			if(!currFile.containsKey("parent"))
-				currFile.put("parent", name);
+				currFile.put("parent", parentAbsPath);
 			dirents[idx] = WebFile.fromJSON(currFile);
 		}
 		return new WebFile(parent, name, type, size, dirents);
@@ -94,8 +102,15 @@ public class WebFile {
 		return humanType() + "\t" + size + "\t" + name;
 	}
 
+	public static String join(String dirName, String baseName) {
+		String retval = dirName;
+		if(retval.length() > 0 && retval.charAt(retval.length()-1) != '/')
+			retval += "/";
+		return retval + baseName;
+	}
+	
 	public String getAbsolutePath() {
-		return parent + "/" + name;
+		return join(parent, name);
 	}
 	
 	

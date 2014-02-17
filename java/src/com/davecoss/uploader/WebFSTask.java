@@ -1,0 +1,186 @@
+package com.davecoss.uploader;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+
+import com.davecoss.java.Logger;
+import com.davecoss.java.LogHandler;
+
+public class WebFSTask implements Callable<WebResponse> {
+	
+	static Logger L = Logger.getInstance();
+	
+	public enum Commands {RM, GET, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO};
+	
+	private final WebFS webfs;
+	private final Commands task;
+	private ArrayList<File> inputfiles = new ArrayList<File>();
+	private ArrayList<String> paths = new ArrayList<String>();
+	
+	public WebFSTask(WebFS webfs, Commands task) {
+		this.webfs = webfs;
+		this.task = task;
+	}
+	
+	public ArrayList<String> getPaths() {
+		return paths;
+	}
+
+	public void setPath(ArrayList<String> paths) {
+		this.paths = paths;
+	}
+	
+	public boolean addPath(String path) {
+		return paths.add(path);
+	}
+
+	public ArrayList<File> getInputfiles() {
+		return inputfiles;
+	}
+
+	public void setInputfiles(ArrayList<File> inputfiles) {
+		this.inputfiles = inputfiles;
+	}
+	
+	public boolean addInputfile(File inputfile) {
+		return inputfiles.add(inputfile);
+	}
+
+	public FutureTask<WebResponse> createFutureTask() {
+		return new FutureTask<WebResponse>(this);
+	}
+	
+	public static WebResponse blockingRun(WebFSTask webfsTask) throws InterruptedException, ExecutionException {
+		FutureTask<WebResponse> future = webfsTask.createFutureTask();
+		Thread t = new Thread(future);
+		t.start();
+		return future.get();
+	}
+	
+	@Override
+	public WebResponse call() throws Exception {
+		if(L.getLevel() == LogHandler.Level.INFO)
+			L.info("Performing Web FS Task: " + task.name());
+		switch(task) {
+		case GET:
+		{
+			if(paths.size() == 0)
+				return new WebResponse(1, "Missing file");
+			if(task == Commands.GET)
+				return webfs.downloadFile(paths.get(0), null);
+		}
+		case PUT:
+		{
+			if(inputfiles.size() == 0)
+				return new WebResponse(1, "Missing file");
+			return webfs.putFile(inputfiles.get(0));
+		}
+		case LS:
+		{
+			String path;
+			if(paths.size() == 0)
+				path = "/";
+			else
+				path = paths.get(0);
+			return webfs.ls(path);
+		}
+		case MD5:
+		{
+			String path;
+			if(paths.size() == 0)
+				return new WebResponse(0, "Missing path for MD5 hash.");
+			path = paths.get(0);
+			return webfs.md5(path);
+		}
+		case MERGE: case RM:
+		{
+			String path;
+			if(paths.size() == 0)
+				return new WebResponse(0, "Missing path.");
+			path = paths.get(0);
+			if(task == Commands.MERGE)
+				return webfs.merge(path);
+			else
+				return webfs.remove(path);
+		}
+		case MV:
+		{
+			if(paths.size() < 2)
+				return new WebResponse(1, "mv requires a source and destination path");
+			return webfs.move(paths.get(0), paths.get(1));
+		}
+		case MKDIR:
+		{
+			if(paths.size() == 0)
+				return new WebResponse(1, "mkdir requires a directory name");
+			return webfs.mkdir(paths.get(0));
+		}
+		case SERVERINFO:
+		{
+			return new WebResponse(0, WebFS.parseServerInfo(webfs.getServerInfo()));
+		}
+		}
+		return new WebResponse(1, "Invalid task state");
+	}
+	
+	/**
+	 * Give a string help message for each task. Returns null for an invalid task name.
+	 * 
+	 * @param task
+	 * @return String Help Message or null if the task is not a valid command.
+	 */
+	public static String getCommandHelp(String taskName) {
+		Commands command = null;
+		
+		try {
+			command = Commands.valueOf(taskName.toUpperCase());
+		} catch(IllegalArgumentException iae) {
+			return null;
+		}
+		switch(command) {
+		case RM:
+			return "Delete specified file";
+		case GET:
+			return "Download file to current working directory";
+		case LS:
+			return "List file(s) for the provided path";
+		case MD5:
+			return "Print the MD5 hash for the specified file";
+		case MERGE:
+			return "Merge all files with the specified prefix";
+		case MKDIR:
+			return "Make a directory";
+		case MV:
+			return "Move file.";
+		case PUT:
+			return "Put a file on the server.";
+		case SERVERINFO:
+			return "Prints information about the server";
+		}
+
+		return null;
+	}
+	
+	public static String[] getCommandNames() {
+		Commands[] cmds = Commands.values();
+		String[] retval = new String[cmds.length];
+		int idx = 0;
+		for(Commands cmd : cmds) {
+			retval[idx++] = cmd.name(); 
+		}
+		return retval;
+	}
+	
+	public static boolean isTask(String taskName) {
+		try {
+			Commands.valueOf(taskName.toUpperCase());
+			return true;
+		} catch(IllegalArgumentException iae) {
+			return false;
+		}
+	}
+
+}

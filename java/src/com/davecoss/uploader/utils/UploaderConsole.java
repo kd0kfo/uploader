@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
-
+import java.util.concurrent.ExecutionException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.http.client.CredentialsProvider;
@@ -24,14 +24,13 @@ import com.davecoss.java.utils.CLIOptionTuple;
 import com.davecoss.java.utils.CredentialPair;
 import com.davecoss.uploader.HTTPSClient;
 import com.davecoss.uploader.WebFS;
+import com.davecoss.uploader.WebFSTask;
 import com.davecoss.uploader.WebFile;
 import com.davecoss.uploader.WebFileException;
 import com.davecoss.uploader.WebResponse;
 
 public class UploaderConsole {
-
-	public enum Commands {DEBUG, RM, GET, HELP, HISTORY, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO, EXIT};
-	
+	public enum ConsoleCommands {DEBUG, EXIT, HELP, HISTORY};
 	private static Logger L = ConsoleLog.getInstance("UploaderConsole");
 	
 	private ArrayList<String> history = new ArrayList<String>();
@@ -89,7 +88,9 @@ public class UploaderConsole {
 		if(cmd.hasOption("basic")) {
 			CredentialPair creds = null;
 			try {
-				creds = CredentialPair.fromInputStream(System.in);
+				String username = console.readLine("Username: ");
+				char[] passphrase = console.readPassword("Passphrase: ");
+				creds = new CredentialPair(username, passphrase);
 				credsProvider = HTTPSClient.createCredentialsProvider(creds, uri);
 			} finally {
 				if(creds != null)
@@ -110,6 +111,7 @@ public class UploaderConsole {
 			keystoreFilename = cmd.getOptionValue("ssl");
 		}
 
+		L.debug("Creating client");
     	HTTPSClient client = null;
     	
     	if(keystoreFilename != null) {
@@ -128,6 +130,7 @@ public class UploaderConsole {
     	
     	uc.webfs = new WebFS(client);
     	uc.webfs.setBaseURI(uri);
+    	L.debug("Downloading config");
     	uc.webfs.downloadConfig();
     	
     	String line = null;
@@ -169,21 +172,33 @@ public class UploaderConsole {
 	public void printHelp(PrintStream output, String[] queries) {
 		if(queries == null)
 		{
-			Commands[] cmds = Commands.values();
-			queries = new String[cmds.length];
-			for(int idx = 0;idx < cmds.length;idx++)
-				queries[idx] = cmds[idx].name();
+			String[] webcommands = WebFSTask.getCommandNames();
+			ConsoleCommands[] consoleCommands = ConsoleCommands.values();
+			queries = new String[webcommands.length + consoleCommands.length];
+			int idx = 0;
+			for(String cmd : webcommands)
+				queries[idx++] = cmd.toLowerCase();
+			for(ConsoleCommands cmd : consoleCommands)
+				queries[idx++] = cmd.name().toLowerCase();
 		}
+		
 		if(output == null)
 			output = System.out;
 
-		Commands cmd = Commands.HELP;
+		ConsoleCommands cmd = ConsoleCommands.HELP;
 		String msg = "";
 		for(String query : queries) {
 			msg = query.toLowerCase() + " -- ";
+			
+			if(WebFSTask.isTask(query)) {
+				msg += WebFSTask.getCommandHelp(query);
+				output.println(msg);
+				continue;
+			}
+			
 			query = query.toUpperCase();
 			try {
-				cmd = Commands.valueOf(query);
+				cmd = Enum.valueOf(ConsoleCommands.class, query);
 			} catch(IllegalArgumentException iae) {
 				output.println("Known command " + query);
 				continue;
@@ -199,14 +214,8 @@ public class UploaderConsole {
 				msg += levels[idx].name().toLowerCase();
 				break;
 			}	
-			case RM:
-				msg += "Delete specified file";
-				break;
 			case EXIT:
 				msg += "Leave the console.";
-				break;
-			case GET:
-				msg += "Download file to current working directory";
 				break;
 			case HELP:
 				msg += "Get help for a given command";
@@ -214,50 +223,14 @@ public class UploaderConsole {
 			case HISTORY:
 				msg += "Print list of commands run";
 				break;
-			case LS:
-				msg += "List file(s) for the provided path";
-				break;
-			case MD5:
-				msg += "Print the MD5 hash for the specified file";
-				break;
-			case MERGE:
-				msg += "Merge all files with the specified prefix";
-				break;
-			case MKDIR:
-				msg += "Make a directory";
-				break;
-			case MV:
-				msg += "Move file.";
-				break;
-			case PUT:
-				msg += "Put a file on the server.";
-				break;
-			case SERVERINFO:
-				msg += "Prints information about the server";
-				break;
 			}
 			output.println(msg);
 		}
 	}
 	
-	public void runCommand(String[] tokens) throws MalformedURLException, IOException, WebFileException {
-		if(tokens == null || tokens.length == 0)
-			return;
-		
-		String strCommand = tokens[0].toUpperCase();
+	public void doConsoleCommand(String[] tokens) throws IllegalArgumentException {
+		ConsoleCommands command = ConsoleCommands.valueOf(tokens[0].toUpperCase());
 		int numArgs = tokens.length - 1;
-		
-		Commands command = null;
-		try {
-			command = Commands.valueOf(strCommand);
-		} catch(IllegalArgumentException iae) {
-			System.out.printf("Unknown Command: %s\n", strCommand);
-			return;
-		}
-		
-		String path = "/";
-		if(numArgs > 0)
-			path = tokens[1];
 		switch(command) {
 		case DEBUG:
 		{
@@ -275,19 +248,8 @@ public class UploaderConsole {
 			}
 			break;
 		}
-		case GET: case PUT:
-		{
-			if(numArgs == 0)
-			{
-				System.out.println("Missing file");
-				break;
-			}
-			if(command == Commands.GET)
-				webfs.downloadFile(path, null);
-			else if(command == Commands.PUT)
-				webfs.putFile(new File(path));
+		case EXIT:
 			break;
-		}
 		case HELP:
 		{
 			String[] query = null;
@@ -303,11 +265,57 @@ public class UploaderConsole {
 				System.out.printf("%d: %s\n", counter, history.get(counter));
 			break;
 		}
+		}
+	}
+	
+	public void runCommand(String[] tokens) throws MalformedURLException, IOException, WebFileException, InterruptedException, ExecutionException {
+		if(tokens == null || tokens.length == 0)
+			return;
+		
+		String strCommand = tokens[0].toUpperCase();
+		int numArgs = tokens.length - 1;
+		
+		WebFSTask.Commands command = null;
+		try {
+			command = Enum.valueOf(WebFSTask.Commands.class, strCommand);
+		} catch(IllegalArgumentException iae) {
+			try {
+				doConsoleCommand(tokens);
+			} catch(IllegalArgumentException iae2) {
+				System.out.println("Invalid command: " + tokens[0]);
+			}
+			return;
+		}
+		
+		// Process and run command.
+		String path = "/";
+		if(numArgs > 0)
+			path = tokens[1];
+		WebFSTask webfsTask = new WebFSTask(webfs, command);
+		WebResponse response = null;
+		WebFile webfile = null;
+		switch(command) {
+		case GET: case PUT:
+		{
+			if(numArgs == 0)
+			{
+				System.out.println("Missing file");
+				break;
+			}
+			if(command == WebFSTask.Commands.PUT)
+				webfsTask.addInputfile(new File(path));
+			else
+				webfsTask.addPath(path);
+			response = WebFSTask.blockingRun(webfsTask);
+			break;
+		}
 		case LS:
 		{
 			if(numArgs == 0)
 				path = "/";
-			WebFile webfile = webfs.ls(path);
+			webfsTask.addPath(path);
+			response = WebFSTask.blockingRun(webfsTask);
+			webfile = response.webfile;
 			if(webfile == null)
 					break;
 			System.out.println(webfile.dirListing());
@@ -319,30 +327,21 @@ public class UploaderConsole {
 				for(int idx = 0;idx<size;idx++)
 					System.out.println(dirents[idx].dirListing());
 			}
+			response = null;
 			break;
 		}
 		case MD5:
 		{
 			if(numArgs == 0)
 				break;
-			String md5hash = webfs.md5(path);
-			if(md5hash == null) {
-				System.out.println("Error get md5 hash for " + path);
-			} else {
-				System.out.printf("%s\t%s\n", md5hash, path);
-			}
+			webfsTask.addPath(path);
+			response = WebFSTask.blockingRun(webfsTask);
 			break;
 		}
 		case MERGE: case RM:
 		{
-			WebResponse status = null;
-			if(command == Commands.MERGE)
-				status = webfs.merge(path);
-			else
-				status = webfs.remove(path);
-			if(status == null)
-				break;
-			System.out.println(status.message);
+			webfsTask.addPath(path);
+			response = WebFSTask.blockingRun(webfsTask);
 			break;
 		}
 		case MV:
@@ -352,9 +351,9 @@ public class UploaderConsole {
 				System.out.println("mv requires a source and destination path");
 				break;
 			}
-			WebResponse status = webfs.move(tokens[1], tokens[2]);
-			if(status.status != 0)
-				System.out.printf("Error moving file: %s\n", status.message);
+			webfsTask.addPath(tokens[1]);
+			webfsTask.addPath(tokens[2]);
+			response = WebFSTask.blockingRun(webfsTask);
 			break;
 		}
 		case MKDIR:
@@ -364,27 +363,20 @@ public class UploaderConsole {
 				System.out.println("mkdir requires a directory name");
 				break;
 			}
-			webfs.mkdir(tokens[1]);
+			webfsTask.addPath(tokens[1]);
+			response = WebFSTask.blockingRun(webfsTask);
 			break;
 		}
 		case SERVERINFO:
 		{
-			JSONObject serverInfo = webfs.getServerInfo();
-			if(serverInfo  == null)
-				break;
-			@SuppressWarnings("unchecked")
-			Iterator<Object> it = serverInfo.keySet().iterator();
-			String key = null;
-			while(it.hasNext()) {
-				key = (String)it.next();
-				System.out.printf("%s: %s\n", key, (String)serverInfo.get(key));
-			}
+			response = WebFSTask.blockingRun(webfsTask);
 			break;
 		}
-		case EXIT:
-			break;
 		}
 		
+		if(response != null) {
+			System.out.println(response.message);
+		}
 	}
 
 	public static void printDir(JSONArray dirents) throws WebFileException {

@@ -8,11 +8,9 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -50,6 +48,18 @@ public class WebFS {
 	public JSONObject getServerInfo() {
 		return serverInfo;
 	}
+	
+	public static String parseServerInfo(JSONObject serverInfo) {
+		String retval = "";
+		@SuppressWarnings("unchecked")
+		Iterator<Object> it = serverInfo.keySet().iterator();
+		String key = null;
+		while(it.hasNext()) {
+			key = (String)it.next();
+			retval += String.format("%s: %s\n", key, (String)serverInfo.get(key));
+		}
+		return retval;
+	}
 
 	public void setServerInfo(JSONObject serverInfo) {
 		this.serverInfo = serverInfo;
@@ -76,6 +86,7 @@ public class WebFS {
 			throw new IOException("Unable to get a valid server configuration.");
 	}
 	
+	@SuppressWarnings("deprecation")
 	public static JSONObject responseJSON(HttpResponse response) throws IOException, org.json.simple.parser.ParseException {
 		HttpEntity entity = response.getEntity();
 		JSONObject retval = null;
@@ -84,12 +95,13 @@ public class WebFS {
 			retval = (JSONObject) jsonParser.parse(new InputStreamReader(jsoncontent));
 		} finally {
 			if(entity != null)
-				entity.consumeContent();
+				entity.consumeContent(); // TODO: Replace this.
 		}
 		return retval;
 	}
 
-	public void downloadFile(String source, File dest) throws IOException {
+	@SuppressWarnings("deprecation")
+	public WebResponse downloadFile(String source, File dest) throws IOException {
 		if(dest == null)
 		{
 			// if Dest is null, simply use the name of the source file.
@@ -109,12 +121,9 @@ public class WebFS {
 			json = responseJSON(response);
 			String type = (String)json.get("type");
 			if(!type.equals("f"))
-			{
-				System.out.println("Cannot download " + source);
-				return;
-			}
+				throw new IOException("Cannot download " + source);
 			sourceURL = baseURI.toString() + contentdir + (String)json.get("parent") + "/" + (String)json.get("name");
-			System.out.println("Path: " + sourceURL);
+			System.out.println("Path: " + sourceURL); // TODO: replace with Logger
 			HTTPSClient.closeResponse(response);
 			
 			// Download content.
@@ -133,12 +142,12 @@ public class WebFS {
 		} finally {
 			// Cleanup
 			if(entity != null)
-				EntityUtils.consume(entity);
+				entity.consumeContent(); // TODO: Replace this
 			HTTPSClient.closeResponse(response);
 			if(output != null)
 				output.close();
 		}
-		
+		return new WebResponse(0, String.format("Saved %s as %s", source, dest.getName()));
 	}
 
 	public WebResponse putFile(File file) throws IOException {
@@ -152,7 +161,7 @@ public class WebFS {
 		CloseableHttpResponse response = null;
 		try {
 			response = client.postFile(baseURI.toString() + "/upload.php", file);
-			json = (JSONObject)jsonParser.parse("{\"status\": 0, \"message\": \"Upload does not yet return JSON\"}");
+			json = responseJSON(response);
 		} catch (ParseException e) {
 			L.error("Error parsing JSON for putFile");
 		} finally {
@@ -194,25 +203,30 @@ public class WebFS {
 		return json;
 	}
 
-	public WebFile ls(String path) throws IOException, WebFileException {
+	public WebResponse ls(String path) throws IOException, WebFileException {
 		HashMap<String, String> args = new HashMap<String, String>();
+		if(path.length() != 0) {
+			if(path.charAt(0) != '/')
+				path = "/" + path;
+		}
 		args.put("filename", path);
-		return WebFile.fromJSON(jsonGet("ls.php", args));
+		WebFile webfile = WebFile.fromJSON(jsonGet("ls.php", args));
+		return new WebResponse(0, webfile);
 	}
 
 	/**
 	 * Returns either the MD5 has as string or null if it could not be found.
 	 * @param path
-	 * @return
+	 * @return WebResponse
 	 * @throws IOException
 	 */
-	public String md5(String path) throws IOException {
+	public WebResponse md5(String path) throws IOException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("filename", path);
 		JSONObject json = jsonGet("md5.php", args);
 		if(json == null || !json.containsKey("md5"))
-			return null;
-		return (String)json.get("md5");
+			return WebResponse.fromJSON(json);
+		return new WebResponse(0, (String)json.get("md5"));
 	}
 
 	public WebResponse merge(String path) throws IOException {
@@ -252,5 +266,6 @@ public class WebFS {
 	public WebResponse clean(String filename) throws IOException {
 		return clean(filename, null);
 	}
+	
 	
 }
