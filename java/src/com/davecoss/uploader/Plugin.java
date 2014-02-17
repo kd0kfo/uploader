@@ -199,7 +199,10 @@ public class Plugin implements StoragePlugin {
 	@Override
 	public boolean isFile(URI uri) throws PluginException {
 		try {
-			WebFile file = webfs.ls(uri.getPath());
+			WebResponse response = webfs.ls(uri.getPath());
+			if(response.status != WebResponse.SUCCESS)
+				throw new Exception(response.message);
+			WebFile file = response.webfile;
 			return file.isFile();
 		} catch (Exception e) {
 			throw new PluginException("Error getting file information for " + uri.toString(), e);
@@ -209,10 +212,13 @@ public class Plugin implements StoragePlugin {
 	@Override
 	public boolean exists(URI uri) throws PluginException {
 		try {
-			WebFile file = webfs.ls(uri.getPath());
+			WebResponse response = webfs.ls(uri.getPath());
+			if(response.status != WebResponse.SUCCESS)
+				throw new Exception(response.message);
+			WebFile file = response.webfile;
 			return file != null;
 		} catch(WebFileException wfe) {
-			L.info("Caught WebFileException and assuming it means there is now file. Message: " + wfe.getMessage());
+			L.info("Caught WebFileException and assuming it means there is no file. Message: " + wfe.getMessage());
 			return false;
 		} catch (Exception e) {
 			throw new PluginException("Error getting file information for " + uri.toString(), e);
@@ -222,7 +228,10 @@ public class Plugin implements StoragePlugin {
 	@Override
 	public URI[] listFiles(URI uri) throws PluginException {
 		try {
-			WebFile dir = webfs.ls(uri.getPath());
+			WebResponse response = webfs.ls(uri.getPath());
+			if(response.status != WebResponse.SUCCESS)
+				throw new Exception(response.message);
+			WebFile dir = response.webfile;
 			WebFile[] dirents = dir.listFiles();
 			int size = dirents.length;
 			URI[] retval = new URI[size];
