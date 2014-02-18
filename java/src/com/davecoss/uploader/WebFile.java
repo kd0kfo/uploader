@@ -1,7 +1,5 @@
 package com.davecoss.uploader;
 
-import java.util.Arrays;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 

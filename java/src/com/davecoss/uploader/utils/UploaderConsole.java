@@ -303,7 +303,7 @@ public class UploaderConsole {
 				break;
 			}
 			if(command == WebFSTask.Commands.PUT)
-				webfsTask.addInputfile(new File(path));
+				webfsTask.addFile(new File(path));
 			else
 				webfsTask.addPath(path);
 			response = WebFSTask.blockingRun(webfsTask);

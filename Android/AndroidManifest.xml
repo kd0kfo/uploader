@@ -9,6 +9,7 @@
         android:targetSdkVersion="10" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -27,6 +28,16 @@
         <activity
             android:name="com.davecoss.uploader.android.Logon"
             android:label="@string/title_activity_logon" >
+        </activity>
+        <activity android:name="com.davecoss.android.lib.FileChooser" >
+        </activity>
+        <activity
+            android:name="com.davecoss.uploader.android.FileDescription"
+            android:label="@string/title_activity_file_description" >
+        </activity>
+        <activity
+            android:name="com.davecoss.uploader.android.UploadDialog"
+            android:label="@string/title_activity_upload_dialog" >
         </activity>
     </application>
 

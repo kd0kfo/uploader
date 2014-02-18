@@ -21,7 +21,7 @@
     </EditText>
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/txtFilename"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/usernameLabel"
@@ -33,6 +33,13 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:hint="@string/username" />
+
+    <TextView
+        android:id="@+id/txtFilesize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/passphraseLabel"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <EditText
         android:id="@+id/txtPassphrase"
@@ -48,12 +55,19 @@
         android:text="@string/keystoreLabel"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
-    <EditText
+    <TextView
         android:id="@+id/txtKeystore"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:onClick="getKeystore" />
+        android:text="@string/empty"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+        
+    <Button
+        android:id="@+id/btnKeyStore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="getKeystore"
+        android:text="@string/keystore" />
 
     <EditText
         android:id="@+id/txtKeystorePassphrase"

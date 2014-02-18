@@ -10,6 +10,17 @@
     <string name="logon">Logon</string>
     <string name="menu_logon">Logon</string>
     <string name="keystoreLabel">Keystore File and Passphrase</string>
-    <string name="usernameLabel">Username and Passphrase</string>
+    <string name="usernameLabel">Username</string>
+    <string name="passphraseLabel">Passphrase</string>
+    <string name="empty"></string>
+    <string name="keystore">Keystore</string>
+    <string name="title_activity_file_description">File Description</string>
+    <string name="lblFilename">File Name:</string>
+    <string name="lblFilesize">File Size:</string>
+    <string name="lblMD5">MD5 Hash</string>
+    <string name="btnDownload">Download</string>
+    <string name="menu_upload">Upload File</string>
+    <string name="lblPath">Full Path:</string>
+    <string name="title_activity_upload_dialog">Upload File</string>
 
 </resources>

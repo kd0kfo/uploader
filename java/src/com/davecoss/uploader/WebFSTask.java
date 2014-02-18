@@ -17,7 +17,7 @@ public class WebFSTask implements Callable<WebResponse> {
 	
 	private final WebFS webfs;
 	private final Commands task;
-	private ArrayList<File> inputfiles = new ArrayList<File>();
+	private ArrayList<File> files = new ArrayList<File>();
 	private ArrayList<String> paths = new ArrayList<String>();
 	
 	public WebFSTask(WebFS webfs, Commands task) {
@@ -37,16 +37,16 @@ public class WebFSTask implements Callable<WebResponse> {
 		return paths.add(path);
 	}
 
-	public ArrayList<File> getInputfiles() {
-		return inputfiles;
+	public ArrayList<File> getFiles() {
+		return files;
 	}
 
-	public void setInputfiles(ArrayList<File> inputfiles) {
-		this.inputfiles = inputfiles;
+	public void setFiles(ArrayList<File> files) {
+		this.files = files;
 	}
 	
-	public boolean addInputfile(File inputfile) {
-		return inputfiles.add(inputfile);
+	public boolean addFile(File file) {
+		return files.add(file);
 	}
 
 	public FutureTask<WebResponse> createFutureTask() {
@@ -69,14 +69,16 @@ public class WebFSTask implements Callable<WebResponse> {
 		{
 			if(paths.size() == 0)
 				return new WebResponse(1, "Missing file");
-			if(task == Commands.GET)
-				return webfs.downloadFile(paths.get(0), null);
+			File dest = null;
+			if(files.size() > 0)
+				dest = files.get(0);
+			return webfs.downloadFile(paths.get(0), dest);
 		}
 		case PUT:
 		{
-			if(inputfiles.size() == 0)
+			if(files.size() == 0)
 				return new WebResponse(1, "Missing file");
-			return webfs.putFile(inputfiles.get(0));
+			return webfs.putFile(files.get(0));
 		}
 		case LS:
 		{
