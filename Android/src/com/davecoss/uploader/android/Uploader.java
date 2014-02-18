@@ -102,12 +102,13 @@ public class Uploader extends ListActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.menu_logon:
-		{
 			showLogonActivity();
 			break;
-		}
 		case R.id.menu_upload:
 			showUploadActivity();
+			break;
+		case R.id.menu_refresh:
+			updateDirList();
 			break;
 		}
 		return true;
