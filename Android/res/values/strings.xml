@@ -22,5 +22,6 @@
     <string name="menu_upload">Upload File</string>
     <string name="lblPath">Full Path:</string>
     <string name="title_activity_upload_dialog">Upload File</string>
+    <string name="btnDelete">Delete</string>
 
 </resources>

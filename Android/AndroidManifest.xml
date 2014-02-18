@@ -39,6 +39,7 @@
             android:name="com.davecoss.uploader.android.UploadDialog"
             android:label="@string/title_activity_upload_dialog" >
         </activity>
+        <activity android:name="com.davecoss.android.lib.ConfirmationActivity"></activity>
     </application>
 
 </manifest>

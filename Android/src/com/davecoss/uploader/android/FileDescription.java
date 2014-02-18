@@ -1,14 +1,19 @@
 package com.davecoss.uploader.android;
 
 
+import com.davecoss.android.lib.ConfirmationActivity;
+
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
+import android.support.v4.app.DialogFragment;
 import android.view.Menu;
 import android.view.View;
 import android.widget.TextView;
 
 public class FileDescription extends Activity {
+	
+	public static final int REQUEST_CONFIRM_DELETE = 0;
 	
 	public static final String DOWNLOAD_KEY = "download";
 	public static final String TASK = "TASK";
@@ -56,11 +61,26 @@ public class FileDescription extends Activity {
 	}
 	
 	public void doDelete(View view) {
-		Intent intent = new Intent();
-		intent.putExtra(TASK, DELETE_KEY);
-		intent.putExtra(DELETE_KEY, fileName);
-		setResult(RESULT_OK, intent);
-		finish();
+		Intent intent = new Intent(this, ConfirmationActivity.class);
+		intent.putExtra(ConfirmationActivity.MESSAGE, String.format("Delete %s?", path));
+		intent.putExtra(ConfirmationActivity.OK_BTN_TEXT, "Yes");
+		intent.putExtra(ConfirmationActivity.CANCEL_BTN_TEXT, "No");
+		startActivityForResult(intent, REQUEST_CONFIRM_DELETE);
+	}
+		
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if(resultCode == RESULT_OK) {
+			if(requestCode == REQUEST_CONFIRM_DELETE) {
+				if(data.getBooleanExtra(ConfirmationActivity.RESULT, false)){
+					Intent intent = new Intent();
+					intent.putExtra(TASK, DELETE_KEY);
+					intent.putExtra(DELETE_KEY, fileName);
+					setResult(RESULT_OK, intent);
+					finish();
+				}
+			}
+		}
 	}
 
 }

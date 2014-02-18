@@ -192,9 +192,14 @@ public class Uploader extends ListActivity {
 	}
 	
 	private void doDelete(Intent data) {
-		String downloadFile = data.getStringExtra(FileDescription.DOWNLOAD_KEY);
+		String downloadFile = data.getStringExtra(FileDescription.DELETE_KEY);
 		WebFile file = dirTree.get(downloadFile);
-		notifier.toast_message("TODO: IMPLEMENT DELETE FOR FILE: " + file.getAbsolutePath());
+		
+		WebFSTask webfsTask = new WebFSTask(webfs, WebFSTask.Commands.RM);
+		webfsTask.addPath(file.getAbsolutePath());
+		Thread t = new Thread(new WebFSThread(webfsTask.createFutureTask()));
+		t.start();
+		notifier.toast_message("Deleting " + file.name);
 	}
 	
 	private void processFileDescriptionIntent(Intent data, String task) {
