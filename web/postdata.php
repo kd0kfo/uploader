@@ -16,7 +16,7 @@ if($fh == null) {
 	json_exit("Error opening $filename", 1);
 }
 
-$amount_written = fwrite($fh, $data);
+$amount_written = fwrite($fh, stripslashes($data));
 
 json_exit("Wrote $amount_written to $filename", 0);
 
