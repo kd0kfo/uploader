@@ -14,6 +14,10 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.message.BasicNameValuePair;  
 
 public class DataPoster extends UploadOutputStream {
+
+	public DataPoster (String baseFilename, HTTPSClient client, String destinationURL) throws IOException {
+		super(baseFilename, client, destinationURL);
+	}
 	
 	public DataPoster (HTTPSClient client, String destinationURL) throws IOException {
 		super(client, destinationURL);
@@ -36,8 +40,9 @@ public class DataPoster extends UploadOutputStream {
 		}
 		
 		List<NameValuePair> params = new ArrayList<NameValuePair>();
+		params.add(new BasicNameValuePair("filename", file.getName()));
         params.add(new BasicNameValuePair("data", sb.toString()));
-        UrlEncodedFormEntity data = new UrlEncodedFormEntity(params, "UTF_8"); 
+        UrlEncodedFormEntity data = new UrlEncodedFormEntity(params); 
         return client.doPost(this.destinationURL, data);
 	}
 }

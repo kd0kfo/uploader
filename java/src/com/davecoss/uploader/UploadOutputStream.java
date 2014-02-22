@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
-
 import com.davecoss.java.Logger;
 
 public class UploadOutputStream extends OutputStream {
@@ -22,6 +21,7 @@ public class UploadOutputStream extends OutputStream {
 	private FileOutputStream stream;
 	private int bufferSize = 1024;
 	private int bytesWritten = 0;
+	private WebResponse uploadResponse = null;
 	
 	public UploadOutputStream(HTTPSClient client, String destinationURL) throws IOException {
 		tempfile = getTempFile();
@@ -80,6 +80,12 @@ public class UploadOutputStream extends OutputStream {
 		
 		// Upload it
 		CloseableHttpResponse response = uploadFile(newfile);
+		try {
+			uploadResponse = WebResponse.fromJSON(WebFS.responseJSON(response));
+		} catch (org.json.simple.parser.ParseException pe) {
+			L.debug("Parser error in UploadOutputStream.flush", pe);
+			uploadResponse = null;
+		}
 		
 		// Cleanup
 		HTTPSClient.closeResponse(response);
@@ -151,5 +157,9 @@ public class UploadOutputStream extends OutputStream {
 	
 	protected CloseableHttpResponse uploadFile(File file) throws IOException {
 		return client.postFile(this.destinationURL, file);
+	}
+	
+	public WebResponse getUploadResponse() {
+		return uploadResponse;
 	}
 }

@@ -1,6 +1,5 @@
 package com.davecoss.uploader;
 
-import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -16,19 +15,8 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.Iterator;
-
-import com.davecoss.java.ConsoleLog;
 import com.davecoss.java.Logger;
-import com.davecoss.java.utils.CLIOptionTuple;
 import com.davecoss.java.utils.CredentialPair;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -55,13 +43,6 @@ public class HTTPSClient {
 	
 	private static Logger L = Logger.getInstance();
 
-	public static final CLIOptionTuple[] optionTuples = {new CLIOptionTuple("basic", false, "Use basic authentication. (Default: off"),
-		new CLIOptionTuple("console", true, "Write to the console and upload the file name provided as an argument to the -console flag."),
-		new CLIOptionTuple("d", true, "Set Debug Level (Default:  ERROR)"),
-		new CLIOptionTuple("f", true, "POST File"),
-		new CLIOptionTuple("ssl", true, "Specify Keystore")};
-
-	
 	private SSLContext sslcontext = null;
 	private SSLConnectionSocketFactory sslsf = null;
 	private CloseableHttpClient httpclient = null;
@@ -189,21 +170,6 @@ public class HTTPSClient {
 			httpclient.close();
 	}
 	
-	public static CommandLine parseCommandLine(String[] cli_args, CLIOptionTuple[] optionArray) throws ParseException {
-		// Define args
-		Options options = new Options();
-		for(CLIOptionTuple option : optionArray )
-			options.addOption(option.name, option.hasArg, option.helpMessage);
-		
-		CommandLineParser parser = new GnuParser();
-		
-		return parser.parse( options, cli_args);
-	}
-	
-	public static CommandLine parseCommandLine(String[] cli_args) throws ParseException {
-		return parseCommandLine(cli_args, optionTuples);
-	}
-
 	public static void printResponse(CloseableHttpResponse response, PrintStream output) throws IOException {
 	    byte[] buf = new byte[4096];
 	    int amount_read = -1;
@@ -249,108 +215,6 @@ public class HTTPSClient {
 		return retval;
 	}
 	
-    public final static void main(String[] cli_args) throws Exception {
-    	L = ConsoleLog.getInstance("HTTPSClient");
-    	Console console = System.console();
-    	CommandLine cmd = null;
-		
-    	try {
-    		cmd = parseCommandLine(cli_args);
-    	}
-		catch(ParseException pe)
-		{
-			System.err.println("Error parsing command line arguments.");
-			System.err.println(pe.getMessage());
-			System.exit(1);
-		}
-		String[] args = cmd.getArgs();
-		URI uri = new URI(args[0]);
-    	
-		// Parse args
-		String keystoreFilename = null;
-		CredentialsProvider credsProvider = null;
-		ArrayList<File> filesToUpload = new ArrayList<File>();
-		UploadOutputStream consoleUploader = null;
-		if(cmd.hasOption("basic")) {
-			CredentialPair creds = CredentialPair.fromInputStream(System.in);
-			credsProvider = createCredentialsProvider(creds, uri);
-			creds.destroyCreds();
-		}
-		if(cmd.hasOption("d")) {
-			L.setLevel(Logger.parseLevel(cmd.getOptionValue("d").toUpperCase()));
-		}
-		if(cmd.hasOption("f")) {
-			for(String filename : cmd.getOptionValues("f")) {
-				filesToUpload.add(new File(filename));
-			}
-		}
-		if(cmd.hasOption("ssl")) {
-			keystoreFilename = cmd.getOptionValue("ssl");
-		}
-
-    	HTTPSClient client = null;
-    	
-    	if(keystoreFilename != null) {
-	    	System.out.print("Keystore Passphrase? ");
-	    	char[] passphrase = console.readPassword();
-	    	
-	    	client = new HTTPSClient(keystoreFilename, passphrase);
-	    	for(int i = 0;i<passphrase.length;i++)
-	    		passphrase[i] = 0;
-    	} else {
-    		client = new HTTPSClient();
-    	}
-    	
-    	if(credsProvider != null)
-    		client.startClient(credsProvider, uri);
-    	
-    	
-    	// Running on Console?
-    	if(cmd.hasOption("console")) {
-			consoleUploader = new UploadOutputStream(cmd.getOptionValue("console"), client, uri.toURL().toString() + "/upload.php");
-		}
-    	
-        try {
-        	if(consoleUploader != null) {
-        		String line = null;
-        		while((line = console.readLine("> ")) != null) {
-        			consoleUploader.write(line.getBytes());
-        			consoleUploader.write('\n');
-        		}
-        		consoleUploader.close();
-        		
-        		String consoleFilename = cmd.getOptionValue("console");
-        		WebFS webfs = new WebFS(client);
-        		webfs.setBaseURI(uri);
-        		WebResponse status = webfs.merge(consoleFilename);
-        		if(status.status == 0)
-        		{
-        			status = webfs.clean(consoleFilename);
-        			L.info("Cleaned up segments. Status: " + status.message);
-        		}
-        	}
-        	else if(filesToUpload.size() > 0) {
-		    	Iterator<File> files = filesToUpload.iterator();
-		    	CloseableHttpResponse response = null;
-		    	while(files.hasNext()) {
-		    		try {
-		    			response = client.postFile(uri.toURL().toString(), files.next());
-		    			printResponse(response, System.out);
-		        	} finally {
-		                response.close();
-		            }
-		    	}
-	    	} else {
-	    		CloseableHttpResponse response = client.doGet(uri.toURL().toString());
-	        	try {
-	        		printResponse(response, System.out);
-	        	} finally {
-	                response.close();
-	            }
-	    	}
-        } finally {
-            client.close();
-        }
-    }
+    
 
 }
