@@ -13,12 +13,13 @@ public class UploadOutputStream extends OutputStream {
 
 	static Logger L = Logger.getInstance();
 	
+	protected HTTPSClient client;
+	protected String destinationURL;
+	
 	private int currIndex = 0;
 	private String baseFilename;
-	private String destinationURL;
 	private File tempfile;
 	private FileOutputStream stream;
-	private HTTPSClient client;
 	private int bufferSize = 1024;
 	private int bytesWritten = 0;
 	
@@ -78,9 +79,10 @@ public class UploadOutputStream extends OutputStream {
 		}
 		
 		// Upload it
-		CloseableHttpResponse response = client.postFile(this.destinationURL, newfile);
-		HTTPSClient.closeResponse(response);
+		CloseableHttpResponse response = uploadFile(newfile);
+		
 		// Cleanup
+		HTTPSClient.closeResponse(response);
 		newfile.delete();
 		L.info("Cleaned up " + newfile.getName());
 		bytesWritten = 0;
@@ -145,5 +147,9 @@ public class UploadOutputStream extends OutputStream {
 		File temp = File.createTempFile("tmp", null);
 		temp.deleteOnExit();
 		return temp;
+	}
+	
+	protected CloseableHttpResponse uploadFile(File file) throws IOException {
+		return client.postFile(this.destinationURL, file);
 	}
 }
