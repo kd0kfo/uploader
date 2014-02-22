@@ -1,12 +1,8 @@
 package com.davecoss.uploader.utils;
 
 import java.io.Console;
-import java.io.File;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.net.URI;
-import java.net.URL;
-
 import com.davecoss.java.ConsoleLog;
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CLIOptionTuple;
@@ -26,8 +22,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.codec.binary.Base64OutputStream;
 
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.impl.client.CloseableHttpClient;
 
 public class UploadWriter {
 	
@@ -74,7 +68,6 @@ public class UploadWriter {
 			// Parse args
 			String keystoreFilename = null;
 			CredentialsProvider credsProvider = null;
-			ArrayList<File> filesToUpload = new ArrayList<File>();
 			UploadOutputStream consoleUploader = null;
 			if(cmd.hasOption("basic")) {
 				String username = console.readLine("Username: ");

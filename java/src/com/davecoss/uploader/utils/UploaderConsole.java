@@ -30,9 +30,17 @@ import com.davecoss.uploader.WebResponse;
 
 public class UploaderConsole {
 
-	public enum Commands {DEBUG, RM, GET, HELP, HISTORY, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO, EXIT};
-	
 	private static Logger L = ConsoleLog.getInstance("UploaderConsole");
+	
+	public static final CLIOptionTuple[] optionTuples = {new CLIOptionTuple("base64", false, "Console writing should use base64 encoding (Default: off)"),
+		new CLIOptionTuple("basic", false, "Use basic authentication. (Default: off)"),
+		new CLIOptionTuple("d", true, "Set Debug Level (Default:  ERROR)"),
+		new CLIOptionTuple("filename", true, "Write to the console and upload the file name provided as an argument to the -console flag."),
+		new CLIOptionTuple("help", false, "Print help and usage information"),
+		new CLIOptionTuple("ssl", true, "Specify Keystore")};
+	
+	
+	public enum Commands {DEBUG, RM, GET, HELP, HISTORY, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO, EXIT};
 	
 	private ArrayList<String> history = new ArrayList<String>();
 	private WebFS webfs = null;
@@ -53,16 +61,11 @@ public class UploaderConsole {
 			System.out.println("For help and usage information, use the -help flag.");
 			System.exit(1);
 		}
-
-		CLIOptionTuple[] optionTuples = Arrays.copyOf(HTTPSClient.optionTuples,
-				HTTPSClient.optionTuples.length + 1);
-		optionTuples[optionTuples.length - 1] = new CLIOptionTuple("help", false, "Print help and usage information");
-		
 		
 		CommandLine cmd = null;
 		
     	try {
-    		cmd = HTTPSClient.parseCommandLine(cliArgs, optionTuples);
+    		cmd = UploadWriter.parseCommandLine(cliArgs, optionTuples);
     		if(cmd.hasOption("help"))
     		{
     			printUsage(System.out);

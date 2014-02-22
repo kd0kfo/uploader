@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.protocol.HTTP;
-
 import com.davecoss.java.Logger;
-import com.davecoss.java.LogHandler;
 
 public class UploadOutputStream extends OutputStream {
 
