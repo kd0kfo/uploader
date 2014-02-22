@@ -34,14 +34,24 @@ function json_exit($msg, $status) {
 	exit($status);
 }
 
-function get_requested_string($name) {
+function get_post_get($key) {
 	$retval = "";
-	
-	if(isset($_GET[$name])) {
-		$retval = $_GET[$name];
+
+	if(isset($_GET[$key])) {
+		$retval = $_GET[$key];
 	}
-	if(isset($_POST[$name])) {
-		$retval = $_POST[$name];
+	if(isset($_POST[$key])) {
+		$retval = $_POST[$key];
+	}
+	
+	return $retval;
+}
+
+function get_requested_string($name) {
+	$retval = get_post_get($name);
+	
+	if($retval == "") {
+		$retval = get_post_get("\r\n" . $name);
 	}
 	
 	return $retval;

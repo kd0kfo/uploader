@@ -299,6 +299,17 @@ public class UploaderConsole {
 		WebResponse response = null;
 		WebFile webfile = null;
 		switch(command) {
+		case CLEAN:
+		{
+			if(numArgs == 0)
+			{
+				System.out.println("Missing file");
+				break;
+			}
+			webfsTask.addPath(path);
+			response = WebFSTask.blockingRun(webfsTask);
+			break;
+		}
 		case GET: case PUT:
 		{
 			if(numArgs == 0)

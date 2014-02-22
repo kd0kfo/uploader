@@ -1,7 +1,9 @@
 package com.davecoss.uploader;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
@@ -13,12 +15,13 @@ public class WebFSTask implements Callable<WebResponse> {
 	
 	static Logger L = Logger.getInstance();
 	
-	public enum Commands {RM, GET, LS, MD5, MERGE, MKDIR, MV, PUT, SERVERINFO};
+	public enum Commands {CLEAN, RM, GET, LS, MD5, MERGE, MKDIR, MV, PUT, PIPE, SERVERINFO};
 	
 	private final WebFS webfs;
 	private final Commands task;
 	private ArrayList<File> files = new ArrayList<File>();
 	private ArrayList<String> paths = new ArrayList<String>();
+	private HashMap<String, Object> args = new HashMap<String, Object>();
 	
 	public WebFSTask(WebFS webfs, Commands task) {
 		this.webfs = webfs;
@@ -48,6 +51,18 @@ public class WebFSTask implements Callable<WebResponse> {
 	public boolean addFile(File file) {
 		return files.add(file);
 	}
+	
+	public HashMap<String, Object> getArgs() {
+		return args;
+	}
+
+	public void setArgs(HashMap<String, Object> args) {
+		this.args = args;
+	}
+	
+	public void addArgument(String key, Object value) {
+		args.put(key, value);
+	}
 
 	public FutureTask<WebResponse> createFutureTask() {
 		return new FutureTask<WebResponse>(this);
@@ -65,6 +80,12 @@ public class WebFSTask implements Callable<WebResponse> {
 		if(L.getLevel() == LogHandler.Level.INFO)
 			L.info("Performing Web FS Task: " + task.name());
 		switch(task) {
+		case CLEAN:
+		{
+			if(paths.size() == 0)
+				return new WebResponse(1, "Missing file");
+			return webfs.clean(paths.get(0));
+		}
 		case GET:
 		{
 			if(paths.size() == 0)
@@ -78,7 +99,10 @@ public class WebFSTask implements Callable<WebResponse> {
 		{
 			if(files.size() == 0)
 				return new WebResponse(1, "Missing file");
-			return webfs.putFile(files.get(0));
+			//return webfs.putFile(files.get(0));
+			File file = files.get(0);
+			boolean useBase64 = getBooleanArgument("base64", false);
+			return webfs.postStream(new FileInputStream(file), file.getName(), useBase64);
 		}
 		case LS:
 		{
@@ -128,6 +152,13 @@ public class WebFSTask implements Callable<WebResponse> {
 		return new WebResponse(1, "Invalid task state");
 	}
 	
+	private boolean getBooleanArgument(String key, boolean defaultValue) {
+		Object val = args.get(key);
+		if(val != null && Boolean.class.isInstance(val))
+			return ((Boolean)val).booleanValue();
+		return defaultValue;
+	}
+
 	/**
 	 * Give a string help message for each task. Returns null for an invalid task name.
 	 * 
@@ -143,6 +174,8 @@ public class WebFSTask implements Callable<WebResponse> {
 			return null;
 		}
 		switch(command) {
+		case CLEAN:
+			return "Remove segment files.";
 		case RM:
 			return "Delete specified file";
 		case GET:

@@ -5,15 +5,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
+
+import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
 
 import com.davecoss.java.Logger;
 
@@ -170,16 +174,24 @@ public class WebFS {
 		return WebResponse.fromJSON(json);
 	}
 	
-	public WebResponse postStream(InputStream input) throws IOException {
-		DataPoster postStream = new DataPoster(client, baseURI.toString());
+	public WebResponse postStream(InputStream input, String filename) throws IOException {
+		return postStream(input, filename, false);
+	}
+	
+	public WebResponse postStream(InputStream input, String filename, boolean useBase64) throws IOException {
+		DataPoster postStream = new DataPoster(filename, client, baseURI.toString() + "/postdata.php");
+		OutputStream output = postStream;
+		if(useBase64) {
+			output = new Base64OutputStream(postStream);
+		}
 		
 		try {
 			byte[] buffer = new byte[2048];
 			int amountRead = -1;
 			while((amountRead = input.read(buffer)) != -1)
-				postStream.write(buffer, 0, amountRead);
+				output.write(buffer, 0, amountRead);
 		} finally {
-			postStream.close();
+			output.close();
 		}
 		
 		return postStream.getUploadResponse();

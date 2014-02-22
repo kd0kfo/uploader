@@ -1,6 +1,8 @@
 package com.davecoss.uploader.android;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.util.HashMap;
@@ -15,6 +17,7 @@ import com.davecoss.android.lib.utils;
 import com.davecoss.java.LogHandler;
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CredentialPair;
+import com.davecoss.uploader.DataPoster;
 import com.davecoss.uploader.HTTPSClient;
 import com.davecoss.uploader.WebFS;
 import com.davecoss.uploader.WebFSTask;
@@ -26,6 +29,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.app.ListActivity;
 import android.content.Intent;
+import android.util.Base64;
+import android.util.Base64OutputStream;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -164,9 +169,10 @@ public class Uploader extends ListActivity {
 				L.error(msg);
 				return;
 			}
-			WebFSTask webfsTask = new WebFSTask(webfs, WebFSTask.Commands.PUT);
-			webfsTask.addFile(file);
-			Thread t = new Thread(new WebFSThread(webfsTask.createFutureTask()));
+			DataPoster dataPoster = new DataPoster(file.getName(), webfs.getClient(), webfs.getBaseURI().toString() + "/postdata.php");
+			OutputStream output = new Base64OutputStream(dataPoster, Base64.DEFAULT);
+			AndroidPipeThread pipe = new AndroidPipeThread(new FileInputStream(file), output, true);
+			Thread t = new Thread(new WebFSThread(pipe.createFutureTask()));
 			t.start();
 			notifier.toast_message("Uploading " + path);
 		}
@@ -405,4 +411,5 @@ public class Uploader extends ListActivity {
 			}
 		}
 	}
+	
 }
