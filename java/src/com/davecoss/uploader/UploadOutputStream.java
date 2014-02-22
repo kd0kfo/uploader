@@ -6,21 +6,25 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.protocol.HTTP;
 
 import com.davecoss.java.Logger;
+import com.davecoss.java.LogHandler;
 
 public class UploadOutputStream extends OutputStream {
 
 	static Logger L = Logger.getInstance();
 	
+	protected HTTPSClient client;
+	protected String destinationURL;
+	
 	private int currIndex = 0;
 	private String baseFilename;
-	private String destinationURL;
 	private File tempfile;
 	private FileOutputStream stream;
-	private HTTPSClient client;
 	private int bufferSize = 1024;
 	private int bytesWritten = 0;
+	private WebResponse uploadResponse = null;
 	
 	public UploadOutputStream(HTTPSClient client, String destinationURL) throws IOException {
 		tempfile = getTempFile();
@@ -78,9 +82,16 @@ public class UploadOutputStream extends OutputStream {
 		}
 		
 		// Upload it
-		CloseableHttpResponse response = client.postFile(this.destinationURL, newfile);
-		HTTPSClient.closeResponse(response);
+		CloseableHttpResponse response = uploadFile(newfile);
+		try {
+			uploadResponse = WebResponse.fromJSON(WebFS.responseJSON(response));
+		} catch (org.json.simple.parser.ParseException pe) {
+			L.debug("Parser error in UploadOutputStream.flush", pe);
+			uploadResponse = null;
+		}
+		
 		// Cleanup
+		HTTPSClient.closeResponse(response);
 		newfile.delete();
 		L.info("Cleaned up " + newfile.getName());
 		bytesWritten = 0;
@@ -145,5 +156,13 @@ public class UploadOutputStream extends OutputStream {
 		File temp = File.createTempFile("tmp", null);
 		temp.deleteOnExit();
 		return temp;
+	}
+	
+	protected CloseableHttpResponse uploadFile(File file) throws IOException {
+		return client.postFile(this.destinationURL, file);
+	}
+	
+	public WebResponse getUploadResponse() {
+		return uploadResponse;
 	}
 }
