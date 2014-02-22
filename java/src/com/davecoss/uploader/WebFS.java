@@ -160,8 +160,22 @@ public class WebFS {
 		}
 		return WebResponse.fromJSON(json);
 	}
-
 	
+	public WebResponse postStream(InputStream input) throws IOException {
+		DataPoster postStream = new DataPoster(client, baseURI.toString());
+		
+		try {
+			byte[] buffer = new byte[2048];
+			int amountRead = -1;
+			while((amountRead = input.read(buffer)) != -1)
+				postStream.write(buffer, 0, amountRead);
+		} finally {
+			postStream.close();
+		}
+		
+		return postStream.getUploadResponse();
+	}
+
 	public JSONObject jsonGet(String apiFilename, HashMap<String, String> args) throws IOException {
 		CloseableHttpResponse response = null;
 		JSONObject json = null;
