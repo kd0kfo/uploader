@@ -30,7 +30,7 @@ public class UploadWriter {
 	public static final CLIOptionTuple[] optionTuples = {new CLIOptionTuple("base64", false, "Console writing should use base64 encoding (Default: off)"),
 		new CLIOptionTuple("basic", false, "Use basic authentication. (Default: off)"),
 		new CLIOptionTuple("d", true, "Set Debug Level (Default:  ERROR)"),
-		new CLIOptionTuple("filename", true, "Write to the console and upload the file name provided as an argument to the -console flag."),
+		new CLIOptionTuple("help", false, "Usage information."),
 		new CLIOptionTuple("ssl", true, "Specify Keystore")};
 	
 	public static CommandLine parseCommandLine(String[] cli_args, CLIOptionTuple[] optionArray) throws ParseException {
@@ -55,6 +55,13 @@ public class UploadWriter {
 			
 	    	try {
 	    		cmd = parseCommandLine(cli_args);
+	    		if(cmd.hasOption("help")) {
+	    			System.out.println("UploadWriter -- Write Text to Web File System");
+	    			System.out.println("Usage: UploadWriter [options] <Web Filesystem URL> <File Name>");
+	    			System.out.println("Options:");
+	    			CLIOptionTuple.printOptions(System.out, optionTuples);
+	    			System.exit(0);
+	    		}
 	    	}
 			catch(ParseException pe)
 			{
@@ -63,7 +70,12 @@ public class UploadWriter {
 				System.exit(1);
 			}
 			String[] args = cmd.getArgs();
+			if(args.length != 2) {
+				System.err.println("Invalid number of arguments. Run \"-help\" to get usage information.");
+				System.exit(1);
+			}
 			URI uri = new URI(args[0]);
+			String filename = args[1];
 	    	
 			// Parse args
 			String keystoreFilename = null;
@@ -102,12 +114,9 @@ public class UploadWriter {
 	    	
 	    	// Running on Console?
 	    	OutputStream outputStream = null;
-	    	String filename = null;
-	    	if(cmd.hasOption("filename")) {
-	    		filename = cmd.getOptionValue("filename");
-				consoleUploader = new DataPoster(filename, client, uri.toURL().toString() + "/postdata.php");
-	    		outputStream = consoleUploader;
-			}
+	    	consoleUploader = new DataPoster(filename, client, uri.toURL().toString() + "/postdata.php");
+	    	outputStream = consoleUploader;
+			
 	    	if(cmd.hasOption("base64")) {
 	    		outputStream = new Base64OutputStream(outputStream);
 	    	}
