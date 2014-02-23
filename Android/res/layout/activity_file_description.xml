@@ -83,6 +83,20 @@
             android:onClick="doDownload"
             android:text="@string/btnDownload" />
 
+        <Button
+            android:id="@+id/btnDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="doDelete"
+            android:text="@string/btnDelete" />
+
+        <Button
+            android:id="@+id/btnMerge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="doMerge"
+            android:text="@string/btnMerge" />
+
     </LinearLayout>
 
     <TableRow
@@ -91,11 +105,39 @@
         android:layout_height="wrap_content" >
 
         <Button
-            android:id="@+id/btnDelete"
+            android:id="@+id/btnClean"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="doDelete"
-            android:text="@string/btnDelete" />
+            android:onClick="doClean"
+            android:text="@string/btnClean" />
+
+    </TableRow>
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/lblBase64"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TableRow
+        android:id="@+id/tableRow5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+
+        <Button
+            android:id="@+id/btnDecode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="doDecode"
+            android:text="@string/btnDecode" />
+
+        <Button
+            android:id="@+id/btnEncode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="doEncode"
+            android:text="@string/btnEncode" />
 
     </TableRow>
 

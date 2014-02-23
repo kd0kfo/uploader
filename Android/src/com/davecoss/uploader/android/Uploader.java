@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.FutureTask;
@@ -209,11 +210,65 @@ public class Uploader extends ListActivity {
 		notifier.toast_message("Deleting " + file.name);
 	}
 	
+	private void doMerge(Intent data) {
+		String downloadFile = data.getStringExtra(FileDescription.MERGE_KEY);
+		WebFile file = dirTree.get(downloadFile);
+		
+		WebFSTask webfsTask = new WebFSTask(webfs, WebFSTask.Commands.MERGE);
+		
+		// Create new merged path
+		String newPath = file.getAbsolutePath();
+		int idx = newPath.lastIndexOf('.');
+		if(idx > 1)
+			newPath = newPath.substring(0, idx);
+		webfsTask.addPath(newPath);
+		Thread t = new Thread(new WebFSThread(webfsTask.createFutureTask()));
+		t.start();
+		notifier.toast_message("Merging " + newPath);
+	}
+	
+	private void doClean(Intent data) {
+		String downloadFile = data.getStringExtra(FileDescription.CLEAN_KEY);
+		WebFile file = dirTree.get(downloadFile);
+		
+		WebFSTask webfsTask = new WebFSTask(webfs, WebFSTask.Commands.CLEAN);
+		
+		// Create new merged path
+		String newPath = file.getAbsolutePath();
+		int idx = newPath.lastIndexOf('.');
+		if(idx > 1)
+			newPath = newPath.substring(0, idx);
+		webfsTask.addPath(newPath);
+		Thread t = new Thread(new WebFSThread(webfsTask.createFutureTask()));
+		t.start();
+		notifier.toast_message("Cleaning " + newPath);
+	}
+	
+	private void doBase64(Intent data) {
+		String filename = data.getStringExtra(FileDescription.BASE64_KEY);
+		WebFile file = dirTree.get(filename);
+		String path = file.getAbsolutePath();
+		boolean encode = data.getBooleanExtra(FileDescription.BASE64_ENCODE, false);
+		WebFSTask webfsTask = new WebFSTask(webfs, WebFSTask.Commands.BASE64);
+		
+		webfsTask.addPath(path);
+		webfsTask.addArgument("encode", encode);
+		Thread t = new Thread(new WebFSThread(webfsTask.createFutureTask()));
+		t.start();
+		notifier.toast_message("Base64 Transforming " + path);
+	}
+	
 	private void processFileDescriptionIntent(Intent data, String task) {
 		if(task.equals(FileDescription.DOWNLOAD_KEY))
 			doDownload(data);
 		else if(task.equals(FileDescription.DELETE_KEY))
 			doDelete(data);
+		else if(task.equals(FileDescription.MERGE_KEY))
+			doMerge(data);
+		else if(task.equals(FileDescription.CLEAN_KEY))
+			doClean(data);
+		else if(task.equals(FileDescription.BASE64_KEY))
+			doBase64(data);
 	}
 
 	private void processLogonIntent(Intent data) {
@@ -328,6 +383,7 @@ public class Uploader extends ListActivity {
 		int idx = 0;
 		while(it.hasNext())
 			list[idx++] = it.next();
+		Arrays.sort(list);
 		setListAdapter(new ArrayAdapter<String>(this, R.layout.activity_file_chooser, list));
 	}
 	

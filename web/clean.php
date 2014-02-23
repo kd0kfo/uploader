@@ -19,8 +19,10 @@ $files = glob($path . ".*");
 
 $filecount = count($files);
 for($i = 0;$i<$filecount;$i++) {
-	$file = $files[$i];
-	unlink($path . "." . $i);
+	$segment_path = $path . "." . $i;
+	if(file_exists($segment_path)) {
+		unlink($segment_path);
+	}
 }
 
 json_exit("Cleaned up file segments for " . $filename, 0);
