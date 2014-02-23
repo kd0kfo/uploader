@@ -170,7 +170,7 @@ public class Uploader extends ListActivity {
 				return;
 			}
 			DataPoster dataPoster = new DataPoster(file.getName(), webfs.getClient(), webfs.getBaseURI().toString() + "/postdata.php");
-			OutputStream output = new Base64OutputStream(dataPoster, Base64.DEFAULT);
+			OutputStream output = new Base64OutputStream(dataPoster, Base64.NO_WRAP);
 			AndroidPipeThread pipe = new AndroidPipeThread(new FileInputStream(file), output, true);
 			Thread t = new Thread(new WebFSThread(pipe.createFutureTask()));
 			t.start();

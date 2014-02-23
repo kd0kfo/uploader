@@ -2,6 +2,7 @@ package com.davecoss.uploader.android;
 
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.Intent;
 import android.view.Menu;
 import android.view.View;
 
@@ -11,6 +12,9 @@ public class UploadDialog extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_upload_dialog);
+		
+		Intent intent = getIntent();
+		
 	}
 
 	@Override

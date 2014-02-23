@@ -254,6 +254,14 @@ public class WebFS {
 			return WebResponse.fromJSON(json);
 		return new WebResponse(0, (String)json.get("md5"));
 	}
+	
+	public WebResponse base64(String path, boolean encode) throws IOException {
+		HashMap<String, String> args = new HashMap<String, String>();
+		args.put("filename", path);
+		String action = (encode) ? "encode" : "decode";
+		args.put("action", action);
+		return WebResponse.fromJSON(jsonGet("base64.php", args));
+	}
 
 	public WebResponse merge(String path) throws IOException {
 		HashMap<String, String> args = new HashMap<String, String>();

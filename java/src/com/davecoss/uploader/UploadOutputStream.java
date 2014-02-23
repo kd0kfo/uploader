@@ -14,12 +14,13 @@ public class UploadOutputStream extends OutputStream {
 	
 	protected HTTPSClient client;
 	protected String destinationURL;
+	protected int bufferSize = 1024;
+	
 	
 	private int currIndex = 0;
 	private String baseFilename;
 	private File tempfile;
 	private FileOutputStream stream;
-	private int bufferSize = 1024;
 	private int bytesWritten = 0;
 	private WebResponse uploadResponse = null;
 	

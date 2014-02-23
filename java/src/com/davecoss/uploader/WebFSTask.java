@@ -15,7 +15,7 @@ public class WebFSTask implements Callable<WebResponse> {
 	
 	static Logger L = Logger.getInstance();
 	
-	public enum Commands {CLEAN, RM, GET, LS, MD5, MERGE, MKDIR, MV, PUT, PIPE, SERVERINFO};
+	public enum Commands {BASE64, CLEAN, RM, GET, LS, MD5, MERGE, MKDIR, MV, PUT, PIPE, SERVERINFO};
 	
 	private final WebFS webfs;
 	private final Commands task;
@@ -80,6 +80,13 @@ public class WebFSTask implements Callable<WebResponse> {
 		if(L.getLevel() == LogHandler.Level.INFO)
 			L.info("Performing Web FS Task: " + task.name());
 		switch(task) {
+		case BASE64:
+		{
+			if(paths.size() == 0)
+				return new WebResponse(1, "Missing file");
+			boolean encode = getBooleanArgument("encode", false);
+			return webfs.base64(paths.get(0), encode);
+		}
 		case CLEAN:
 		{
 			if(paths.size() == 0)
@@ -174,6 +181,8 @@ public class WebFSTask implements Callable<WebResponse> {
 			return null;
 		}
 		switch(command) {
+		case BASE64:
+			return "Encode/Decode file using Base 64 encoding";
 		case CLEAN:
 			return "Remove segment files.";
 		case RM:

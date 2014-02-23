@@ -299,6 +299,20 @@ public class UploaderConsole {
 		WebResponse response = null;
 		WebFile webfile = null;
 		switch(command) {
+		case BASE64:
+		{
+			if(numArgs < 1)
+			{
+				System.out.println("Missing file");
+				break;
+			}
+			webfsTask.addPath(path);
+			if(numArgs > 1) {
+				webfsTask.addArgument("encode", (tokens[2].equals("decode")) ? false : true);
+			}
+			response = WebFSTask.blockingRun(webfsTask);
+			break;
+		}
 		case CLEAN:
 		{
 			if(numArgs == 0)

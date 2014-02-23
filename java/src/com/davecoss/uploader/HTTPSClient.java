@@ -146,7 +146,9 @@ public class HTTPSClient {
         System.out.println("executing request " + httppost.getRequestLine());
 
         if(mpEntity != null)
+        {
         	httppost.setEntity(mpEntity);
+        }
         
         return httpclient.execute(httppost);
         
