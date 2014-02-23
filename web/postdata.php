@@ -16,8 +16,16 @@ if($fh == null) {
 	json_exit("Error opening $filename", 1);
 }
 
-$amount_written = fwrite($fh, stripslashes($data));
+$base64 = get_requested_string("base64");
+if($base64) {
+	$data = base64_decode($data);
+}
+else {
+	$data = stripslashes($data);
+}
 
-json_exit("Wrote $amount_written to $filename", 0);
+$amount_written = fwrite($fh, $data);
+
+json_exit("Wrote $amount_written to $filename $base64", 0);
 
 ?>
