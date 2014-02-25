@@ -338,6 +338,17 @@ public class UploaderConsole {
 			response = WebFSTask.blockingRun(webfsTask);
 			break;
 		}
+		case POSTSTREAM:
+		{
+			if(numArgs == 0)
+			{
+				System.out.println("Missing file");
+				break;
+			}
+			webfsTask.addArgument("base64", true);
+			webfsTask.addFile(new File(path));
+			response = WebFSTask.blockingRun(webfsTask);
+		}
 		case LS:
 		{
 			if(numArgs == 0)

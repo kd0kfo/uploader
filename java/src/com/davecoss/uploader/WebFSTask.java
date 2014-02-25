@@ -2,6 +2,7 @@ package com.davecoss.uploader;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
@@ -15,7 +16,7 @@ public class WebFSTask implements Callable<WebResponse> {
 	
 	static Logger L = Logger.getInstance();
 	
-	public enum Commands {BASE64, CLEAN, RM, GET, LS, MD5, MERGE, MKDIR, MV, PUT, PIPE, SERVERINFO};
+	public enum Commands {BASE64, CLEAN, RM, GET, LS, MD5, MERGE, MKDIR, MV, PUT, POSTSTREAM, SERVERINFO};
 	
 	private final WebFS webfs;
 	private final Commands task;
@@ -106,10 +107,22 @@ public class WebFSTask implements Callable<WebResponse> {
 		{
 			if(files.size() == 0)
 				return new WebResponse(1, "Missing file");
-			//return webfs.putFile(files.get(0));
-			File file = files.get(0);
-			boolean useBase64 = getBooleanArgument("base64", false);
-			return webfs.postStream(new FileInputStream(file), file.getName(), useBase64);
+			return webfs.putFile(files.get(0));
+		}
+		case POSTSTREAM:
+		{
+			if(files.size() == 0)
+				return new WebResponse(1, "Missing file name");
+			boolean usebase64 = getBooleanArgument("base64", false);
+			InputStream input = null;
+			try {
+				File file = files.get(0);
+				input = new FileInputStream(file);
+				return webfs.postStream(input, file.getName(), usebase64);
+			} finally {
+				if(input != null)
+					input.close();
+			}
 		}
 		case LS:
 		{
@@ -201,6 +214,8 @@ public class WebFSTask implements Callable<WebResponse> {
 			return "Move file.";
 		case PUT:
 			return "Put a file on the server.";
+		case POSTSTREAM:
+			return "Post a stream.";
 		case SERVERINFO:
 			return "Prints information about the server";
 		}
