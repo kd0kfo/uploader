@@ -179,7 +179,7 @@ public class WebFS {
 	}
 	
 	public WebResponse postStream(InputStream input, String filename, boolean useBase64) throws IOException {
-		DataPoster postStream = new DataPoster(filename, client, baseURI.toString() + "/postdata.php");
+		UploadOutputStream postStream = new UploadOutputStream(filename, client, baseURI.toString() + "/upload.php");
 		OutputStream output = postStream;
 		if(useBase64) {
 			output = new Base64OutputStream(postStream);
