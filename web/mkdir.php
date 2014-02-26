@@ -1,6 +1,14 @@
 <?php
 
 require_once("includes.php");
+require_once("auth.php");
+
+$username = get_requested_string("username");
+if(!$username) {
+	json_exit("Login required.", 1);
+}
+
+$auth = new Auth();
 
 if(!isset($uploaddir) || strlen($uploaddir) == 0) {
 	json_exit("Missing upload directory", 1);
@@ -10,6 +18,12 @@ $parent = $uploaddir;
 $mode = $default_dir_mode;
 
 $dirname = get_requested_string("dirname");
+$signature = get_requested_string("signature");
+
+if(!$auth->authenticate($username, $dirname, $signature)) {
+	$auth->increment_failed_logins($username);
+	json_exit("Signature failed.", 1);
+}
 
 if(strlen($dirname) != 0) {
 	$dirname = basename($dirname);

@@ -3,6 +3,7 @@
 $uploaddir = "/path/to/content"; // Path on Server where content is stored
 $downloaddir = "/webdownload"; // Path in HTTP(S) URL from which content is served.
 $default_dir_mode = 0700; // File mode used on Server
+$max_failed_logins = 3;
 
 function site_footer() {
 	echo "Site Unique Footer Goes Here";

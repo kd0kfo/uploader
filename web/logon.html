@@ -1,47 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Make a directory</title>
+<title>Logon</title>
 <script src="//code.jquery.com/jquery-1.10.2.min.js" language="javascript"></script>
 <script type="text/javascript" src="http://crypto-js.googlecode.com/svn/tags/3.0.2/build/rollups/hmac-sha256.js"></script><script type="text/javascript" src="http://crypto-js.googlecode.com/svn/tags/3.0.2/build/components/enc-base64-min.js"></script>
 <script src="site.js" language="javascript"></script>
 <script src="fs.js" language="javascript"></script>
 </head>
 <body>
-<form action="mkdir.php" id="mkdirAction">
-<label for="file">Directory Name:</label>
-<input type="text" name="dirname" id="dirname"><br>
-<input type="submit" name="submit" value="Submit" id="submitbutton"/>
+<form action="logon.php" id="logonAction">
+<label for="username">User Name:</label>
+<input type="text" name="username" id="username"><br>
+<label for="pass">Password:</label>
+<input type="password" name="password" id="password"><br>
+<input type="submit" name="submit" value="Submit">
 </form>
 <div id="result"></div>
 <div id="footer"></div>
 </body>
 <script>
-$(document).ready(function() {
-	if(!localStorage['username'] || !localStorage['sessionkey']) {
-		$("#mkdirAction").hide();
-		$("#result").text("Login required.");
-	}
-});
-
 $("#footer").html(site_footer());
-$("#mkdirAction").submit(function(event) {
+$("#logonAction").submit(function(event) {
 	event.preventDefault();
 
 	var form = $(this);
-	var dirname = form.find("input[name='dirname']").val();
+	var username = $("#username").val();
+	var password = $("#password").val();
 	var url = form.attr("action");
 
-	var username = localStorage['username'];
-	var sessionkey = localStorage['sessionkey'];
-	var sig = hash(dirname, sessionkey);
+	var h = hash(username, password);
 
-	var result = $.post(url, {dirname: dirname, username: username, signature: sig});
+	var result = $.post(url, {username: username, key: h});
 
 	result.done(function(data) {
 		var json = jQuery.parseJSON(data);
 		$("#result").empty().append(json.message);
+		if(json.sessionkey) {
+			localStorage['username'] = username;
+			localStorage['sessionkey'] = json.sessionkey;
+		}
 	});
+
 
 });
 </script>

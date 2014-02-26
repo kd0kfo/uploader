@@ -53,3 +53,9 @@ function updateDir(thedirname) {
 	    }
 	});
 }
+
+function hash(data, key) {
+	var hash = CryptoJS.HmacSHA256(data, key);
+	return CryptoJS.enc.Base64.stringify(hash);
+}
+

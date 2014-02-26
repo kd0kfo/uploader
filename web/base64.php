@@ -5,18 +5,14 @@ require_once("classes.php");
 require_once("auth.php");
 
 $username = get_requested_string("username");
-$hmac = get_requested_string("hmac");
 $auth = new Auth();
-
-if(!$username || !$hmac) {
-	json_exit("Authorization required to use base64.", 1);
-}
 
 $filename = get_requested_filename();
 if(!$filename) {
 	json_exit("Missing filename", 1);
 }
 if(!$auth->verify_data($username, $filename, $hmac)) {
+	$auth->increment_failed_logins($username);
 	json_exit("Invalid authentication", 1);
 }
 

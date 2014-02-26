@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="http://crypto-js.googlecode.com/svn/tags/3.0.2/build/rollups/hmac-sha256.js"></script><script type="text/javascript" src="http://crypto-js.googlecode.com/svn/tags/3.0.2/build/components/enc-base64-min.js"></script>
+<script type="text/javascript" src="fs.js"></script>
+</head>
+<body>
+<div id="result"></div>
+<form id="hashform">
+<label for="username">Data:</label><input type="text" id="username" name="username"/><br/>
+<label for="pass">Secret:</label><input type="password" id="pass" name="pass"/>
+<input type="submit" id="submit" value="hash"/>
+<script type="text/javascript">
+$(document).ready(function() {
+	$("#hashform").submit(function(event) {
+		event.preventDefault();
+		var username = $("#username").val();
+		var pass = $("#pass").val();
+		$("#result").text("Hash: " + hash(username, pass)).show();
+	});
+});
+</script>
+</body>
+</html>

@@ -8,10 +8,29 @@ class authtest extends PHPUnit_Framework_TestCase {
 	public function testOne() {
 		global $db;
 		$auth = new Auth();
-		$db->exec("insert into users values ('authtest', 'test123');");
+		$username = "authtest";
+		$db->exec("insert into users values ('$username', 'test123', null, null);");
+
+		/* Test verify */
 		$result = $auth->verify_user("authtest", "baWMoR/ZMBC/JI27QJJ+sw0hf85chWk6Ryhn3n5gaEc=");
-		$db->exec("delete from users where username = 'authtest' and password = 'test123';");
 		$this->assertTrue($result);
+		
+		/* Test data signing */
+		$sessionkey = $auth->create_session_key($username);
+
+		echo "Session hash: $sessionkey";
+
+		$data = "foo";
+		$hashval = $auth->hash($data, $sessionkey);
+
+		$this->assertTrue($auth->authenticate($username, $data, $hashval));
+
+		/* Test log off */
+		$auth->clear_session_key($username);
+		$this->assertFalse($auth->authenticate($username, $data, $hashval));
+
+
+		$db->exec("delete from users where username = 'authtest' and password = 'test123';");
 	}
 }
 

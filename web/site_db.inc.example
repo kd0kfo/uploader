@@ -2,6 +2,6 @@
 
 $db = new Sqlite3("test.sqlite");
 
-$db->exec("create table if not exists users (username STRING PRIMARY KEY, password STRING);") || die ("Could not setup table.");
+$db->exec("create table if not exists users (username STRING PRIMARY KEY, password STRING NOT NULL, sessionkey STRING, sessionstart INTEGER, failed_logins INTEGER default 0);") || die ("Could not setup table.");
 
 ?>
