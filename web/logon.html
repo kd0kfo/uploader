@@ -30,7 +30,7 @@ $("#logonAction").submit(function(event) {
 
 	var h = hash(username, password);
 
-	var result = $.post(url, {username: username, key: h});
+	var result = $.post(url, {username: username, hmac: h});
 
 	result.done(function(data) {
 		var json = jQuery.parseJSON(data);

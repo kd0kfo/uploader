@@ -9,10 +9,10 @@ class authtest extends PHPUnit_Framework_TestCase {
 		global $db;
 		$auth = new Auth();
 		$username = "authtest";
-		$db->exec("insert into users values ('$username', 'test123', null, null);");
+		$db->exec("insert into users values ('$username', 'baWMoR/ZMBC/JI27QJJ+sw0hf85chWk6Ryhn3n5gaEc=', null, null, 0);");
 
 		/* Test verify */
-		$result = $auth->verify_user("authtest", "baWMoR/ZMBC/JI27QJJ+sw0hf85chWk6Ryhn3n5gaEc=");
+		$result = $auth->verify_user($username, "baWMoR/ZMBC/JI27QJJ+sw0hf85chWk6Ryhn3n5gaEc=");
 		$this->assertTrue($result);
 		
 		/* Test data signing */
@@ -30,7 +30,7 @@ class authtest extends PHPUnit_Framework_TestCase {
 		$this->assertFalse($auth->authenticate($username, $data, $hashval));
 
 
-		$db->exec("delete from users where username = 'authtest' and password = 'test123';");
+		$db->exec("delete from users where username = 'authtest';");
 	}
 }
 

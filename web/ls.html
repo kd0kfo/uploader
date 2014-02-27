@@ -2,6 +2,7 @@
 <head>
 <title></title>
 <script src="//code.jquery.com/jquery-1.10.2.min.js" language="javascript"></script>
+<script type="text/javascript" src="http://crypto-js.googlecode.com/svn/tags/3.0.2/build/rollups/hmac-sha256.js"></script><script type="text/javascript" src="http://crypto-js.googlecode.com/svn/tags/3.0.2/build/components/enc-base64-min.js"></script>
 <script src="site.js" language="javascript"></script>
 <script src="fs.js" language="javascript"></script>
 </head>
@@ -19,7 +20,11 @@ $(document).ready(function() {
 	    dirname = "/";
 	}
 	window.document.title = dirname;
-	updateDir(dirname);
+	if(!localStorage['sessionkey'] || !localStorage['username']) {
+		$("#debug").text("Login Required");
+		return;
+	}
+	updateDir(dirname, localStorage['username'], localStorage['sessionkey']);
 	$("#footer").html(site_footer());
 });// End of document.ready
 </script>

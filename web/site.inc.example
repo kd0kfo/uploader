@@ -4,6 +4,7 @@ $uploaddir = "/path/to/content"; // Path on Server where content is stored
 $downloaddir = "/webdownload"; // Path in HTTP(S) URL from which content is served.
 $default_dir_mode = 0700; // File mode used on Server
 $max_failed_logins = 3;
+$site_secret = "This should be very long and random"; // secret used to make server side hashes. I suggest using 'openssl rand # -base64' to generate this and choose a large number.
 
 function site_footer() {
 	echo "Site Unique Footer Goes Here";

@@ -10,10 +10,12 @@ function hoverout() {
     $(this).css("font-style", "normal").css("color", "black");
 }
 
-function updateDir(thedirname) {
+function updateDir(thedirname, username, sessionkey) {
     window.document.title = thedirname;
-    $("#heading").text("Contents of " + thedirname);
-    $.getJSON("ls.php", {"filename": thedirname}, function(data) {
+    $("#heading").text("Contents of " + thedirname + " " + signature);
+    var signature = hash(thedirname, sessionkey);
+    $.getJSON("ls.php", {"filename": thedirname, "username": username, "signature": signature},
+    	function(data) {
 	    $("#contents").text("");
 	    if(data['status'] && data['status'] != 0) {
 	    	$("#contents").text("ERROR: " + data['message']);
@@ -25,7 +27,7 @@ function updateDir(thedirname) {
 			if(thedirname != "/") {
 			    var parentdir = $("<p/>", {class: "d"});
 			    parentdir.text("Up to " + data["parent"]);
-			    parentdir.click(function() {updateDir(data["parent"]);});
+			    parentdir.click(function() {updateDir(data["parent"], username, sessionkey);});
 			    parentdir.hover(hoverin,
 					    hoverout);
 			    $("#contents").append(parentdir);
@@ -43,7 +45,7 @@ function updateDir(thedirname) {
 				var dirent = $("<p/>", {class: val["type"]});
 				dirent.text(text);
 				if(val["type"] == "d") {
-				    dirent.click(function() {updateDir($(this).text().trim());});
+				    dirent.click(function() {updateDir($(this).text().trim(), username, sessionkey);});
 				} else {
 				    dirent.click(function() {window.open(localStorage['contentdir'] + text, thedirname);});
 				}
