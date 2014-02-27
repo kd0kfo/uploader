@@ -34,7 +34,7 @@ class Auth {
 
 		$retval = ($row['passhash'] == $hmac);
 		if(!$retval) {
-			$this->increment_failed_logins($this->username);
+			$this->increment_failed_logins();
 		}
 		
 		return $retval;
