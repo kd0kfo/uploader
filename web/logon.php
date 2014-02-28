@@ -10,15 +10,15 @@ if(!$username || !$hmac) {
 	json_exit("Login failed.", 1);
 }
 
-$auth = new Auth();
+$auth = new Auth($username);
 
-if(!$auth->verify_user($username, $hmac)) {
+if(!$auth->verify_user($hmac)) {
 	json_exit("Username and/or password do not match", 1);
 }
 
-$sessionkey = $auth->get_session_key($username);
+$sessionkey = $auth->get_session_key();
 if($sessionkey === null || !$sessionkey) {
-	$sessionkey = $auth->create_session_key($username);
+	$sessionkey = $auth->create_session_key();
 }
 
 echo json_encode(array("sessionkey" => $sessionkey, "status" => 0, "message" => "Login successful"));

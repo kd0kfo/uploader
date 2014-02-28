@@ -7,23 +7,24 @@ class authtest extends PHPUnit_Framework_TestCase {
 
 	public function testOne() {
 		global $db;
+		global $site_salt;
 		$username = "authtest";
 		$auth = new Auth($username);
-		$db->exec("insert into users values ('$username', 'baWMoR/ZMBC/JI27QJJ+sw0hf85chWk6Ryhn3n5gaEc=', null, null, 0);");
+		$pass = "testpass";
+		$passhash = auth_hash($username+$site_salt, $pass);
+		$db->exec("insert into users values ('$username', '$passhash', null, null, 0);");
 
 		/* Test verify */
-		$result = $auth->verify_user("baWMoR/ZMBC/JI27QJJ+sw0hf85chWk6Ryhn3n5gaEc=");
+		$result = $auth->verify_user(auth_hash("logon", $passhash));
 		echo "Testing logon... ";
 		$this->assertTrue($result);
 		echo "Passed\n";
 		
 		/* Test data signing */
 		$sessionkey = $auth->create_session_key();
-
 		echo "Session hash: $sessionkey\n";
-
 		$data = "foo";
-		$hashval = auth_hash($data, $sessionkey);
+		$hashval = auth_hash($data+$passhash, $sessionkey);
 
 		echo "Testing authentication of message... ";
 		$this->assertTrue($auth->authenticate($data, $hashval));

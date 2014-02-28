@@ -23,21 +23,26 @@ class Auth {
 			json_exit("Maximum failed logins.", 1);
 		}
 
-		$result = sql_query("select passhash from users where username = '$this->username';");
-		if(!$result) {
-			return false;
-		}
-		$row = $result->fetchArray();
-		if(!$row || !$row['passhash']) {
-			return false;
-		}
-
-		$retval = ($row['passhash'] == $hmac);
+		$passhash = $this->get_passwordhash();
+		echo "Verifying " . $this->username . " with $hmac and $passhash\n";
+		$retval = (auth_hash("logon", $passhash) == $hmac);
 		if(!$retval) {
 			$this->increment_failed_logins();
 		}
 		
 		return $retval;
+	}
+	
+	function get_passwordhash() {
+		$result = sql_query("select passhash from users where username = '" . $this->username . "';");
+		if(!$result) {
+			return null;
+		}
+		$row = $result->fetchArray();
+		if(!$row || !$row['passhash']) {
+			return null;
+		}
+		return $row['passhash'];
 	}
 
 	/**
@@ -106,6 +111,13 @@ class Auth {
 		return $result >= $max_failed_logins;
 	}
 
+	/**
+	 * Authentication scheme is hmac(data + passwordhash, sessionkey)
+	 * 
+	 * @param unknown $data
+	 * @param unknown $signature
+	 * @return boolean
+	 */
 	function authenticate($data, $signature) {
 		if($this->excessive_failed_logins()) {
 			json_exit("Maximum failed logins.", 1);
@@ -115,7 +127,11 @@ class Auth {
 		if(!$sessionkey) {
 			return false;
 		}
-		$realhash = auth_hash($data, $sessionkey);
+		$passhash = $this->get_passwordhash();
+		if(!$passhash) {
+			return false;
+		}
+		$realhash = auth_hash($data+$passhash, $sessionkey);
 		$retval = ($signature == $realhash);
 		if(!$retval) {
 			$this->increment_failed_logins();
