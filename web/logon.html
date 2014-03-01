@@ -43,6 +43,12 @@ $("#logonAction").submit(function(event) {
 
 
 });
+$(document).ready(function() {
+	var server_info = get_server_info();
+	if(server_info['salt']) {
+		$("#salt").val(server_info['salt']);
+	}
+});
 </script>
 </html>
 

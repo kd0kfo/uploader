@@ -131,7 +131,7 @@ class Auth {
 		if(!$passhash) {
 			return false;
 		}
-		$realhash = auth_hash($data+$passhash, $sessionkey);
+		$realhash = auth_hash($data, create_signing_key($passhash, $sessionkey));
 		$retval = ($signature == $realhash);
 		if(!$retval) {
 			$this->increment_failed_logins();
@@ -159,4 +159,9 @@ function auth_hash($data, $secret) {
 	$h = base64_encode($h);
 	return $h;
 }
+
+function create_signing_key($passhash, $sessionkey) {
+	return $passhash + $sessionkey;
+}
+
 ?>
