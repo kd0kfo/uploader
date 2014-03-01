@@ -65,7 +65,6 @@ class Auth {
 		$data = strval($now);
 		$sessionkey = auth_hash($data, $site_secret);
 		
-
 		sql_exec("update users set sessionkey = '" . $sessionkey . "', sessionstart = ". $now . " where username = '" . $this->username . "';");
 		return $this->get_session_key();
 	}
@@ -82,7 +81,10 @@ class Auth {
 		if($this->excessive_failed_logins()) {
 			json_exit("Max failed logins", 1);
 		}
-		if(!$row['sessionkey'] || !$row['sessionstart'] || $row['sessionstart'] < 86400) {
+		if(!$row['sessionkey'] || !$row['sessionstart'] ) {
+			return null;
+		}
+		if(time() - $row['sessionstart'] > 86400) {
 			return null;
 		}
 		return $row['sessionkey'];
