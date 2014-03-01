@@ -24,7 +24,6 @@ class Auth {
 		}
 
 		$passhash = $this->get_passwordhash();
-		echo "Verifying " . $this->username . " with $hmac and $passhash\n";
 		$retval = (auth_hash("logon", $passhash) == $hmac);
 		if(!$retval) {
 			$this->increment_failed_logins();
@@ -163,7 +162,7 @@ function auth_hash($data, $secret) {
 }
 
 function create_signing_key($passhash, $sessionkey) {
-	return $passhash + $sessionkey;
+	return auth_hash($passhash + $sessionkey, $passhash);
 }
 
 ?>

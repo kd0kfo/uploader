@@ -13,6 +13,7 @@
 <input type="text" name="username" id="username"><br>
 <label for="pass">Password:</label>
 <input type="password" name="password" id="password"><br>
+<input type="hidden" name="salt" id="salt"/>
 <input type="submit" name="submit" value="Submit">
 </form>
 <div id="result"></div>
@@ -26,10 +27,11 @@ $("#logonAction").submit(function(event) {
 	var form = $(this);
 	var username = $("#username").val();
 	var password = $("#password").val();
+	var salt = $("#salt").val();
 	var url = form.attr("action");
 
-	var h = hash(username, password);
-
+	var h = hash(username+salt, password);
+	var logon_hash = hash("logon", h);
 	var result = $.post(url, {username: username, hmac: h});
 
 	result.done(function(data) {
@@ -37,7 +39,7 @@ $("#logonAction").submit(function(event) {
 		$("#result").empty().append(json.message);
 		if(json.sessionkey) {
 			localStorage['username'] = username;
-			localStorage['sessionkey'] = json.sessionkey;
+			localStorage['sessionkey'] = hash(h + json.sessionkey, h);
 		}
 	});
 

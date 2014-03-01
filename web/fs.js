@@ -10,6 +10,14 @@ function hoverout() {
     $(this).css("font-style", "normal").css("color", "black");
 }
 
+function get_server_info() {
+	var server_info = $.ajax({ 
+        url: 'info.php',
+        async: false
+     }).responseText;
+  return $.parseJSON(server_info);
+}
+
 function updateDir(thedirname, username, sessionkey) {
     window.document.title = thedirname;
     $("#heading").text("Contents of " + thedirname + " " + signature);
