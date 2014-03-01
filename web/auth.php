@@ -98,10 +98,10 @@ class Auth {
 	}
 
 	function get_failed_logins() {
-		$result = sql_query("select failed_logins from users where username='" . $this->username . "';") or die("Failed database access");
+		$result = sql_query("select failed_logins from users where username='" . $this->username . "';") or json_exit("Failed database access", 1);
 		$row = $result->fetchArray();
 		if(!$row) {
-			die("Unknown user " . $this->username);
+			return null;
 		}
 		return $row['failed_logins'];
 	}

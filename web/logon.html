@@ -32,14 +32,14 @@ $("#logonAction").submit(function(event) {
 
 	var h = hash(username+salt, password);
 	var logon_hash = hash("logon", h);
-	var result = $.post(url, {username: username, hmac: h});
+	var result = $.post(url, {username: username, hmac: logon_hash});
 
 	result.done(function(data) {
 		var json = jQuery.parseJSON(data);
 		$("#result").empty().append(json.message);
 		if(json.sessionkey) {
 			localStorage['username'] = username;
-			localStorage['sessionkey'] = hash(h + json.sessionkey, h);
+			localStorage['sessionkey'] = hash(h + json.sessionkey, logon_hash);
 		}
 	});
 
