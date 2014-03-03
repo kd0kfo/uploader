@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Logon</title>
+<title>New Authentication</title>
 <script src="//code.jquery.com/jquery-1.10.2.min.js" language="javascript"></script>
 <script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/rollups/hmac-sha256.js"></script><script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/components/enc-base64-min.js"></script>
 <script src="site.js" language="javascript"></script>
 <script src="fs.js" language="javascript"></script>
 </head>
 <body>
-<form action="logon.php" id="logonAction">
+<form id="logonAction">
 <label for="username">User Name:</label>
 <input type="text" name="username" id="username"><br>
 <label for="pass">Password:</label>
@@ -28,22 +28,10 @@ $("#logonAction").submit(function(event) {
 	var username = $("#username").val();
 	var password = $("#password").val();
 	var salt = $("#salt").val();
-	var url = form.attr("action");
 
 	var h = hash(username, password+salt);
-	var logon_hash = hash("logon", h);
-	var result = $.post(url, {username: username, hmac: logon_hash});
 
-	result.done(function(data) {
-		var json = jQuery.parseJSON(data);
-		$("#result").empty().append(json.message);
-		if(json.sessionkey) {
-			localStorage['username'] = username;
-			localStorage['sessionkey'] = hash(h + json.sessionkey, h);
-		}
-	});
-
-
+	$("#result").text("Hash: " + h);
 });
 $(document).ready(function() {
 	var server_info = get_server_info();

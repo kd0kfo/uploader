@@ -162,7 +162,7 @@ function auth_hash($data, $secret) {
 }
 
 function create_signing_key($passhash, $sessionkey) {
-	return auth_hash($passhash + $sessionkey, $passhash);
+	return auth_hash($passhash . $sessionkey, $passhash);
 }
 
 ?>

@@ -20,7 +20,7 @@ class authtest extends PHPUnit_Framework_TestCase {
 		$username = "authtest";
 		$auth = new Auth($username);
 		$pass = "testpass";
-		$passhash = auth_hash($username+$site_salt, $pass);
+		$passhash = auth_hash($usernamet, $pass+$site_salt);
 		$db->exec("insert into users values ('$username', '$passhash', null, null, 0);");
 
 		/* Test verify */

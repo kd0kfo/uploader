@@ -8,7 +8,7 @@ if(!$username) {
 	json_exit("No username provided.", 1);
 }
 
-$auth = new Auth();
+$auth = new Auth($username);
 $auth->clear_session_key($username);
 json_exit("Logout successful.", 0);
 ?>

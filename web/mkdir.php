@@ -8,7 +8,7 @@ if(!$username) {
 	json_exit("Login required.", 1);
 }
 
-$auth = new Auth();
+$auth = new Auth($username);
 
 if(!isset($uploaddir) || strlen($uploaddir) == 0) {
 	json_exit("Missing upload directory", 1);
@@ -20,7 +20,7 @@ $mode = $default_dir_mode;
 $dirname = get_requested_string("dirname");
 $signature = get_requested_string("signature");
 
-if(!$auth->authenticate($username, $dirname, $signature)) {
+if(!$auth->authenticate($dirname, $signature)) {
 	$auth->increment_failed_logins($username);
 	json_exit("Signature failed.", 1);
 }

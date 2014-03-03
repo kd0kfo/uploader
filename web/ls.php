@@ -4,7 +4,11 @@ require_once("includes.php");
 require_once("classes.php");
 require_once("auth.php");
 
-$auth = new Auth();
+$username = get_requested_string("username");
+if(!$username) {
+	json_exit("logon required.", 1);
+}
+$auth = new Auth($username);
 
 $filename = get_requested_filename();
 if(!$auth->authenticate($filename, get_requested_string("signature"))) {

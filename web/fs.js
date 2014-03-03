@@ -20,7 +20,7 @@ function get_server_info() {
 
 function updateDir(thedirname, username, sessionkey) {
     window.document.title = thedirname;
-    $("#heading").text("Contents of " + thedirname + " " + signature);
+    $("#heading").text("Contents of " + thedirname);
     var signature = hash(thedirname, sessionkey);
     $.getJSON("ls.php", {"filename": thedirname, "username": username, "signature": signature},
     	function(data) {
