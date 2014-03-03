@@ -58,12 +58,9 @@ class Auth {
 
 	function create_session_key() {
 		global $site_secret;
-		$data = strval(time());
-
+		$data = base64_encode(openssl_random_pseudo_bytes(64));
 		$now = time();
-		$data = strval($now);
 		$sessionkey = auth_hash($data, $site_secret);
-		
 		sql_exec("update users set sessionkey = '" . $sessionkey . "', sessionstart = ". $now . " where username = '" . $this->username . "';");
 		return $this->get_session_key();
 	}
