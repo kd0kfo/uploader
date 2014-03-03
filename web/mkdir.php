@@ -21,8 +21,7 @@ $dirname = get_requested_string("dirname");
 $signature = get_requested_string("signature");
 
 if(!$auth->authenticate($dirname, $signature)) {
-	$auth->increment_failed_logins($username);
-	json_exit("Signature failed.", 1);
+	json_exit("Access Denied", 1);
 }
 
 if(strlen($dirname) != 0) {

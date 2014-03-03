@@ -1,6 +1,11 @@
 <?php
 
 require_once("includes.php");
+require_once("auth.php");
+
+$auth = new Auth(get_requested_string("username"));
+
+json_exit("TODO: Expand Upload to send client a token. Then the client signs that. The token needs to be unique every time.", 1);
 
 $dirmode = $default_dir_mode;
 if(!isset($uploaddir) || strlen($uploaddir) == 0) {

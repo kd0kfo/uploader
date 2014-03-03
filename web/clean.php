@@ -2,9 +2,15 @@
 
 require_once("includes.php");
 require_once("classes.php");
+require_once("auth.php");
+
+$auth = new Auth(get_requested_string("username"));
 
 $filename = get_requested_filename();
 $md5 = get_requested_string("md5");
+if(!$auth->authenticate($filename, get_requested_string("signature"))) {
+	json_exit("Invalid authentication", 1);
+}
 
 if(strlen($md5) != 0) {
 	$server_md5 = new MD5($filename);
