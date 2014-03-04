@@ -3,7 +3,7 @@
 require_once("site.inc");
 require_once("site_db.inc");
 
-$UPLOADER_VERSION = "1.0-beta";
+$UPLOADER_VERSION = "1.0-alpha";
 
 $upload_error_msgs = array( 
         0=>"Success",

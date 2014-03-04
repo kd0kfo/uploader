@@ -1,6 +1,6 @@
 <project>
 	<property name="packagename" value="uploader"/>
-	<property name="version" value="1.0.b"/>
+	<property name="version" value="1.0.a"/>
 	<property name="main.class" value="com.davecoss.uploader.utils.UploaderConsole"/>
 	<property name="TODO.test.class" value="com.davecoss.uploader.TestRunner"/>
 	<property name="plugin.class.name" value="com.davecoss.uploader.Plugin"/>
