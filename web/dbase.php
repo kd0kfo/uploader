@@ -24,6 +24,13 @@ class DBase {
 		return $this->conn->query($sql);
 	}
 	
+	function prepare($sql) {
+		if(!$this->conn) {
+			json_exit("Error preparing statement. Not connected to database.", 1);
+		}
+		return $this->conn->prepare($sql);
+	}
+
 	function lastErrorMsg() {
 		if(!$this->conn) {
 			return "Not connected.";

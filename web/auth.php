@@ -33,7 +33,9 @@ class Auth {
 	}
 	
 	function get_passwordhash() {
-		$result = sql_query("select passhash from users where username = '" . $this->username . "';");
+		$stmt = sql_prepare("select passhash from users where username = :username;");
+		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
+		$result = $stmt->execute();
 		if(!$result) {
 			return null;
 		}
@@ -61,12 +63,16 @@ class Auth {
 		$data = base64_encode(openssl_random_pseudo_bytes(64));
 		$now = time();
 		$sessionkey = auth_hash($data, $site_secret);
-		sql_exec("update users set sessionkey = '" . $sessionkey . "', sessionstart = ". $now . " where username = '" . $this->username . "';");
+		$stmt = sql_prepare("update users set sessionkey = '" . $sessionkey . "', sessionstart = ". $now . " where username = :username ;");
+		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
+		$stmt->execute();
 		return $this->get_session_key();
 	}
 
 	function get_session_key() {
-		$result = sql_query("select sessionkey, sessionstart, failed_logins from users where username = '" . $this->username . "';");
+		$stmt = sql_prepare("select sessionkey, sessionstart, failed_logins from users where username = :username;");
+		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
+		$result = $stmt->execute();
 		if(!$result) {
 			return null;
 		}
@@ -87,15 +93,21 @@ class Auth {
 	}
 
 	function clear_session_key() {
-		sql_exec("update users set sessionkey = null, sessionstart = null where username = '" . $this->username . "';");
+		$stmt = sql_prepare("update users set sessionkey = null, sessionstart = null where username = :username ;");
+		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
+		$stmt->execute();
 	}
 
 	function increment_failed_logins() {
-		sql_exec("update users set failed_logins = failed_logins + 1 where username = '" . $this->username . "';");
+		$stmt = sql_prepare("update users set failed_logins = failed_logins + 1 where username = :username ;");
+		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
+		$stmt->execute();
 	}
 
 	function get_failed_logins() {
-		$result = sql_query("select failed_logins from users where username='" . $this->username . "';") or json_exit("Failed database access", 1);
+		$stmt = sql_prepare("select failed_logins from users where username = :username ;");
+		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
+		$result = $stmt->execute() or json_exit("Failed database access", 1);
 		$row = $result->fetchArray();
 		if(!$row) {
 			return null;
@@ -138,7 +150,9 @@ class Auth {
 	}
 
 	function get_user_hash($data) {
-		$result = sql_query("select passhash from users where username = '" . $this->username . "';");
+		$stmt = sql_prepare("select passhash from users where username = :username ;");
+		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
+		$result = $stmt->execute();
 		$row = $result->fetchArray();
 		if($row == null || !$row['passhash']) {
 			return false;

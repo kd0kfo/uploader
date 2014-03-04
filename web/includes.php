@@ -114,4 +114,9 @@ function sql_query($sql) {
 	return $db->query($sql);
 }
 
+function sql_prepare($sql) {
+	global $db;
+	return $db->prepare($sql);
+}
+
 ?>
