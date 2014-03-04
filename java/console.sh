@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CLASSPATH="build/jar/uploader-1.0.b.jar"
+CLASSPATH="build/jar/uploader-1.0.a.jar"
 
 for lib in lib/*.jar;do
 	CLASSPATH=$lib:$CLASSPATH
