@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import com.davecoss.java.Logger;
+import com.davecoss.uploader.auth.AuthHash;
+import com.davecoss.uploader.auth.Credentials;
 
 import org.json.simple.parser.ParseException;
 import org.json.simple.JSONObject;
@@ -20,6 +22,8 @@ public class WebFS {
 	private URI baseURI = null;
 	private JSONObject serverInfo = null;
 	private HTTPSClient client = null;
+	private Credentials credentials = null;
+	private byte[] signingkey = null;
 	
 	public WebFS(HTTPSClient client) {
 		this.client = client;
@@ -83,10 +87,12 @@ public class WebFS {
 		L.debug("Downloading " + source);
 		// Get info for file and verify that it is a file.
 		String contentdir = (String)serverInfo.get("contentdir");
-		String sourceURL = baseURI.toString() + "/ls.php?filename=" + source;
 		InputStream input = null;
 		FileOutputStream output = null;
 		try {
+			AuthHash signature = AuthHash.getInstance(source, signingkey);
+			String sourceURL = String.format("%s/ls.php?filename=%s&signature=%s&username=%s",
+					baseURI.toString(), source, signature.toURLEncoded(), credentials.getUsername());
 			WebFile fileInfo = WebFile.fromJSON(client.jsonGet(sourceURL));
 			if(!fileInfo.type.equals("f"))
 				throw new IOException("Cannot download " + source);
@@ -106,6 +112,10 @@ public class WebFS {
 			String msg = "Error getting file information";
 			L.error(msg, wfe);
 			throw new IOException(msg, wfe);
+		} catch (AuthHash.HashException ahhe) {
+			String msg = "Error generating signature";
+			L.error(msg, ahhe);
+			throw new IOException(msg, ahhe);
 		} finally {
 			// Cleanup
 			if(input != null)
@@ -116,19 +126,25 @@ public class WebFS {
 		return new WebResponse(0, String.format("Saved %s as %s", source, dest.getName()));
 	}
 
-	public WebResponse putFile(File file) throws IOException {
+	public WebResponse putFile(File file) throws IOException, AuthHash.HashException {
 		if(!file.exists())
 			return new WebResponse(1, "File not found: " + file.getPath());
 		
-		return client.postFile(baseURI.toString() + "/upload.php", file);
+		AuthHash signature = AuthHash.getInstance(file.getName(), signingkey);
+		String postURL = String.format("%s/upload.php?username=%s&signature=%s",
+				baseURI.toString(), credentials.getUsername(), signature.hash);
+		return client.postFile(postURL, file);
 	}
 	
-	public WebResponse postStream(InputStream input, String filename) throws IOException {
+	public WebResponse postStream(InputStream input, String filename) throws IOException, AuthHash.HashException {
 		return postStream(input, filename, false);
 	}
 	
-	public WebResponse postStream(InputStream input, String filename, boolean useBase64) throws IOException {
-		UploadOutputStream postStream = new UploadOutputStream(filename, client, baseURI.toString() + "/upload.php");
+	public WebResponse postStream(InputStream input, String filename, boolean useBase64) throws IOException, AuthHash.HashException {
+		AuthHash signature = AuthHash.getInstance(filename, signingkey);
+		String postURL = String.format("%s/upload.php?username=%s&%signature=%s",
+				baseURI.toString(), credentials.getUsername(), signature.hash);
+		UploadOutputStream postStream = new UploadOutputStream(filename, client, postURL);
 		OutputStream output = postStream;
 		if(useBase64) {
 			output = client.getEncoder().encodeOutputStream(postStream);
@@ -146,7 +162,7 @@ public class WebFS {
 		return postStream.getUploadResponse();
 	}
 
-	public JSONObject jsonGet(String apiFilename, HashMap<String, String> args) throws IOException {
+	public JSONObject jsonGet(String apiFilename, HashMap<String, String> args, AuthHash signature) throws IOException {
 		String currURL = baseURI.toString();
 		if(currURL.charAt(currURL.length() - 1) != '/')
 			currURL += "/";
@@ -162,22 +178,62 @@ public class WebFS {
 					val = "";
 				currURL += String.format(fmt, key, val);
 			}
+			if(signature != null) {
+				currURL += String.format("username=%s&signature=%s", credentials.getUsername(), signature.toURLEncoded());
+			}
 			if(currURL.charAt(currURL.length() - 1) == '&')
 				currURL = currURL.substring(0, currURL.length() - 1);
 		}
 		
 		return client.jsonGet(currURL);
 	}
+	
+	public WebResponse logon() throws IOException {
+		if(credentials == null)
+			throw new IOException("Cannot log on. Missing credentials.");
+		
+		AuthHash logonkey = null;
+		try {
+			logonkey = credentials.generateLogonKey();
+		} catch (Exception e) {
+			throw new IOException("Error generating logon key", e);
+		}
+		
+		String logonURL = String.format("%s/logon.php?username=%s&hmac=%s",
+				baseURI.toString(), credentials.getUsername(), logonkey.toURLEncoded());
+		JSONObject json = client.jsonGet(logonURL);
+		WebResponse retval = WebResponse.fromJSON(json);
+		long status = (Long)json.get("status");
+		if(status != WebResponse.SUCCESS)
+			return retval;
+		
+		// Generate signing key
+		try {
+			String key = (String)json.get("sessionkey");
+			AuthHash signingHash = credentials.createSigningKey(key);
+			signingkey = signingHash.bytes();
+			credentials.destroyPassphrase(); // If there is a signing key, there is no need for the pass phrase. Destroy it.
+			L.info("Signing Key: " + signingHash.hash);
+		} catch (Exception e) {
+			throw new IOException("Error generating signing key", e);
+		}
+				
+		return retval;
+	}
 
-	public WebResponse ls(String path) throws IOException, WebFileException {
+	public WebResponse ls(String path) throws IOException, WebFileException, AuthHash.HashException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		if(path.length() != 0) {
 			if(path.charAt(0) != '/')
 				path = "/" + path;
 		}
 		args.put("filename", path);
-		WebFile webfile = WebFile.fromJSON(jsonGet("ls.php", args));
-		return new WebResponse(0, webfile);
+		try {
+			WebFile webfile = WebFile.fromJSON(jsonGet("ls.php", args, AuthHash.getInstance(path, signingkey)));
+			return new WebResponse(0, webfile);
+		} catch(Exception e) {
+			throw new WebFileException("Error getting file information", e);
+		}
 	}
 
 	/**
@@ -186,59 +242,67 @@ public class WebFS {
 	 * @return WebResponse
 	 * @throws IOException
 	 */
-	public WebResponse md5(String path) throws IOException {
+	public WebResponse md5(String path) throws IOException, AuthHash.HashException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("filename", path);
-		JSONObject json = jsonGet("md5.php", args);
+		JSONObject json = jsonGet("md5.php", args, AuthHash.getInstance(path, signingkey));
 		if(json == null || !json.containsKey("md5"))
 			return WebResponse.fromJSON(json);
 		return new WebResponse(0, (String)json.get("md5"));
 	}
 	
-	public WebResponse base64(String path, boolean encode) throws IOException {
+	public WebResponse base64(String path, boolean encode) throws IOException, AuthHash.HashException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("filename", path);
 		String action = (encode) ? "encode" : "decode";
 		args.put("action", action);
-		return WebResponse.fromJSON(jsonGet("base64.php", args));
+		return WebResponse.fromJSON(jsonGet("base64.php", args, AuthHash.getInstance(path, signingkey)));
 	}
 
-	public WebResponse merge(String path) throws IOException {
+	public WebResponse merge(String path) throws IOException, AuthHash.HashException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("filename", path);
-		return WebResponse.fromJSON(jsonGet("merge.php", args));
+		return WebResponse.fromJSON(jsonGet("merge.php", args, AuthHash.getInstance(path, signingkey)));
 	}
 	
-	public WebResponse remove(String path) throws IOException {
+	public WebResponse remove(String path) throws IOException, AuthHash.HashException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("filename", path);
-		return WebResponse.fromJSON(jsonGet("delete.php", args));
+		return WebResponse.fromJSON(jsonGet("delete.php", args, AuthHash.getInstance(path, signingkey)));
 	}
 
-	public WebResponse move(String src, String dest) throws IOException {
+	public WebResponse move(String src, String dest) throws IOException, AuthHash.HashException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("source", src);
 		args.put("destination", dest);
-		return WebResponse.fromJSON(jsonGet("mv.php", args));
+		return WebResponse.fromJSON(jsonGet("mv.php", args, AuthHash.getInstance(src+dest, signingkey)));
 	}
 	
-	public WebResponse mkdir(String newdir) throws IOException {
+	public WebResponse mkdir(String newdir) throws IOException, AuthHash.HashException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		args.put("dirname", newdir);
-		return WebResponse.fromJSON(jsonGet("mkdir.php", args));
+		return WebResponse.fromJSON(jsonGet("mkdir.php", args, AuthHash.getInstance(newdir, signingkey)));
 	}
 
-	public WebResponse clean(String filename, String md5hash) throws IOException {
+	public WebResponse clean(String filename, String md5hash) throws IOException, AuthHash.HashException {
 		HashMap<String, String> args = new HashMap<String, String>();
 		if(md5hash != null && md5hash.length() > 0) {
 			args.put("md5", md5hash);
 		}
 		args.put("filename", filename);
-		return WebResponse.fromJSON(jsonGet("clean.php", args));
+		return WebResponse.fromJSON(jsonGet("clean.php", args, AuthHash.getInstance(filename, signingkey)));
 	}
 	
-	public WebResponse clean(String filename) throws IOException {
+	public WebResponse clean(String filename) throws IOException, AuthHash.HashException {
 		return clean(filename, null);
+	}
+
+	public Credentials getCredentials() {
+		return credentials;
+	}
+
+	public void setCredentials(Credentials credentials) {
+		this.credentials = credentials;
 	}
 	
 	

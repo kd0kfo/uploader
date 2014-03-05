@@ -25,6 +25,7 @@ import com.davecoss.java.plugin.StoragePlugin;
 import com.davecoss.java.utils.CredentialPair;
 import com.davecoss.java.utils.JDialogCredentialPair;
 import com.davecoss.uploader.utils.ConsoleHTTPSClient;
+import com.davecoss.uploader.auth.AuthHash.HashException;
 
 public class Plugin implements StoragePlugin {
 	
@@ -166,6 +167,10 @@ public class Plugin implements StoragePlugin {
 			} catch (IOException ioe) {
 				ioe.printStackTrace();
 				throw new PluginException("Error closing client", ioe);
+			} catch (HashException e) {
+				String msg = "Error generating signature for merge";
+				L.error(msg, e);
+				throw new PluginException(msg, e);
 			}
 		}
 		webfs = null;
@@ -278,13 +283,16 @@ public class Plugin implements StoragePlugin {
 			}
 		} catch (IOException e) {
 			L.error("Unable to clean upload segemnts for destination: " + e.getMessage());
+		} catch (HashException e) {
+			String msg = "Error generating signature for merge";
+			L.error(msg, e);
+			throw new PluginException(msg, e);
 		}
 		return destination;
 	}
 
 	@Override
 	public InputStream getInputStream(URI uri) throws PluginException {
-		// TODO Auto-generated method stub
 		L.debug("Called getInputStream");
 		return null;
 	}

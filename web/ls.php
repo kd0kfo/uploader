@@ -2,8 +2,18 @@
 
 require_once("includes.php");
 require_once("classes.php");
+require_once("auth.php");
+
+$username = get_requested_string("username");
+if(!$username) {
+	json_exit("logon required.", 1);
+}
+$auth = new Auth($username);
 
 $filename = get_requested_filename();
+if(!$auth->authenticate($filename, get_requested_string("signature"))) {
+	json_exit("Access denied.", 1);
+}
 // If file, dump file JSON data. Otherwise use directory setup.
 if(strlen($filename) == 0) {
 	$filename = "/";

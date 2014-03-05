@@ -1,5 +1,7 @@
 <?php
+
 require_once("site.inc");
+require_once("site_db.inc");
 
 $UPLOADER_VERSION = "1.0-alpha";
 
@@ -86,6 +88,9 @@ function resolve_dir($relpath) {
 
 function append_path($dir, $to_append) {
 	$retval = $dir;
+	if(!$to_append) {
+		return $dir;
+	}
 	if($to_append[0] != "/") {
 		$retval .= "/";
 	}
@@ -98,4 +103,20 @@ function clear_uploaddir($path) {
 	global $uploaddir;
 	return str_replace($uploaddir, "", $path);
 }
+
+function sql_exec($sql) {
+	global $db;
+	$db->exec($sql) || json_exit("Failed sql exec", 1);
+}
+
+function sql_query($sql) {
+	global $db;
+	return $db->query($sql);
+}
+
+function sql_prepare($sql) {
+	global $db;
+	return $db->prepare($sql);
+}
+
 ?>

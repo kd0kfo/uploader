@@ -1,6 +1,16 @@
 <?php
 
 require_once("includes.php");
+require_once("auth.php");
+
+// TODO: Currently, upload.php only supports signing one file. Replace this with
+// a json map that will support multiple files.
+
+$auth = new Auth(get_requested_string("username"));
+$signature = get_requested_string("signature");
+if(!$signature) {
+	json_exit("Authentication required.", 1);
+}
 
 $dirmode = $default_dir_mode;
 if(!isset($uploaddir) || strlen($uploaddir) == 0) {
@@ -10,7 +20,6 @@ if(!isset($uploaddir) || strlen($uploaddir) == 0) {
 $msg = "";
 $status = 0;
 if(isset($_FILES) && count($_FILES) != 0) {
-	$keys = array("name", "tmp_name", "size");
 	foreach($_FILES as $file) {
 		if($file["error"] != 0) {
 			global  $upload_error_msgs;
@@ -19,7 +28,9 @@ if(isset($_FILES) && count($_FILES) != 0) {
 		} 			
 		$newpath = $uploaddir . "/";
 		$filename = basename($file["name"]);
-		$fanout = get_requested_string("fanout");
+		if(!$auth->authenticate($filename, $signature)) {
+			json_exit("Authorization denied.", 1);
+		}	$fanout = get_requested_string("fanout");
 		if(strlen($fanout) != 0) {
 			$subdir = substr($filename, 0, 2);
 			$newpath = $newpath . $subdir . "/";

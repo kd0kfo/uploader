@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Logon</title>
+<script src="//code.jquery.com/jquery-1.10.2.min.js" language="javascript"></script>
+<script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/rollups/hmac-sha256.js"></script><script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/components/enc-base64-min.js"></script>
+<script src="site.js" language="javascript"></script>
+<script src="fs.js" language="javascript"></script>
+</head>
+<body>
+<form action="logon.php" id="logonAction">
+<label for="username">User Name:</label>
+<input type="text" name="username" id="username"><br>
+<label for="pass">Password:</label>
+<input type="password" name="password" id="password"><br>
+<input type="hidden" name="salt" id="salt"/>
+<input type="submit" name="submit" value="Submit">
+</form>
+<div id="result"></div>
+<div id="footer"></div>
+</body>
+<script>
+$("#footer").html(site_footer());
+$("#logonAction").submit(function(event) {
+	event.preventDefault();
+
+	var form = $(this);
+	var username = $("#username").val();
+	var password = $("#password").val();
+	var salt = $("#salt").val();
+	var url = form.attr("action");
+
+	var h = hash(username, password+salt);
+	var logon_hash = hash("logon", h);
+	var result = $.post(url, {username: username, hmac: logon_hash});
+
+	result.done(function(data) {
+		var json = jQuery.parseJSON(data);
+		$("#result").empty().append(json.message);
+		if(json.sessionkey) {
+			localStorage['username'] = username;
+			localStorage['sessionkey'] = hash(h + json.sessionkey, h);
+		}
+	});
+
+
+});
+$(document).ready(function() {
+	var server_info = get_server_info();
+	if(server_info['salt']) {
+		$("#salt").val(server_info['salt']);
+	}
+});
+</script>
+</html>
+
