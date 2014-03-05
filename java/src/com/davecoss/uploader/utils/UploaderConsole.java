@@ -28,6 +28,8 @@ import com.davecoss.uploader.WebFSTask;
 import com.davecoss.uploader.WebFile;
 import com.davecoss.uploader.WebFileException;
 import com.davecoss.uploader.WebResponse;
+import com.davecoss.uploader.auth.AuthHash;
+import com.davecoss.uploader.auth.Credentials;
 
 public class UploaderConsole {
 
@@ -56,6 +58,7 @@ public class UploaderConsole {
 	public static void main(String[] cliArgs) throws Exception {
 		Console console = System.console();
 		UploaderConsole uc = new UploaderConsole();
+		AuthHash.init(new CommonsBase64());
 		
 		if(cliArgs.length == 0) {
 			System.out.println("For help and usage information, use the -help flag.");
@@ -136,6 +139,18 @@ public class UploaderConsole {
     	uc.webfs.setBaseURI(uri);
     	L.debug("Downloading config");
     	uc.webfs.downloadConfig();
+    	
+    	String username = console.readLine("WebFS Username: ");
+    	char[] passphrase = console.readPassword("WebFS Passphrase: ");
+    	String serverSalt = (String)uc.webfs.getServerInfo().get("salt");
+    	uc.webfs.setCredentials(new Credentials(username, passphrase, serverSalt));
+    	WebResponse logonResponse = uc.webfs.logon();
+    	if(logonResponse.status != WebResponse.SUCCESS)
+    	{
+    		System.err.println("Error logon on");
+    		System.err.println(logonResponse.message);
+    		System.exit(logonResponse.status);
+    	}
     	
     	String line = null;
 		while ((line = console.readLine("> ")) != null) {

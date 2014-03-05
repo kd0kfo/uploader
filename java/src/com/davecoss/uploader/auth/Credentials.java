@@ -3,7 +3,7 @@ package com.davecoss.uploader.auth;
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CredentialPair;
 
-public class Credentials extends CredentialPair{
+public class Credentials extends CredentialPair {
 
 	private static Logger L = Logger.getInstance();
 	
