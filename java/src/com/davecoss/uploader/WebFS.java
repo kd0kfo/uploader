@@ -158,7 +158,7 @@ public class WebFS {
 		return new WebResponse(0, String.format("Saved %s as %s", source, dest.getName()));
 	}
 
-	public WebResponse putFile(File file) throws IOException {
+	public WebResponse putFile(File file) throws IOException, AuthHash.HashException {
 		if(!file.exists())
 			return new WebResponse(1, "File not found: " + file.getPath());
 		
@@ -166,9 +166,12 @@ public class WebFS {
 		HashMap<String, Object> values = new HashMap<String, Object>();
 		values.put("status", (Long)0L);
 		values.put("message", "JSON return from put not yet implemented.");
+		AuthHash signature = AuthHash.getInstance(file.getName(), signingkey);
 		CloseableHttpResponse response = null;
 		try {
-			response = client.postFile(baseURI.toString() + "/upload.php", file);
+			String postURL = String.format("%s/upload.php?username=%s&signature=%s",
+					baseURI.toString(), credentials.getUsername(), signature.hash);
+			response = client.postFile(postURL, file);
 			json = responseJSON(response);
 		} catch (ParseException e) {
 			L.error("Error parsing JSON for putFile");
@@ -178,12 +181,15 @@ public class WebFS {
 		return WebResponse.fromJSON(json);
 	}
 	
-	public WebResponse postStream(InputStream input, String filename) throws IOException {
+	public WebResponse postStream(InputStream input, String filename) throws IOException, AuthHash.HashException {
 		return postStream(input, filename, false);
 	}
 	
-	public WebResponse postStream(InputStream input, String filename, boolean useBase64) throws IOException {
-		UploadOutputStream postStream = new UploadOutputStream(filename, client, baseURI.toString() + "/upload.php");
+	public WebResponse postStream(InputStream input, String filename, boolean useBase64) throws IOException, AuthHash.HashException {
+		AuthHash signature = AuthHash.getInstance(filename, signingkey);
+		String postURL = String.format("%s/upload.php?username=%s&%signature=%s",
+				baseURI.toString(), credentials.getUsername(), signature.hash);
+		UploadOutputStream postStream = new UploadOutputStream(filename, client, postURL);
 		OutputStream output = postStream;
 		if(useBase64) {
 			output = new Base64OutputStream(postStream);
@@ -261,6 +267,7 @@ public class WebFS {
 			String key = (String)json.get("sessionkey");
 			AuthHash signingHash = credentials.createSigningKey(key);
 			signingkey = signingHash.bytes();
+			credentials.destroyPassphrase(); // If there is a signing key, there is no need for the pass phrase. Destroy it.
 			L.info("Signing Key: " + signingHash.hash);
 		} catch (Exception e) {
 			throw new IOException("Error generating signing key", e);
