@@ -4,10 +4,10 @@ import java.io.Console;
 import java.io.OutputStream;
 import java.net.URI;
 import com.davecoss.java.ConsoleLog;
+import com.davecoss.java.GenericBase64;
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CLIOptionTuple;
 import com.davecoss.java.utils.CredentialPair;
-import com.davecoss.uploader.DataPoster;
 import com.davecoss.uploader.HTTPSClient;
 import com.davecoss.uploader.UploadOutputStream;
 import com.davecoss.uploader.WebFS;
@@ -19,7 +19,6 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import org.apache.commons.codec.binary.Base64OutputStream;
 
 import org.apache.http.client.CredentialsProvider;
 
@@ -85,7 +84,7 @@ public class UploadWriter {
 				String username = console.readLine("Username: ");
 				char[] pass = console.readPassword("Passphrase: ");
 				CredentialPair creds = new CredentialPair(username, pass);
-				credsProvider = HTTPSClient.createCredentialsProvider(creds, uri);
+				credsProvider = ConsoleHTTPSClient.createCredentialsProvider(creds, uri);
 				creds.destroyCreds();
 			}
 			if(cmd.hasOption("d")) {
@@ -101,11 +100,11 @@ public class UploadWriter {
 		    	System.out.print("Keystore Passphrase? ");
 		    	char[] passphrase = console.readPassword();
 		    	
-		    	client = new HTTPSClient(keystoreFilename, passphrase);
+		    	client = new ConsoleHTTPSClient(keystoreFilename, passphrase);
 		    	for(int i = 0;i<passphrase.length;i++)
 		    		passphrase[i] = 0;
 	    	} else {
-	    		client = new HTTPSClient();
+	    		client = new ConsoleHTTPSClient();
 	    	}
 	    	
 	    	if(credsProvider != null)
@@ -114,11 +113,11 @@ public class UploadWriter {
 	    	
 	    	// Running on Console?
 	    	OutputStream outputStream = null;
-	    	consoleUploader = new DataPoster(filename, client, uri.toURL().toString() + "/postdata.php");
+	    	consoleUploader = new UploadOutputStream(filename, client, uri.toURL().toString() + "/postdata.php");
 	    	outputStream = consoleUploader;
 			
 	    	if(cmd.hasOption("base64")) {
-	    		outputStream = new Base64OutputStream(outputStream);
+	    		outputStream = client.getEncoder().encodeOutputStream(outputStream);
 	    	}
 	    	
 	        try {

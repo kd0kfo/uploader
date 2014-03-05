@@ -4,29 +4,21 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.apache.commons.codec.binary.Base64OutputStream;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
-
 import com.davecoss.java.Logger;
+
+import org.json.simple.parser.ParseException;
+import org.json.simple.JSONObject;
 
 public class WebFS {
 	static Logger L = Logger.getInstance();
 	
 	private URI baseURI = null;
 	private JSONObject serverInfo = null;
-	private static final JSONParser jsonParser = new JSONParser();
 	private HTTPSClient client = null;
 	
 	public WebFS(HTTPSClient client) {
@@ -75,36 +67,11 @@ public class WebFS {
 	}
 	
 	public void downloadConfig() throws IOException {
-		CloseableHttpResponse response = client.doGet(baseURI.toString() + "/info.php");
-		JSONObject json = null;
-		try {
-			json = responseJSON(response);
-		} catch(org.json.simple.parser.ParseException pe) {
-			throw new IOException("Unable to load server config", pe);
-		} finally {
-			HTTPSClient.closeResponse(response);
-		}
-	
-		this.serverInfo = json;
+		this.serverInfo = client.jsonGet(baseURI.toString() + "/info.php");
 		if(!this.serverInfo.containsKey("contentdir"))
 			throw new IOException("Unable to get a valid server configuration.");
 	}
 	
-	@SuppressWarnings("deprecation")
-	public static JSONObject responseJSON(HttpResponse response) throws IOException, org.json.simple.parser.ParseException {
-		HttpEntity entity = response.getEntity();
-		JSONObject retval = null;
-		try {
-			InputStream jsoncontent = entity.getContent();
-			retval = (JSONObject) jsonParser.parse(new InputStreamReader(jsoncontent));
-		} finally {
-			if(entity != null)
-				entity.consumeContent(); // TODO: Replace this.
-		}
-		return retval;
-	}
-
-	@SuppressWarnings("deprecation")
 	public WebResponse downloadFile(String source, File dest) throws IOException {
 		if(dest == null)
 		{
@@ -113,41 +80,36 @@ public class WebFS {
 			dest = new File(dest.getName());
 		}
 		
+		L.debug("Downloading " + source);
 		// Get info for file and verify that it is a file.
 		String contentdir = (String)serverInfo.get("contentdir");
 		String sourceURL = baseURI.toString() + "/ls.php?filename=" + source;
-		CloseableHttpResponse response = client.doGet(sourceURL);
-		HttpEntity entity = null;
-		JSONObject json = null;
 		InputStream input = null;
 		FileOutputStream output = null;
 		try {
-			json = responseJSON(response);
-			String type = (String)json.get("type");
-			if(!type.equals("f"))
+			WebFile fileInfo = WebFile.fromJSON(client.jsonGet(sourceURL));
+			if(!fileInfo.type.equals("f"))
 				throw new IOException("Cannot download " + source);
-			sourceURL = baseURI.toString() + contentdir + (String)json.get("parent") + "/" + (String)json.get("name");
+			sourceURL = baseURI.toString() + WebFile.join(contentdir, fileInfo.getAbsolutePath());
 			System.out.println("Path: " + sourceURL); // TODO: replace with Logger
-			HTTPSClient.closeResponse(response);
 			
 			// Download content.
-			response = client.doGet(sourceURL);
-			entity = response.getEntity();
+			input = client.getContent(sourceURL);
 			
 			// Write content to file
-			input = entity.getContent();
 			output = new FileOutputStream(dest);
 			byte[] buffer = new byte[4096];
 			int amountRead = -1;
 			while((amountRead = input.read(buffer, 0, 4096)) != -1)
 				output.write(buffer,0, amountRead);
-		} catch(org.json.simple.parser.ParseException pe) {
-			throw new IOException("Error getting file information", pe);
+		} catch(WebFileException wfe) {
+			String msg = "Error getting file information";
+			L.error(msg, wfe);
+			throw new IOException(msg, wfe);
 		} finally {
 			// Cleanup
-			if(entity != null)
-				entity.consumeContent(); // TODO: Replace this
-			HTTPSClient.closeResponse(response);
+			if(input != null)
+				input.close();
 			if(output != null)
 				output.close();
 		}
@@ -158,20 +120,7 @@ public class WebFS {
 		if(!file.exists())
 			return new WebResponse(1, "File not found: " + file.getPath());
 		
-		JSONObject json = null;
-		HashMap<String, Object> values = new HashMap<String, Object>();
-		values.put("status", (Long)0L);
-		values.put("message", "JSON return from put not yet implemented.");
-		CloseableHttpResponse response = null;
-		try {
-			response = client.postFile(baseURI.toString() + "/upload.php", file);
-			json = responseJSON(response);
-		} catch (ParseException e) {
-			L.error("Error parsing JSON for putFile");
-		} finally {
-			HTTPSClient.closeResponse(response);
-		}
-		return WebResponse.fromJSON(json);
+		return client.postFile(baseURI.toString() + "/upload.php", file);
 	}
 	
 	public WebResponse postStream(InputStream input, String filename) throws IOException {
@@ -182,7 +131,7 @@ public class WebFS {
 		UploadOutputStream postStream = new UploadOutputStream(filename, client, baseURI.toString() + "/upload.php");
 		OutputStream output = postStream;
 		if(useBase64) {
-			output = new Base64OutputStream(postStream);
+			output = client.getEncoder().encodeOutputStream(postStream);
 		}
 		
 		try {
@@ -198,8 +147,6 @@ public class WebFS {
 	}
 
 	public JSONObject jsonGet(String apiFilename, HashMap<String, String> args) throws IOException {
-		CloseableHttpResponse response = null;
-		JSONObject json = null;
 		String currURL = baseURI.toString();
 		if(currURL.charAt(currURL.length() - 1) != '/')
 			currURL += "/";
@@ -218,15 +165,8 @@ public class WebFS {
 			if(currURL.charAt(currURL.length() - 1) == '&')
 				currURL = currURL.substring(0, currURL.length() - 1);
 		}
-		try {
-			response = client.doGet(currURL);
-			json = responseJSON(response);
-		} catch (org.json.simple.parser.ParseException e) {
-			e.printStackTrace();
-		} finally {
-			HTTPSClient.closeResponse(response);
-		}
-		return json;
+		
+		return client.jsonGet(currURL);
 	}
 
 	public WebResponse ls(String path) throws IOException, WebFileException {

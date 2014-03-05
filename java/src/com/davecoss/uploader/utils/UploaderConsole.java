@@ -95,7 +95,7 @@ public class UploaderConsole {
 				String username = console.readLine("Username: ");
 				char[] passphrase = console.readPassword("Passphrase: ");
 				creds = new CredentialPair(username, passphrase);
-				credsProvider = HTTPSClient.createCredentialsProvider(creds, uri);
+				credsProvider = ConsoleHTTPSClient.createCredentialsProvider(creds, uri);
 			} finally {
 				if(creds != null)
 					creds.destroyCreds();
@@ -122,11 +122,11 @@ public class UploaderConsole {
 	    	System.out.print("Keystore Passphrase? ");
 	    	char[] passphrase = console.readPassword();
 	    	
-	    	client = new HTTPSClient(keystoreFilename, passphrase);
+	    	client = new ConsoleHTTPSClient(keystoreFilename, passphrase);
 	    	for(int i = 0;i<passphrase.length;i++)
 	    		passphrase[i] = 0;
     	} else {
-    		client = new HTTPSClient();
+    		client = new ConsoleHTTPSClient();
     	}
     	
     	if(credsProvider != null)
