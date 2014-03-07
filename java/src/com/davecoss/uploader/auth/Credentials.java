@@ -26,6 +26,8 @@ public class Credentials extends CredentialPair {
 		AuthHash retval = null;
 		L.info("Generating passhash");
 		L.info("Username: " + username);
+		if(serverSalt == null)
+			throw new Exception("No server salt provided.");
 		try {
 			byte[] saltbytes = serverSalt.getBytes();
 			passbytes = AuthHash.charArray2byteArray(passphrase);
