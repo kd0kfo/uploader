@@ -24,6 +24,7 @@ import com.davecoss.java.plugin.PluginInitException;
 import com.davecoss.java.plugin.StoragePlugin;
 import com.davecoss.java.utils.CredentialPair;
 import com.davecoss.java.utils.JDialogCredentialPair;
+import com.davecoss.uploader.utils.ConsoleHTTPSClient;
 import com.davecoss.uploader.auth.AuthHash.HashException;
 
 public class Plugin implements StoragePlugin {
@@ -53,7 +54,7 @@ public class Plugin implements StoragePlugin {
 				password = console.readPassword("Keystore Password: ");
 				if(password == null)
 					throw new PluginInitException("Error reading password");
-				client = new HTTPSClient(keystorePath, password);
+				client = new ConsoleHTTPSClient(keystorePath, password);
 			} catch(Exception e) {
 				e.printStackTrace();
 				throw new PluginInitException("Error reading URL", e);
@@ -64,13 +65,13 @@ public class Plugin implements StoragePlugin {
 				}
 			}
 		} else {
-			client = new HTTPSClient();
+			client = new ConsoleHTTPSClient();
 		}
 		
 		CredentialPair creds = null;
 		try {
 			creds = CredentialPair.fromInputStream(System.in);
-			client.startClient(HTTPSClient.createCredentialsProvider(creds, uri), uri);
+			client.startClient(ConsoleHTTPSClient.createCredentialsProvider(creds, uri), uri);
 			webfs = new WebFS(client);
 			webfs.setClient(client);
 			webfs.setBaseURI(uri);
@@ -116,19 +117,19 @@ public class Plugin implements StoragePlugin {
 			if(passphrase == null)
 				throw new PluginInitException("Error reading password");
 			try {
-				client = new HTTPSClient(keystorePath.getAbsolutePath(), passphrase);
+				client = new ConsoleHTTPSClient(keystorePath.getAbsolutePath(), passphrase);
 			} catch (Exception e) {
 				throw new PluginInitException("Error starting HTTPSClient", e);
 			}
 		} else {
-			client = new HTTPSClient();
+			client = new ConsoleHTTPSClient();
 		}
 		
 		CredentialPair creds = null;
 		try {
 			URI uri = new URI(baseURI);
 			creds = JDialogCredentialPair.showInputDialog(parent);
-			client.startClient(HTTPSClient.createCredentialsProvider(creds, uri), uri);
+			client.startClient(ConsoleHTTPSClient.createCredentialsProvider(creds, uri), uri);
 			webfs = new WebFS(client);
 			webfs.setBaseURI(uri);
 			webfs.downloadConfig();
