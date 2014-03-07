@@ -41,6 +41,9 @@ public class AuthHash {
 	}
 
 	public static AuthHash getInstance(byte[] data, byte[] secretBytes) throws HashException {
+		if(encoder == null)
+			throw new HashException("Uninitialized base64 encoder.");
+
 		Mac sha256_HMAC = null;
 		try {
 			sha256_HMAC = Mac.getInstance("HmacSHA256");

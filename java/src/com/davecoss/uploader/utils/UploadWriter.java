@@ -8,6 +8,8 @@ import com.davecoss.java.GenericBase64;
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CLIOptionTuple;
 import com.davecoss.java.utils.CredentialPair;
+import com.davecoss.uploader.auth.AuthHash;
+import com.davecoss.uploader.auth.Credentials;
 import com.davecoss.uploader.HTTPSClient;
 import com.davecoss.uploader.UploadOutputStream;
 import com.davecoss.uploader.WebFS;
@@ -49,6 +51,7 @@ public class UploadWriter {
 
 	public final static void main(String[] cli_args) throws Exception {
 	    	
+			AuthHash.init(new CommonsBase64());
 	    	Console console = System.console();
 	    	CommandLine cmd = null;
 			
@@ -75,14 +78,17 @@ public class UploadWriter {
 			}
 			URI uri = new URI(args[0]);
 			String filename = args[1];
+			if(filename.charAt(0) != '/') {
+				filename = "/" + filename;
+			}
 	    	
 			// Parse args
 			String keystoreFilename = null;
 			CredentialsProvider credsProvider = null;
 			UploadOutputStream consoleUploader = null;
 			if(cmd.hasOption("basic")) {
-				String username = console.readLine("Username: ");
-				char[] pass = console.readPassword("Passphrase: ");
+				String username = console.readLine("Basic Auth Username: ");
+				char[] pass = console.readPassword("Basic Auth Passphrase: ");
 				CredentialPair creds = new CredentialPair(username, pass);
 				credsProvider = ConsoleHTTPSClient.createCredentialsProvider(creds, uri);
 				creds.destroyCreds();
@@ -110,10 +116,24 @@ public class UploadWriter {
 	    	if(credsProvider != null)
 	    		client.startClient(credsProvider, uri);
 	    	
+	    	String username = console.readLine("WebFS Username: ");
+	    	char[] passphrase = console.readPassword("WebFS Passphrase: ");
+	    	WebFS webfs = new WebFS(client);
+	    	webfs.setBaseURI(uri);
+	    	webfs.downloadConfig();
+    		String serverSalt = (String)webfs.getServerInfo().get("salt");
+    		webfs.setCredentials(new Credentials(username, passphrase, serverSalt));
+	    	WebResponse logonResponse = webfs.logon();
+	    	if(logonResponse.status != WebResponse.SUCCESS)
+	    	{
+	    		System.err.println("Error logon on");
+	    		System.err.println(logonResponse.message);
+	    		System.exit(logonResponse.status);
+	    	}
 	    	
 	    	// Running on Console?
 	    	OutputStream outputStream = null;
-	    	consoleUploader = new UploadOutputStream(filename, client, uri.toURL().toString() + "/postdata.php");
+	    	consoleUploader = webfs.openUploadStream(filename);
 	    	outputStream = consoleUploader;
 			
 	    	if(cmd.hasOption("base64")) {
@@ -135,8 +155,6 @@ public class UploadWriter {
 	        			L.info(uploadResponse.message);
 	        		
 	        		String consoleFilename = filename;
-	        		WebFS webfs = new WebFS(client);
-	        		webfs.setBaseURI(uri);
 	        		WebResponse status = webfs.merge(consoleFilename);
 	        		if(status.status == 0)
 	        		{

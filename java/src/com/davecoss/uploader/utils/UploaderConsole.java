@@ -95,8 +95,8 @@ public class UploaderConsole {
 		if(cmd.hasOption("basic")) {
 			CredentialPair creds = null;
 			try {
-				String username = console.readLine("Username: ");
-				char[] passphrase = console.readPassword("Passphrase: ");
+				String username = console.readLine("Basic Auth Username: ");
+				char[] passphrase = console.readPassword("Basic Auth Passphrase: ");
 				creds = new CredentialPair(username, passphrase);
 				credsProvider = ConsoleHTTPSClient.createCredentialsProvider(creds, uri);
 			} finally {
