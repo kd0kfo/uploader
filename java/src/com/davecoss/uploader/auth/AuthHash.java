@@ -39,7 +39,9 @@ public class AuthHash {
 	
 	public static byte[] charArray2byteArray(char[] chars) {
 		ByteBuffer bb = Charset.forName("UTF-8").encode(CharBuffer.wrap(chars));
-		return Arrays.copyOf(bb.array(), chars.length);
+		byte[] retval = Arrays.copyOf(bb.array(), chars.length);
+		Arrays.fill(bb.array(), (byte)0);// cleanup
+		return retval;
 	}
 
 	public static AuthHash getInstance(byte[] data, byte[] secretBytes) throws HashException {
