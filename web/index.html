@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>The Vault</title>
+<script src="//code.jquery.com/jquery-1.10.2.min.js" language="javascript"></script>
+</head>
+<body>
+<div id="content">
+<p><a href="/ls.html">View Files</a></p>
+<p><a href="/upload.html">Upload Files</a></p>
+</div>
+<div id="message"></div>
+<script>
+$(document).ready(function() {
+	if(!localStorage['sessionkey']) {
+		$("#content").hide();
+		$("#message").html("<p><a href=\"logon.html\">Login</a> Required</p>");
+	}
+});
+</script>
+</body>
+</html>
