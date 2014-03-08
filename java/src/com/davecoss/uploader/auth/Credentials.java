@@ -1,7 +1,10 @@
 package com.davecoss.uploader.auth;
 
+import java.util.Arrays;
+
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CredentialPair;
+import com.davecoss.uploader.utils.CommonsBase64;
 
 public class Credentials extends CredentialPair {
 
@@ -24,8 +27,6 @@ public class Credentials extends CredentialPair {
 		byte[] secretBytes = null;
 		byte[] passbytes = null;
 		AuthHash retval = null;
-		L.info("Generating passhash");
-		L.info("Username: " + username);
 		if(serverSalt == null)
 			throw new Exception("No server salt provided.");
 		try {
@@ -46,8 +47,7 @@ public class Credentials extends CredentialPair {
 				for(int i = 0;i<passbytes.length;i++)
 					passbytes[i] = (byte)0;
 		}
-		L.debug("Salt: " + serverSalt);
-		L.debug("Passhash: " +retval.hash);
+		
 		return retval;
 	}
 	

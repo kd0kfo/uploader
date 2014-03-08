@@ -12,6 +12,8 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
+import java.util.Arrays;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -37,7 +39,7 @@ public class AuthHash {
 	
 	public static byte[] charArray2byteArray(char[] chars) {
 		ByteBuffer bb = Charset.forName("UTF-8").encode(CharBuffer.wrap(chars));
-		return bb.array();
+		return Arrays.copyOf(bb.array(), chars.length);
 	}
 
 	public static AuthHash getInstance(byte[] data, byte[] secretBytes) throws HashException {
