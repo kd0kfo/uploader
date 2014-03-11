@@ -10,10 +10,11 @@ import com.davecoss.java.Logger;
 public class UploadOutputStream extends OutputStream {
 
 	static Logger L = Logger.getInstance();
+	public static final int DEFAULT_BUFFER_SIZE = 4096;
 	
 	protected HTTPSClient client;
 	protected String destinationURL;
-	protected int bufferSize = 1024;
+	protected int bufferSize = DEFAULT_BUFFER_SIZE;
 	
 	
 	private int currIndex = 0;

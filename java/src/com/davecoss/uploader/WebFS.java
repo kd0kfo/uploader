@@ -24,6 +24,7 @@ public class WebFS {
 	private HTTPSClient client = null;
 	private Credentials credentials = null;
 	private byte[] signingkey = null;
+	private int uploadBufferSize = UploadOutputStream.DEFAULT_BUFFER_SIZE;
 	
 	public WebFS(HTTPSClient client) {
 		this.client = client;
@@ -171,7 +172,9 @@ public class WebFS {
 		}
 		String uploadURL = String.format("%s/upload.php?username=%s&signature=%s",
 				baseURI.toString(), credentials.getUsername(), signature.toURLEncoded());
-		return new UploadOutputStream(filename, client, uploadURL);
+		UploadOutputStream retval = new UploadOutputStream(filename, client, uploadURL);
+		retval.setBufferSize(this.uploadBufferSize);
+		return retval;
 	}
 
 	public JSONObject jsonGet(String apiFilename, HashMap<String, String> args, AuthHash signature) throws IOException {
@@ -315,6 +318,14 @@ public class WebFS {
 
 	public void setCredentials(Credentials credentials) {
 		this.credentials = credentials;
+	}
+	
+	public int getUploadBufferSize() {
+		return uploadBufferSize;
+	}
+	
+	public void setUploadBufferSize(int buffersize) {
+		this.uploadBufferSize = buffersize;
 	}
 	
 	public AuthHash signData(String data) throws AuthHash.HashException {

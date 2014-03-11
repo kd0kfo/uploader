@@ -23,6 +23,7 @@ import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CLIOptionTuple;
 import com.davecoss.java.utils.CredentialPair;
 import com.davecoss.uploader.HTTPSClient;
+import com.davecoss.uploader.UploadOutputStream;
 import com.davecoss.uploader.WebFS;
 import com.davecoss.uploader.WebFSTask;
 import com.davecoss.uploader.WebFile;
@@ -33,7 +34,7 @@ import com.davecoss.uploader.auth.Credentials;
 
 public class UploaderConsole {
 
-	public enum ConsoleCommands {DEBUG, EXIT, HELP, HISTORY};
+	public enum ConsoleCommands {BUFFERSIZE, DEBUG, EXIT, HELP, HISTORY};
 
 	private static Logger L = ConsoleLog.getInstance("UploaderConsole");
 	
@@ -223,6 +224,12 @@ public class UploaderConsole {
 				continue;
 			}
 			switch(cmd) {
+			case BUFFERSIZE:
+			{
+				msg += String.format("Set size of buffer used to store bytes until posted to web. (Default: %d)", 
+						UploadOutputStream.DEFAULT_BUFFER_SIZE);
+								
+			}
 			case DEBUG:
 			{
 				msg += "Set debug level. Options are ";
@@ -251,6 +258,21 @@ public class UploaderConsole {
 		ConsoleCommands command = ConsoleCommands.valueOf(tokens[0].toUpperCase());
 		int numArgs = tokens.length - 1;
 		switch(command) {
+		case BUFFERSIZE:
+		{
+			if(numArgs != 0) {
+				try {
+					webfs.setUploadBufferSize(Integer.parseInt(tokens[1]));
+				} catch(NumberFormatException nfe) {
+					System.err.println("Buffer size not changed. Invalid size: " + tokens[1]);
+					break;
+				}
+			}
+			System.out.print("Buffer Size: ");
+			System.out.print(webfs.getUploadBufferSize());
+			System.out.println();
+			break;
+		}
 		case DEBUG:
 		{
 			if(numArgs == 0)
