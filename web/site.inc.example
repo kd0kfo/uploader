@@ -6,6 +6,7 @@ $default_dir_mode = 0700; // File mode used on Server
 $max_failed_logins = 3;
 $site_secret = "This should be very long and random"; // secret used to make server side hashes. I suggest using 'openssl rand # -base64' to generate this and choose a large number.
 $site_salt = "SALT USED FOR HASHES IN DATABASE";
+$max_upload_size = 1048576; // Requested max upload size.
 
 function site_footer() {
 	echo "Site Unique Footer Goes Here";
