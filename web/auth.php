@@ -27,6 +27,8 @@ class Auth {
 		$retval = (auth_hash("logon", $passhash) == $hmac);
 		if(!$retval) {
 			$this->increment_failed_logins();
+		} else {
+			$this->reset_failed_logins();
 		}
 		
 		return $retval;
@@ -113,6 +115,12 @@ class Auth {
 			return null;
 		}
 		return $row['failed_logins'];
+	}
+	
+	function reset_failed_logins() {
+		$stmt = sql_prepare("update users set failed_logins = 0 where username = :username ;");
+		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
+		$stmt->execute();
 	}
 		
 	function excessive_failed_logins() {
