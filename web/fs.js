@@ -55,7 +55,7 @@ function updateDir(thedirname, username, sessionkey) {
 				if(val["type"] == "d") {
 				    dirent.click(function() {updateDir($(this).text().trim(), username, sessionkey);});
 				} else {
-				    dirent.click(function() {window.open(localStorage['contentdir'] + text, thedirname);});
+				    dirent.click(function() {window.location="file.html?filename=" + text;});
 				}
 				dirent.hover(hoverin, hoverout);
 				$("#contents").append(dirent);

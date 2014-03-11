@@ -20,7 +20,7 @@ if(strlen($filename) == 0) {
 }
 $thefile = new WebFile($filename);
 if(!$thefile->exists()) {
-	json_exit($filefile->orig_filename . " does not exist.", 1);
+	json_exit($filename . " does not exist.", 1);
 }
 echo $thefile->get_json();
 exit(0);
