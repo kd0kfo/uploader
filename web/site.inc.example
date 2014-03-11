@@ -1,6 +1,7 @@
 <?php
 
-$uploaddir = "/path/to/content"; // Path on Server where content is stored
+$contentdir = "/path/to/content"; // Path on Server where content is stored
+$uploaddir = "/uploads"; // Subdirectory for uploads within $contentdir
 $downloaddir = "/webdownload"; // Path in HTTP(S) URL from which content is served.
 $default_dir_mode = 0700; // File mode used on Server
 $max_failed_logins = 3;

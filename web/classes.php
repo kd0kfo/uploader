@@ -71,13 +71,13 @@ class WebFile {
 	}
 
 	function get_json() {
-		global $uploaddir;
+		global $contentdir;
 		
 		if(!file_exists($this->filepath)) {
 			json_exit("Missing file: " . $this->orig_filename, 1);
 		}
 
-		$parent = clear_uploaddir($this->base_dir);
+		$parent = clear_contentdir($this->base_dir);
 		if(strlen($parent) == 0) {
 			$parent = "/";
 		}

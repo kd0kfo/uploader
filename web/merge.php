@@ -14,7 +14,7 @@ if(!$auth->authenticate($filename, get_requested_string("signature"))) {
 }
 
 $orig_filename = $filename;
-$filename = $uploaddir . "/" . $filename;
+$filename = $contentdir . "/" . $filename;
 
 $files = glob($filename . ".*");
 $filecount = count($files);

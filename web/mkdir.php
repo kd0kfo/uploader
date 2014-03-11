@@ -10,11 +10,11 @@ if(!$username) {
 
 $auth = new Auth($username);
 
-if(!isset($uploaddir) || strlen($uploaddir) == 0) {
+if(!isset($contentdir) || strlen($contentdir) == 0) {
 	json_exit("Missing upload directory", 1);
 }
 
-$parent = $uploaddir;
+$parent = $contentdir;
 $mode = $default_dir_mode;
 
 $dirname = get_requested_string("dirname");

@@ -16,9 +16,17 @@ if(!$auth->authenticate("upload", $signature)) {
 $fanout = get_requested_string("fanout");
 
 $dirmode = $default_dir_mode;
-if(!isset($uploaddir) || strlen($uploaddir) == 0) {
-	die("Missing uploaddir");
+if(!isset($contentdir) || strlen($contentdir) == 0) {
+	json_exit("Missing contentdir", 1);
 }
+if(!isset($uploaddir) || strlen($uploaddir) == 0) {
+	json_exit("Missing upload directory", 1);
+}
+$upload_destination = $contentdir;
+if($uploaddir[0] != '/') {
+	$upload_destination .= '/';
+}
+$upload_destination .= $uploaddir;
 
 $msg = "";
 $status = 0;
@@ -29,7 +37,7 @@ if(isset($_FILES) && count($_FILES) != 0) {
 			$msg .= "Error uploading file:" . $upload_error_msgs[$file["error"]] . "\n";
 			$status = $file["error"];
 		} 			
-		$newpath = $uploaddir . "/";
+		$newpath = $upload_destination . "/";
 		$filename = basename($file["name"]);
 		if(strlen($fanout) != 0) {
 			$subdir = substr($filename, 0, 2);

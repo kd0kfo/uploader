@@ -64,12 +64,12 @@ function get_requested_filename() {
 }
 
 function resolve_dir($relpath) {
-	global $uploaddir;
+	global $contentdir;
 	if(strpos($relpath, '.') !== FALSE) {
 	  json_exit("'.' is not allowed in directory! Requested $relpath", 1);
 	}
 
-	$dir = $uploaddir;
+	$dir = $contentdir;
 	if(substr($relpath,0,1) != "/") { 
 	  $dir = "/$dir";
 	}
@@ -99,9 +99,9 @@ function append_path($dir, $to_append) {
 	return $retval;
 }
 
-function clear_uploaddir($path) {
-	global $uploaddir;
-	return str_replace($uploaddir, "", $path);
+function clear_contentdir($path) {
+	global $contentdir;
+	return str_replace($contentdir, "", $path);
 }
 
 function sql_exec($sql) {
