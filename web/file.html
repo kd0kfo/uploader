@@ -42,7 +42,7 @@ $(document).ready(function() {
 
 			message += "<br/>";
 			if(data['type'] != 'd') {
-				message += "<p><a href=\"" + localStorage['contentdir'] + data['parent'] + data['name'] + "\">Download</a></p>\n";
+				message += "<p><a href=\"" + localStorage['contentdir'] + data['parent'] + "/" + data['name'] + "\">Download</a></p>\n";
 				var clean_filename = filename.substring(0, filename.lastIndexOf('.'));
 				var clean_signature = hash(clean_filename, localStorage['sessionkey']);
 				var clean_query = "?filename=" + clean_filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(clean_signature);
