@@ -10,7 +10,9 @@ import com.davecoss.java.Logger;
 public class UploadOutputStream extends OutputStream {
 
 	static Logger L = Logger.getInstance();
-	public static final int DEFAULT_BUFFER_SIZE = 4096;
+	
+	public static final int DEFAULT_BUFFER_SIZE = 4096;// may be set using the system property, upload.buffer_size
+	public static final String PROPERTY_BUFFER_SIZE = "upload.buffer_size"; // System property name for buffer size.
 	
 	protected HTTPSClient client;
 	protected String destinationURL;
@@ -30,6 +32,7 @@ public class UploadOutputStream extends OutputStream {
 		baseFilename = tempfile.getName();
 		this.client = client;
 		this.destinationURL = destinationURL;
+		loadBufferSize();
 	}
 	
 	public UploadOutputStream(String baseFilename, HTTPSClient client, String destinationURL) throws IOException {
@@ -38,6 +41,7 @@ public class UploadOutputStream extends OutputStream {
 		stream = new FileOutputStream(tempfile);
 		this.client = client;
 		this.destinationURL = destinationURL;
+		loadBufferSize();
 		
 		while(this.baseFilename.charAt(0) == '/')
 			this.baseFilename = this.baseFilename.substring(1);
@@ -155,5 +159,16 @@ public class UploadOutputStream extends OutputStream {
 	
 	public WebResponse getUploadResponse() {
 		return uploadResponse;
+	}
+	
+	protected void loadBufferSize() {
+		String strBufferSize = System.getProperty(PROPERTY_BUFFER_SIZE, String.valueOf(DEFAULT_BUFFER_SIZE));
+		try {
+			bufferSize = Integer.parseInt(strBufferSize);
+		} catch(NumberFormatException nfe) {
+			L.error("Invalid buffer size in system property:");
+			L.error(String.valueOf(bufferSize));
+			throw nfe;
+		}
 	}
 }

@@ -24,10 +24,20 @@ public class WebFS {
 	private HTTPSClient client = null;
 	private Credentials credentials = null;
 	private byte[] signingkey = null;
-	private int uploadBufferSize = UploadOutputStream.DEFAULT_BUFFER_SIZE;
+	private int uploadBufferSize;
 	
 	public WebFS(HTTPSClient client) {
 		this.client = client;
+		String bufferSize = System.getProperty(UploadOutputStream.PROPERTY_BUFFER_SIZE, String.valueOf(UploadOutputStream.DEFAULT_BUFFER_SIZE));
+		try {
+			uploadBufferSize = Integer.parseInt(bufferSize);
+		} catch(NumberFormatException nfe) {
+			L.error("Invalid buffer size: ");
+			L.error(bufferSize);
+			L.error("Using default buffer size:");
+			L.error(Integer.toString(UploadOutputStream.DEFAULT_BUFFER_SIZE));
+			uploadBufferSize = UploadOutputStream.DEFAULT_BUFFER_SIZE;
+		}
 	}
 	
 	public HTTPSClient getClient() {
