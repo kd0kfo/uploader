@@ -24,7 +24,10 @@ import com.davecoss.java.plugin.PluginInitException;
 import com.davecoss.java.plugin.StoragePlugin;
 import com.davecoss.java.utils.CredentialPair;
 import com.davecoss.java.utils.JDialogCredentialPair;
+import com.davecoss.uploader.utils.CommonsBase64;
 import com.davecoss.uploader.utils.ConsoleHTTPSClient;
+import com.davecoss.uploader.auth.AuthHash;
+import com.davecoss.uploader.auth.Credentials;
 import com.davecoss.uploader.auth.AuthHash.HashException;
 
 public class Plugin implements StoragePlugin {
@@ -35,6 +38,10 @@ public class Plugin implements StoragePlugin {
 	private File jarfile = null;
 	private String baseURI = "";
 	private ArrayList<String> tempFiles = new ArrayList<String>();
+	
+	static {
+		AuthHash.init(new CommonsBase64());
+	}
 	
 	@Override
 	public void init(Console console) throws PluginInitException {
@@ -126,13 +133,27 @@ public class Plugin implements StoragePlugin {
 		}
 		
 		CredentialPair creds = null;
+		Credentials webfsCreds = null;
 		try {
 			URI uri = new URI(baseURI);
-			creds = JDialogCredentialPair.showInputDialog(parent);
-			client.startClient(ConsoleHTTPSClient.createCredentialsProvider(creds, uri), uri);
+			int useBasicAuth = JOptionPane.showConfirmDialog(parent, "Use Basic Auth?", "Should Basic Authentication be used?", JOptionPane.YES_NO_OPTION);
+			if(useBasicAuth == JOptionPane.YES_OPTION) {
+				creds = JDialogCredentialPair.showInputDialog(parent);
+				client.startClient(ConsoleHTTPSClient.createCredentialsProvider(creds, uri), uri);
+				creds.destroyCreds();
+			} else {
+				client.startClient();
+			}
 			webfs = new WebFS(client);
 			webfs.setBaseURI(uri);
 			webfs.downloadConfig();
+			
+			// Do webfs logon
+			creds = JDialogCredentialPair.showInputDialog(parent);
+			webfsCreds = new Credentials(creds.getUsername(), creds.getPassphrase(), (String)webfs.getServerInfo().get("salt"));
+			webfs.setCredentials(webfsCreds);
+			webfs.logon();
+			L.info("Logged onto " + uri.toString());
 		} catch (Exception e) {
 			throw new PluginInitException("Error starting WebFS", e);
 		} finally {
@@ -271,15 +292,21 @@ public class Plugin implements StoragePlugin {
 					throw new PluginException("Error uploading stream", ioe);
 				}
 		}
+		File filepath = new File(destination.getPath());
 		try {
 			L.info("saveStream is about to merge " + destination);
-			File filepath = new File(destination.getPath());
-			String name = filepath.getName();
+			String name = "/uploads/" + filepath.getName();
 			WebResponse response = webfs.merge(name);
 			if(response.status != 0)
 			{
-				L.debug("Unable to clean upload segemnts for destination: " + response.message);
-				tempFiles.remove(name);
+				L.debug("Unable to merge upload segments for destination: " + response.message);
+				return destination;
+			}
+			response = webfs.clean(name);
+			if(response.status != 0)
+			{
+				L.debug("Unable to clean upload segments for destination: " + response.message);
+				return destination;
 			}
 		} catch (IOException e) {
 			L.error("Unable to clean upload segemnts for destination: " + e.getMessage());
@@ -287,6 +314,8 @@ public class Plugin implements StoragePlugin {
 			String msg = "Error generating signature for merge";
 			L.error(msg, e);
 			throw new PluginException(msg, e);
+		} finally {
+			tempFiles.remove(filepath.getName());
 		}
 		return destination;
 	}
@@ -303,8 +332,7 @@ public class Plugin implements StoragePlugin {
 		try {
 			File filepath = new File(uri.getPath());
 			String name = filepath.getName();
-			tempFiles.add(String.format("/%s/%s", name.substring(0, 2), name));// account for fanout, add directory
-			return new UploadOutputStream(name, webfs.getClient(), baseURI + "/upload.php?fanout=1");
+			return webfs.openUploadStream(name);
 		} catch (IOException e) {
 			throw new PluginException("Error opening Upload Stream", e);
 		}
