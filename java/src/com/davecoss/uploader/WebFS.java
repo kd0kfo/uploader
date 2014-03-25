@@ -98,7 +98,7 @@ public class WebFS {
 		L.debug("Downloading " + source);
 		// Get info for file and verify that it is a file.
 		String contentdir = (String)serverInfo.get("contentdir");
-		InputStream input = null;
+		DownloadInputStream input = null;
 		FileOutputStream output = null;
 		try {
 			AuthHash signature = signData(source);
@@ -111,7 +111,7 @@ public class WebFS {
 			System.out.println("Path: " + sourceURL); // TODO: replace with Logger
 			
 			// Download content.
-			input = client.getContent(sourceURL);
+			input = new DownloadInputStream(client, sourceURL);
 			
 			// Write content to file
 			output = new FileOutputStream(dest);
@@ -169,6 +169,15 @@ public class WebFS {
 		}
 		
 		return postStream.getUploadResponse();
+	}
+	
+	public DownloadInputStream openDownloadStream(WebFile webfile) throws IOException {
+		return openDownloadStream(webfile.getAbsolutePath());
+	}
+	
+	public DownloadInputStream openDownloadStream(String path) throws IOException {
+		String uri = String.format("%s/%s%s", baseURI.toString(), (String)serverInfo.get("contentdir"), path);
+		return new DownloadInputStream(client, uri);
 	}
 	
 	public UploadOutputStream openUploadStream(String filename) throws IOException {

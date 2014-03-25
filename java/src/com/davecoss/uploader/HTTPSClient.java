@@ -19,7 +19,7 @@ public interface HTTPSClient {
 	
 	public void startClient(CredentialsProvider creds, URI uri) throws IOException;
 	
-	public InputStream getContent(String url) throws IOException;
+	public File downloadContent(String url) throws IOException;
 	
 	public JSONObject jsonGet(String url) throws IOException;
 	

@@ -322,8 +322,11 @@ public class Plugin implements StoragePlugin {
 
 	@Override
 	public InputStream getInputStream(URI uri) throws PluginException {
-		L.debug("Called getInputStream");
-		return null;
+		try {
+			return webfs.openDownloadStream(uri.getPath());
+		} catch(IOException ioe) {
+			throw new PluginException("Error opening download stream", ioe);
+		}
 	}
 
 	@Override

@@ -142,7 +142,7 @@ public class ConsoleHTTPSClient implements HTTPSClient {
 	}
 
 	@Override
-	public InputStream getContent(String url) throws IOException {
+	public File downloadContent(String url) throws IOException {
 		HttpGet httpget = new HttpGet(url);
 		
         L.info("Opening input stream from " + httpget.getRequestLine());
@@ -150,11 +150,11 @@ public class ConsoleHTTPSClient implements HTTPSClient {
         CloseableHttpResponse response = httpclient.execute(httpget);
         HttpEntity entity = response.getEntity();
 		InputStream content = null;
-        InputStream retval = null;
         FileOutputStream output = null;
+        File tmpfile = null;
         try {
         	content = entity.getContent();
-        	File tmpfile = File.createTempFile("download", null);
+        	tmpfile = File.createTempFile("download", null);
         	tmpfile.deleteOnExit();
         	output = new FileOutputStream(tmpfile);
         	byte[] buffer = new byte[4096];
@@ -163,7 +163,6 @@ public class ConsoleHTTPSClient implements HTTPSClient {
         		output.write(buffer, 0, amountRead);
         	output.close();
         	output = null;
-        	retval = new FileInputStream(tmpfile);
         } finally {
         	closeResponse(response);
         	if(content != null)
@@ -171,7 +170,7 @@ public class ConsoleHTTPSClient implements HTTPSClient {
         	if(output != null)
         		output.close();
         }
-        return retval;
+        return tmpfile;
 	}
 		
 	@Override
