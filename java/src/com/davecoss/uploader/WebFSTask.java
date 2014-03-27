@@ -16,7 +16,7 @@ public class WebFSTask implements Callable<WebResponse> {
 	
 	static Logger L = Logger.getInstance();
 	
-	public enum Commands {BASE64, CLEAN, RM, GET, LS, MD5, MERGE, MKDIR, MV, PUT, POSTSTREAM, SERVERINFO};
+	public enum Commands {BASE64, CLEAN, RM, GET, LS, MD5, MERGE, MKDIR, MV, PUT, POSTSTREAM, SERVERINFO, STAT};
 	
 	private final WebFS webfs;
 	private final Commands task;
@@ -168,6 +168,15 @@ public class WebFSTask implements Callable<WebResponse> {
 		{
 			return new WebResponse(0, WebFS.parseServerInfo(webfs.getServerInfo()));
 		}
+		case STAT:
+		{
+			String path;
+			if(paths.size() == 0)
+				path = "/";
+			else
+				path = paths.get(0);
+			return webfs.stat(path);
+		}
 		}
 		return new WebResponse(1, "Invalid task state");
 	}
@@ -218,6 +227,8 @@ public class WebFSTask implements Callable<WebResponse> {
 			return "Post a stream.";
 		case SERVERINFO:
 			return "Prints information about the server";
+		case STAT:
+			return "Get detailed file status information";
 		}
 
 		return null;

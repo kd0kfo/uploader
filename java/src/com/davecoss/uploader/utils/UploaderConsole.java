@@ -22,7 +22,11 @@ import com.davecoss.java.LogHandler;
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CLIOptionTuple;
 import com.davecoss.java.utils.CredentialPair;
+import com.davecoss.uploader.ACL;
+import com.davecoss.uploader.FileMetaData;
+import com.davecoss.uploader.FileRevision;
 import com.davecoss.uploader.HTTPSClient;
+import com.davecoss.uploader.Permission;
 import com.davecoss.uploader.UploadOutputStream;
 import com.davecoss.uploader.WebFS;
 import com.davecoss.uploader.WebFSTask;
@@ -447,6 +451,33 @@ public class UploaderConsole {
 		case SERVERINFO:
 		{
 			response = WebFSTask.blockingRun(webfsTask);
+			break;
+		}
+		case STAT:
+		{
+			if(numArgs == 0)
+				path = "/";
+			webfsTask.addPath(path);
+			response = WebFSTask.blockingRun(webfsTask);
+			if(response.metadata == null)
+				break;
+			FileMetaData metadata = response.metadata;
+			System.out.println("About: " + path);
+			System.out.println("Size: " + metadata.size);
+			System.out.println("Permissions:");
+			Iterator<String> users = metadata.acl.getUsers().iterator();
+			while(users.hasNext()) {
+				String user = users.next();
+				Permission perm = metadata.acl.getPermission(user);
+				System.out.println(user + "(" + perm.toString() + ")");
+			}
+			Iterator<Integer> revids = metadata.revisionList.keySet().iterator();
+			while(revids.hasNext()) {
+				Integer revid = revids.next();
+				FileRevision rev = metadata.revisionList.get(revid);
+				System.out.println("Revision " + revid.toString() + ": " + rev.toString());
+			}
+			response = null;
 			break;
 		}
 		}

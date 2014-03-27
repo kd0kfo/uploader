@@ -1,106 +1,98 @@
 <?php
 
 require_once("includes.php");
+require_once("webfile.php");
 
-class WebFile {
-
-	var $filepath;
-	var $orig_filename;
-	var $base_dir;
-
-	function WebFile($relative_path) {
-		$this->orig_filename = $relative_path;
-		$dir = dirname($relative_path);
-		if($dir == ".") {
-			$dir = "/";
+class ACL {
+	var $access_list = array();
+	
+	function ACL($arr) {
+		$this->access_list = $arr;
+	}
+	
+	function get_permission($user) {
+		if(!array_key_exists($user, $access_list)) {
+			return 0;
 		}
-		$this->base_dir = resolve_dir($dir);
-		$this->filepath = append_path($this->base_dir, basename($this->orig_filename));
+		return $this->access_list[$user];
 	}
 	
-	function is_file() {
-		return is_file($this->filepath);
+	function get_acl_list() {
+		return $this->access_list;
 	}
-	
-	function is_dir() {
-		return is_dir($this->filepath);
-	}
-	
-	function exists() {
-		return file_exists($this->filepath);
-	}
+}
 
-	function size() {
-		if(!$this->exists()) {
+class FileRevision {
+	var $creator;
+	var $timestamp;
+	var $command;
+	
+	function FileRevision($creator, $command) {
+		$this->creator = $creator;
+		$this->timestamp = time();
+		$this->command = $command;
+	}
+	
+	function time() {
+		return $this->timestamp;
+	}
+	
+	function set_time($time) {
+		$this->timestamp = $time;
+	}
+	
+	function creator() {
+		return $this->creator;
+	}
+	
+	function command() {
+		return $this->command;
+	}
+}
+
+class FileMetaData {
+	var $acl;
+	var $revision_list;
+	var $size;
+	
+	function FileMetaData($size, $revision_list, $acl) {
+		$this->size = $size;
+		$this->revision_list = $revision_list;
+		$this->acl = $acl;
+	}
+	
+	function current_revision() {
+		if(empty($revision_list)) {
 			return -1;
 		}
-		if($this->is_file()) {
-			return filesize($this->filepath);
-		}
-		$count = 0;
-		$dh = opendir($this->filepath);
-		if($dh) {
-			while(($dirent = readdir($dh)) !== false) {
-				$count++;
-			}	
-			closedir($dh);
-		}
-		return $count - 2;
-	}
-
-	function unlink() {
-		if($this->is_dir()) {
-			return rmdir($this->filepath);
-		}
-		return unlink($this->filepath);
-	}
-
-	function get_base_dir() {
-		return $this->base_dir;
+		$newest_revision = max(array_keys($this->revision_list));
+		return $newest_revision;
 	}
 	
-	function move_to($destination) {
-		return rename($this->filepath, $destination->filepath);
+	function get_revision($rev) {
+		if(!access_key_exists($rev)) {
+			return null;
+		}
+		return $this->revision_list[$rev];
 	}
-
-	function type() {
-		if($this->is_dir()) {
-			return "d";
-		}
-		return "f";
+	
+	function get_permission($user) {
+		return $this->acl->get_permission($user);
 	}
-
-	function get_json() {
-		global $contentdir;
-		
-		if(!file_exists($this->filepath)) {
-			json_exit("Missing file: " . $this->orig_filename, 1);
+	
+	function json() {
+		$revs = array();
+		if(empty($this->revision_list)) {
+			return json_encode(array("size" => $this->size, "acl" => null, "revisions" => null));
 		}
-
-		$parent = clear_contentdir($this->base_dir);
-		if(strlen($parent) == 0) {
-			$parent = "/";
+		foreach($this->revision_list as $id => $val) {
+			$revs[$id] = array("creator" => $val->creator, "timestamp" => $val->timestamp, "command" => $val->command);
 		}
-		$info = array("name" => basename($this->orig_filename), "type" => $this->type(), "size" => $this->size(), "parent" => $parent);
-		if($this->is_dir()) {
-			$dir_arr = array();
-			$web_dirname = dirname($this->orig_filename);
-			if($web_dirname == ".") {
-				$web_dirname = "";
-			}
-			if($dh = opendir($this->filepath)) {
-			  while(($dirent = readdir($dh)) !== FALSE) {
-			    if($dirent == "." || $dirent == "..") {
-			      continue;
-			    }
-			    $childfile = new WebFile($this->orig_filename . "/" . $dirent);
-			    $dir_arr[] = array("name" => basename($childfile->orig_filename), "type" => $childfile->type(), "size" => $childfile->size());
-			  }
-			  closedir($dh);
-			 }	
-			$info["dirents"] = $dir_arr;
+		$acllist = $this->acl->get_acl_list();
+		if(empty($acllist)) {
+			$acllist = null;
 		}
-		return json_encode($info);
+		return json_encode(array("size" => $this->size, "acl" =>$acllist , "revisions" => $revs));
 	}
 }
 

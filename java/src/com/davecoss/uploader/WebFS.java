@@ -269,6 +269,22 @@ public class WebFS {
 			throw new WebFileException("Error getting file information", e);
 		}
 	}
+	
+	public WebResponse stat(String path)  throws IOException, WebFileException, AuthHash.HashException {
+		HashMap<String, String> args = new HashMap<String, String>();
+		if(path.length() != 0) {
+			if(path.charAt(0) != '/')
+				path = "/" + path;
+		}
+		args.put("filename", path);
+		try {
+			JSONObject json = jsonGet("stat.php", args, signData(path));
+			FileMetaData metadata = FileMetaData.fromJSON(json);
+			return new WebResponse(0, path, metadata);
+		} catch(Exception e) {
+			throw new WebFileException("Error doing file stat", e);
+		}
+	}
 
 	/**
 	 * Returns either the MD5 has as string or null if it could not be found.

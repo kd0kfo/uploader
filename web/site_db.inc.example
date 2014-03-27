@@ -3,5 +3,7 @@
 $db = new Sqlite3("test.sqlite");
 
 $db->exec("create table if not exists users (username STRING PRIMARY KEY, passhash STRING NOT NULL, sessionkey STRING, sessionstart INTEGER, failed_logins INTEGER default 0);") || die ("Could not setup table.");
-
+$db->exec("create table if not exists filemetadata (id INTEGER PRIMARY KEY, filepath STRING UNIQUE NOT NULL);") || die ("Could not setup metadata table.");
+$db->exec("create table if not exists filerevisions (id INTEGER PRIMARY KEY, fileid INTEGER NOT NULL, creator STRING NOT NULL, timestamp INTEGER, command STRING, FOREIGN KEY(fileid) REFERENCES filemetadata(id));") || die ("Could not setup revision table.");
+$db->exec("create table if not exists fileacls (id INTEGER PRIMARY KEY, fileid INTEGER NOT NULL, username STRING NOT NULL, permission INTEGER, FOREIGN KEY(fileid) REFERENCES filemetadata(id));") || die ("Could not setup acl table.");
 ?>

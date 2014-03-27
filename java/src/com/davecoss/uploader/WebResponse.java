@@ -17,12 +17,14 @@ public class WebResponse {
 	public final String message;
 	public final WebFile webfile;
 	public final File localfile;
+	public final FileMetaData metadata;
 	
 	public WebResponse(int status, String message) {
 		this.status = status;
 		this.message = message;
 		this.webfile = null;
 		this.localfile = null;
+		this.metadata = null;
 	}
 	
 	public WebResponse(int status, WebFile webfile) {
@@ -30,6 +32,7 @@ public class WebResponse {
 		this.message = webfile.name;
 		this.webfile = webfile;
 		this.localfile = null;
+		this.metadata = null;
 	}
 	
 	public WebResponse(int status, File localfile) {
@@ -37,6 +40,15 @@ public class WebResponse {
 		this.message = localfile.getName();
 		this.webfile = null;
 		this.localfile = localfile;
+		this.metadata = null;
+	}
+	
+	public WebResponse(int status, String filename, FileMetaData meatadata) {
+		this.status = status;
+		this.message = filename;
+		this.webfile = null;
+		this.localfile = null;
+		this.metadata = meatadata;
 	}
 	
 	public static WebResponse fromJSON(JSONObject json) throws IOException {

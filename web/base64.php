@@ -3,6 +3,7 @@
 require_once("includes.php");
 require_once("classes.php");
 require_once("auth.php");
+require_once("webfile.php");
 
 $username = get_requested_string("username");
 $auth = new Auth($username);
