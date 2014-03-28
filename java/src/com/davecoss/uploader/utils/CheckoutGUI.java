@@ -136,6 +136,7 @@ public class CheckoutGUI extends JFrame {
 				if(path == null)
 					return;
 				String message = "";
+				FileWriter statWriter = null;
 				try {
 					WebResponse response = webfs.stat(path);
 					if(response.status != WebResponse.SUCCESS) {
@@ -155,6 +156,8 @@ public class CheckoutGUI extends JFrame {
 				} catch(Exception e) {
 					message = "Error downloading file";
 					L.error(message, e);
+					if(statWriter != null)
+						statWriter.close();
 				}
 				JOptionPane.showMessageDialog(contentPane, message);
 				
