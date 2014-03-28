@@ -59,6 +59,32 @@ class WebFile {
 		}
 		return $retval;
 	}
+	
+	function chmod($user, $permission) {
+		$fileid = $this->get_fileid();
+		$stmt = sql_prepare("insert or replace into fileacls (fileid, username, permission) values (:fileid, :username, :permission);");
+		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
+		$stmt->bindValue(":username", $user, SQLITE3_TEXT);
+		$stmt->bindValue(":permission", $permission, SQLITE3_INTEGER);
+		return $stmt->execute();
+	}
+	
+	function checkout($user) {
+		$fileid = $this->get_fileid();
+		$stmt = sql_prepare("insert or replace into filecheckouts (fileid, username, timestamp) values (:fileid, :username, :timestamp);");
+		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
+		$stmt->bindValue(":username", $user, SQLITE3_TEXT);
+		$stmt->bindValue(":timestamp", time(), SQLITE3_INTEGER);
+		return $stmt->execute();
+	}
+	
+	function checkin($user) {
+		$fileid = $this->get_fileid();
+		$stmt = sql_prepare("delete from filecheckouts where fileid = :fileid and username = :username;");
+		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
+		$stmt->bindValue(":username", $user, SQLITE3_TEXT);
+		$stmt->execute();
+	}
 
 	function get_base_dir() {
 		return $this->base_dir;
@@ -154,7 +180,16 @@ class WebFile {
 		while(($row = $result->fetchArray()) != null) {
 			$acllist[$row['username']] = $row['permission'];
 		}
-		return new FileMetaData($this->size(), $revisions, new ACL($acllist));
+		
+		$retval = new FileMetaData($this->orig_filename, $this->size(), $revisions, new ACL($acllist));
+		$stmt = sql_prepare("select username, timestamp from filecheckouts where fileid = :fileid;");
+		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
+		$result = $stmt->execute();
+		while(($row = $result->fetchArray()) != null) {
+			$retval->checkout_list[$row['username']] = new FileCheckout($row['username'], $row['timestamp']);
+		}
+		
+		return $retval;
 	}
 
 	function update_revision($username, $command) {

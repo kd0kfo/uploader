@@ -50,6 +50,7 @@ else {
 	fwrite($fh, base64_decode($data));
 }
 fclose($fh);
+$file->update_revision($username, "base64_$action");
 
 $msg = "Base64 ";
 if($action == "encode") {

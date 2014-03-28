@@ -11,10 +11,20 @@ class ACL {
 	}
 	
 	function get_permission($user) {
-		if(!array_key_exists($user, $access_list)) {
+		if(!array_key_exists($user, $this->access_list)) {
 			return 0;
 		}
 		return $this->access_list[$user];
+	}
+	
+	function can_read($user) {
+		$perm = $this->get_permission($user);
+		return ($perm & 4) != 0;
+	}
+	
+	function can_write($user) {
+		$perm = $this->get_permission($user);
+		return ($perm & 2) != 0;
 	}
 	
 	function get_acl_list() {
@@ -41,28 +51,50 @@ class FileRevision {
 		$this->timestamp = $time;
 	}
 	
-	function creator() {
+	function get_creator() {
 		return $this->creator;
 	}
 	
-	function command() {
+	function get_command() {
 		return $this->command;
+	}
+}
+
+class FileCheckout {
+	var $user;
+	var $timestamp;
+	
+	function FileCheckout($user, $timestamp) {
+		$this->user = $user;
+		$this->timestamp = $timestamp;
+	}
+	
+	function who() {
+		return $this->user;		
+	}
+	
+	function when() {
+		return $this->timestamp;
 	}
 }
 
 class FileMetaData {
 	var $acl;
 	var $revision_list;
+	var $checkout_list;
 	var $size;
+	var $path;
 	
-	function FileMetaData($size, $revision_list, $acl) {
+	function FileMetaData($path, $size, $revision_list, $acl) {
+		$this->path = $path;
 		$this->size = $size;
 		$this->revision_list = $revision_list;
 		$this->acl = $acl;
+		$this->checkout_list = array();
 	}
 	
 	function current_revision() {
-		if(empty($revision_list)) {
+		if(empty($this->revision_list)) {
 			return -1;
 		}
 		$newest_revision = max(array_keys($this->revision_list));
@@ -73,26 +105,46 @@ class FileMetaData {
 		if(!access_key_exists($rev)) {
 			return null;
 		}
-		return $this->revision_list[$rev];
+		$rev = $this->revision_list[$rev];
+		return $rev->get_creator();
 	}
 	
-	function get_permission($user) {
-		return $this->acl->get_permission($user);
+	function get_acl() {
+		return $this->acl;
+	}
+	
+	function get_owner() {
+		$revision = $this->current_revision();
+		if($revision == -1) {
+			return "root";
+		}
+		return $this->revision_list[$revision]->creator;
+	}
+	
+	function checkout($user) {
+		$this->checkout_list[$user] = new FileCheckout($user, time());
+	}
+	
+	function checkin($user) {
+		if($this->checkout_list[$user]) {
+			unset($this->checkout_list[$user]);
+		}
 	}
 	
 	function json() {
 		$revs = array();
-		if(empty($this->revision_list)) {
-			return json_encode(array("size" => $this->size, "acl" => null, "revisions" => null));
-		}
+		$checkouts = array();
 		foreach($this->revision_list as $id => $val) {
 			$revs[$id] = array("creator" => $val->creator, "timestamp" => $val->timestamp, "command" => $val->command);
+		}
+		foreach($this->checkout_list as $user => $val) {
+			$checkouts[$user] = array("user" => $val->who(), "timestamp" => $val->when());
 		}
 		$acllist = $this->acl->get_acl_list();
 		if(empty($acllist)) {
 			$acllist = null;
 		}
-		return json_encode(array("size" => $this->size, "acl" =>$acllist , "revisions" => $revs));
+		return json_encode(array("path" => $this->path, "size" => $this->size, "acl" =>$acllist , "revisions" => $revs, "checkouts" => $checkouts));
 	}
 }
 

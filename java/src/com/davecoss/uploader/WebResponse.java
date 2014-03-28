@@ -43,12 +43,12 @@ public class WebResponse {
 		this.metadata = null;
 	}
 	
-	public WebResponse(int status, String filename, FileMetaData meatadata) {
+	public WebResponse(int status, String message, FileMetaData metadata) {
 		this.status = status;
-		this.message = filename;
+		this.message = message;
 		this.webfile = null;
 		this.localfile = null;
-		this.metadata = meatadata;
+		this.metadata = metadata;
 	}
 	
 	public static WebResponse fromJSON(JSONObject json) throws IOException {

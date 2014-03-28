@@ -354,6 +354,19 @@ public class UploaderConsole {
 			response = WebFSTask.blockingRun(webfsTask);
 			break;
 		}
+		case CHMOD:
+		{
+			if(numArgs != 3)
+			{
+				System.out.println("chmod requires file path, username and permission.");
+				break;
+			}
+			webfsTask.addPath(path);
+			webfsTask.addArgument("user", tokens[2]);
+			webfsTask.addArgument("permission", new Integer(tokens[3]));
+			response = WebFSTask.blockingRun(webfsTask);
+			break;
+		}
 		case CLEAN:
 		{
 			if(numArgs == 0)

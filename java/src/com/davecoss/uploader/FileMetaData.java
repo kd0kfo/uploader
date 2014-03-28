@@ -3,6 +3,11 @@ package com.davecoss.uploader;
 import com.davecoss.java.Logger;
 import com.davecoss.java.LogHandler;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.lang.StringBuilder;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -15,14 +20,19 @@ public class FileMetaData {
 
 	private static Logger L = Logger.getInstance();
 	
+	public final String path;
 	public final Map<Integer, FileRevision> revisionList;
+	public final Map<String, Long> checkouts;
 	public final ACL acl;
-	public long size;
+	public final long size;
 	
-	public FileMetaData(long size, Map<Integer, FileRevision> revisionList, ACL acl) {
+	public FileMetaData(String path, long size, Map<Integer, FileRevision> revisionList, ACL acl,
+			Map<String, Long> checkouts) {
+		this.path = path;
 		this.acl = acl;
 		this.revisionList = revisionList;
 		this.size = size;
+		this.checkouts = checkouts;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -38,15 +48,17 @@ public class FileMetaData {
 				throw new WebFileException((String)json.get("message"));
 			}
 		}
-		if(!json.containsKey("size") || !json.containsKey("acl") || !json.containsKey("revisions"))
+		if(!json.containsKey("path") || !json.containsKey("size") || !json.containsKey("acl") || !json.containsKey("revisions"))
 			throw new  WebFileException("Missing WebFile JSON Element");
 		
 		JSONObject acllist = (JSONObject)json.get("acl");
 		JSONObject revisions = (JSONObject)json.get("revisions");
+		JSONObject checkoutList = (JSONObject)json.get("checkouts");
 		long size = 0;
 		if(json.containsKey("size")) {
 			size = (Long)json.get("size");
 		}
+		String path = (String)json.get("path");
 		
 		ACL acl = new ACL();
 		if(acllist != null) {
@@ -71,7 +83,28 @@ public class FileMetaData {
 				revisionList.put(revid, new FileRevision(creator, timestamp, command));
 			}
 		}
+		HashMap<String, Long> checkouts = new HashMap<String, Long>();
+		if(checkoutList != null) {
+			Iterator<Object> checkoutIt = checkoutList.values().iterator();
+			while(checkoutIt.hasNext()) {
+				JSONObject val = (JSONObject)checkoutIt.next();
+				String user = (String)val.get("user");
+				Long timestamp = (Long)val.get("timestamp");
+				checkouts.put(user, timestamp);
+			}
+		}
 		
-		return new FileMetaData(size, revisionList, acl);
+		return new FileMetaData(path, size, revisionList, acl, checkouts);
+	}
+	
+	public static FileMetaData fromFile(File file) throws WebFileException, IOException {
+		StringBuilder sb = new StringBuilder();
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+		String line = null;
+		while((line = reader.readLine()) != null) {
+			sb.append(line);
+			sb.append('\r');
+		}
+		return fromJSON((JSONObject)JSONValue.parse(sb.toString()));
 	}
 }

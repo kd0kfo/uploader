@@ -15,6 +15,7 @@ import com.davecoss.uploader.auth.Credentials;
 
 import org.json.simple.parser.ParseException;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 public class WebFS {
 	static Logger L = Logger.getInstance();
@@ -102,12 +103,14 @@ public class WebFS {
 		FileOutputStream output = null;
 		try {
 			AuthHash signature = signData(source);
-			String sourceURL = String.format("%s/ls.php?filename=%s&signature=%s&username=%s",
+			String sourceURL = String.format("%s/stream.php?filename=%s&signature=%s&username=%s",
+					baseURI.toString(), source, signature.toURLEncoded(), credentials.getUsername());
+			/*String sourceURL = String.format("%s/ls.php?filename=%s&signature=%s&username=%s",
 					baseURI.toString(), source, signature.toURLEncoded(), credentials.getUsername());
 			WebFile fileInfo = WebFile.fromJSON(client.jsonGet(sourceURL));
 			if(!fileInfo.type.equals("f"))
 				throw new IOException("Cannot download " + source);
-			sourceURL = baseURI.toString() + WebFile.join(contentdir, fileInfo.getAbsolutePath());
+			sourceURL = baseURI.toString() + WebFile.join(contentdir, fileInfo.getAbsolutePath());/**/
 			System.out.println("Path: " + sourceURL); // TODO: replace with Logger
 			
 			// Download content.
@@ -119,10 +122,10 @@ public class WebFS {
 			int amountRead = -1;
 			while((amountRead = input.read(buffer, 0, 4096)) != -1)
 				output.write(buffer,0, amountRead);
-		} catch(WebFileException wfe) {
+		/*} catch(WebFileException wfe) {
 			String msg = "Error getting file information";
 			L.error(msg, wfe);
-			throw new IOException(msg, wfe);
+			throw new IOException(msg, wfe);*/
 		} catch (AuthHash.HashException ahhe) {
 			String msg = "Error generating signature";
 			L.error(msg, ahhe);
@@ -280,9 +283,26 @@ public class WebFS {
 		try {
 			JSONObject json = jsonGet("stat.php", args, signData(path));
 			FileMetaData metadata = FileMetaData.fromJSON(json);
-			return new WebResponse(0, path, metadata);
+			return new WebResponse(0, JSONValue.toJSONString(json), metadata);
 		} catch(Exception e) {
 			throw new WebFileException("Error doing file stat", e);
+		}
+	}
+	
+	public WebResponse chmod(String path, String user, int permission)  throws IOException, WebFileException, AuthHash.HashException {
+		HashMap<String, String> args = new HashMap<String, String>();
+		if(path.length() != 0) {
+			if(path.charAt(0) != '/')
+				path = "/" + path;
+		}
+		args.put("filename", path);
+		args.put("user", user);
+		args.put("permission", Integer.toString(permission));
+		try {
+			JSONObject json = jsonGet("chmod.php", args, signData(path));
+			return WebResponse.fromJSON(json);
+		} catch(Exception e) {
+			throw new WebFileException("Error changing file permission", e);
 		}
 	}
 
