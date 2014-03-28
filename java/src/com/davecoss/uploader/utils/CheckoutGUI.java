@@ -156,8 +156,13 @@ public class CheckoutGUI extends JFrame {
 				} catch(Exception e) {
 					message = "Error downloading file";
 					L.error(message, e);
-					if(statWriter != null)
+					if(statWriter != null) {
+						try {
 						statWriter.close();
+						} catch(IOException ioe) {
+							L.error("Error closing stat file", ioe);
+						}
+					}
 				}
 				JOptionPane.showMessageDialog(contentPane, message);
 				
