@@ -53,7 +53,7 @@ public class WebResponse {
 	
 	public static WebResponse fromJSON(JSONObject json) throws IOException {
 		if(json == null)
-			return new WebResponse(1, "No json data provided.");
+			throw new IOException("No json data provided.");
 		if(!json.containsKey("status"))
 			throw new IOException("Missing status field in JSONObject to be casted to a WebResponse");
 		int status = ((Long)json.get("status")).intValue();

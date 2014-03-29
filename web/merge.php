@@ -2,8 +2,10 @@
 
 require_once("includes.php");
 require_once("auth.php");
+require_once("webfile.php");
 
-$auth = new Auth(get_requested_string("username"));
+$username = get_requested_string("username");
+$auth = new Auth($username);
 
 $filename = get_requested_filename();
 if(strlen($filename) == 0) {
@@ -41,6 +43,10 @@ for($i = 0;$i < $filecount;$i++) {
 }
 fclose($outfile);
 
+$webfile = new WebFile($orig_filename);
+if($webfile) {
+	$webfile->update_revision($username);
+}
 json_exit("Merged $orig_filename", 0);
 
 ?>

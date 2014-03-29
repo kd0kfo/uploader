@@ -26,7 +26,14 @@ if(!$file->exists()) {
 	json_exit("File $filename does not exist.", 1);
 }
 
+$metadata = $file->get_metadata();
+$acl = $metadata->acl;
+if(!$acl->can_read($username)) {
+	json_exit("Permission denied.", 1);
+}
+
 /* Load data */
+ob_clean();
 readfile($file->filepath);
 
 ?>

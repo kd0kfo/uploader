@@ -17,7 +17,7 @@ if(!$auth->authenticate($filename, get_requested_string("signature"))) {
 }
 
 $permission = get_requested_string("permission");
-if(!$permission) {
+if(count($permission) == 0) {
 	json_exit("Missing permission", 1);
 }
 if(!is_numeric($permission)) {

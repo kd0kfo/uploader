@@ -5,7 +5,8 @@ require_once("classes.php");
 require_once("auth.php");
 require_once("webfile.php");
 
-$auth = new Auth(get_requested_string("username"));
+$username = get_requested_string("username");
+$auth = new Auth($username);
 
 $source = get_requested_string("source");
 $destination = get_requested_string("destination");
@@ -22,6 +23,17 @@ $destination = new WebFile($destination);
 
 if(!$source->exists())
 	json_exit($source->orig_filename . " does not exist.", 1);
+
+foreach(array($source, $destination) as $F) {
+	if(!$F->exists()) {
+		continue;
+	}
+	$metadata = $F->get_metadata();
+	$acl = $metadata->get_acl();
+	if(!$acl->can_write($username)) {
+		json_exit("Permission denied.", 1);
+	}
+}
 
 $retval = $source->move_to($destination);
 if(!$retval) {

@@ -58,6 +58,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
 
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+
 public class CheckoutGUI extends JFrame {
 
 	static Logger L = Logger.getInstance();
@@ -68,6 +71,7 @@ public class CheckoutGUI extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTextArea txtContent;
+	private String baseuri = null;
 	protected File last_dialog_dir = null;
 	protected WebFS webfs;
 	protected File statfile = null;
@@ -92,6 +96,7 @@ public class CheckoutGUI extends JFrame {
 						statfile = new File(args[0]); 
 					}
 					CheckoutGUI frame = new CheckoutGUI();
+					frame.loadProperties();
 					if(statfile != null) {
 						try {
 							frame.loadFileInfo(statfile);
@@ -127,48 +132,32 @@ public class CheckoutGUI extends JFrame {
 		JMenuItem mntmCheckout = new JMenuItem("Checkout File");
 		mntmCheckout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				WebFS webfs = CheckoutGUI.this.webfs;
-				if(webfs == null) {
-					JOptionPane.showMessageDialog(contentPane, "Not yet logged on.");
-					return;
-				}
-				String path = (String)JOptionPane.showInputDialog(contentPane, "File Path");
-				if(path == null)
-					return;
-				String message = "";
-				FileWriter statWriter = null;
-				try {
-					WebResponse response = webfs.stat(path);
-					if(response.status != WebResponse.SUCCESS) {
-						JOptionPane.showMessageDialog(contentPane, "Could not get file information: " + response.message);
-						return;
-					}
-					FileMetaData metadata = response.metadata;
-					File localfile = new File((new File(metadata.path)).getName());
-					File statfile = new File(localfile.getName() + ".meta");
-					statWriter = new FileWriter(statfile);
-					statWriter.write(response.message);
-					statWriter.flush();statWriter.close();
-					
-					response = webfs.downloadFile(metadata.path, localFile);
-					message = response.message;
-					loadFileInfo(statfile);
-				} catch(Exception e) {
-					message = "Error downloading file";
-					L.error(message, e);
-					if(statWriter != null) {
-						try {
-						statWriter.close();
-						} catch(IOException ioe) {
-							L.error("Error closing stat file", ioe);
-						}
-					}
-				}
-				JOptionPane.showMessageDialog(contentPane, message);
-				
+				CheckoutGUI.this.checkoutfile();
 			}
 		});
 		mnFile.add(mntmCheckout);
+		JMenuItem mntmCheckin = new JMenuItem("Checkin File");
+		mntmCheckin.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				CheckoutGUI.this.checkin();
+			}
+		});
+		mnFile.add(mntmCheckin);
+		JMenuItem mntmRefresh = new JMenuItem("Refresh File Info");
+		mntmRefresh.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if(CheckoutGUI.this.updateStatFile()) {
+					try {
+						CheckoutGUI.this.loadFileInfo(CheckoutGUI.this.statfile);
+					} catch(Exception e) {
+						String msg = "Unable to reload file information";
+						JOptionPane.showMessageDialog(CheckoutGUI.this.contentPane, msg);
+						L.error(msg, e);
+					}
+				}
+			}
+		});
+		mnFile.add(mntmRefresh);
 		
 		JMenu mnWeb = new JMenu("Web");
 		menuBar.add(mnWeb);
@@ -180,11 +169,24 @@ public class CheckoutGUI extends JFrame {
 					CheckoutGUI.this.logon();
 				} catch(Exception e) {
 					JOptionPane.showMessageDialog(contentPane, "Could not log on");
-					L.error("Error loggin on", e);
+					L.error("Error logging on", e);
 				}
 			}
 		});
 		mnWeb.add(mntmLogon);
+		
+		JMenuItem mntmLogout = new JMenuItem("Logout");
+		mntmLogout.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					CheckoutGUI.this.logout();
+				} catch(Exception e) {
+					JOptionPane.showMessageDialog(contentPane, "Could not log out");
+					L.error("Error logging out", e);
+				}
+			}
+		});
+		mnWeb.add(mntmLogout);
 		
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
@@ -272,14 +274,15 @@ public class CheckoutGUI extends JFrame {
 	}
 	
 	private void logon() throws Exception {
-		String baseURI = (String)JOptionPane.showInputDialog(contentPane, "Enter Base URL");
-		if(baseURI == null)
+		if(baseuri == null)
+			baseuri = (String)JOptionPane.showInputDialog(contentPane, "Enter Base URL");
+		if(baseuri == null)
 			throw new Exception("Missing Base URI");
 		CredentialPair creds = null;
 		try {
 			ConsoleHTTPSClient client = new ConsoleHTTPSClient();
 			Credentials webfsCreds = null;
-			URI uri = new URI(baseURI);
+			URI uri = new URI(baseuri);
 			client.startClient();
 			
 			webfs = new WebFS(client);
@@ -297,4 +300,252 @@ public class CheckoutGUI extends JFrame {
 				creds.destroyCreds();
 		}
 	}
+	
+	private void logout() throws IOException {
+		if(webfs != null) {
+			webfs.close();
+			webfs = null;
+		}
+		baseuri = null;
+	}
+	
+	/**
+	 * Meant to load small file to check if error message was downloaded. Should only be used for that.
+	 */
+	private String loadContents(File file) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+		StringBuilder sb = new StringBuilder();
+		String line = null;
+		while((line = reader.readLine()) != null) {
+			sb.append(line);
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+	
+	private void loadProperties() {
+		try {
+			String homedir = System.getProperty("user.home");
+			if(homedir == null) {
+				L.debug("user.home not defined.");
+				return;
+			}
+			File propfile = new File(homedir, ".uploaderrc");
+			if(!propfile.exists())
+				return;
+			
+			InputStream input = null;
+			Properties props = null;
+			try {
+				input = new FileInputStream(propfile);
+				props = new Properties();
+				props.load(input);
+			} finally {
+				if(input != null)
+					input.close();
+			}
+			if(props == null)
+				return;
+			if(props.containsKey("baseuri")) {
+				this.baseuri = props.getProperty("baseuri");
+			}
+			L.info("Loaded default properties.");
+		} catch(Exception e) {
+			L.error("Error loading properties.", e);
+		}
+	}
+	
+	private void checkoutfile() {
+		if(webfs == null) {
+			JOptionPane.showMessageDialog(contentPane, "Not yet logged on.");
+			return;
+		}
+		String path = (String)JOptionPane.showInputDialog(contentPane, "File Path");
+		if(path == null)
+			return;
+		String message = "";
+		try {
+			updateStatFile();
+			
+			if(localFile.exists()) {
+				int choice = JOptionPane.showConfirmDialog(contentPane,
+						"File already exists locally. Overwrite it?", "Overwrite File?", JOptionPane.YES_NO_OPTION);
+				if(choice != JOptionPane.YES_OPTION) {
+					loadFileInfo(statfile);
+					return;
+				}
+			}
+			WebResponse response = webfs.downloadFile(metadata.path, localFile);
+			// Did we download and error message?
+			if(localFile.length() < 75) {
+				try { 
+					String fileContents = loadContents(localFile);
+					JSONObject tryjson = (JSONObject)JSONValue.parse(fileContents);
+					WebResponse errorCheck = WebResponse.fromJSON(tryjson);
+					response = errorCheck;
+				} catch(Exception e) {
+					// Do nothing. Not json.
+				}
+			}
+			message = response.message;
+			if(response.status != WebResponse.SUCCESS) {
+				localFile.delete();
+			} else {
+				webfs.checkout(metadata.path);
+			}
+			loadFileInfo(statfile);
+		} catch(Exception e) {
+			message = "Error downloading file";
+			L.error(message, e);
+		}
+		JOptionPane.showMessageDialog(contentPane, message);
+		
+	}
+	
+	public boolean checkin() {
+		if(webfs == null) {
+			JOptionPane.showMessageDialog(contentPane, "Not yet logged on.");
+			return false;
+		}
+		if(localFile == null || !localFile.exists()) {
+			JOptionPane.showMessageDialog(contentPane, "Missing file.");
+			L.debug("Checking missing file");
+			return false;
+		}
+		
+		if(metadata == null) {
+			JOptionPane.showMessageDialog(contentPane, "Missing file information.");
+			L.debug("Checking missing metadata");
+			return false;
+		}
+		Integer currRevId = metadata.getLastRevision();
+		
+		String path = metadata.path;
+		FileWriter statWriter = null;
+		try {
+			WebResponse response = webfs.stat(path);
+			if(response.status != WebResponse.SUCCESS) {
+				String msg = "Could not get file information: " + response.message;
+				JOptionPane.showMessageDialog(contentPane, msg);
+				L.error("Error in checkin()");
+				L.error(msg);
+				return false;
+			}
+			FileMetaData serverMetadata = response.metadata;
+			statWriter = new FileWriter(statfile);
+			statWriter.write(response.message);
+			statWriter.flush();statWriter.close();
+			
+			Integer serverRevId = serverMetadata.getLastRevision();
+			if(currRevId == null) {
+				JOptionPane.showMessageDialog(contentPane, "Cannot upload changes. Check revision number");
+				L.debug("Current metadata has no revision number. Cannot upload changes.");
+				return false;
+			}
+			if(serverRevId != null && serverRevId > currRevId) {
+				String msg = "The server has a newer version of this file. Merge contents before uploading.";
+				JOptionPane.showMessageDialog(contentPane, msg);
+				L.debug(msg);
+				L.debug("Local Version:");
+				L.debug(currRevId.toString());
+				L.debug("Server Version:");
+				L.debug(serverRevId.toString());
+				return false;
+			}
+			InputStream filestream = null;
+			try {
+				filestream = new BufferedInputStream(new FileInputStream(localFile));
+				response = webfs.postStream(filestream, localFile.getName()); // Do upload
+				if(response.status != WebResponse.SUCCESS) {
+					String msg = "Error Uploading file: " + response.message;
+					JOptionPane.showMessageDialog(contentPane, msg);
+					L.debug(msg);
+					return false;
+				}
+			} finally {
+				if(filestream != null)
+					filestream.close();
+			}
+			String uploadPath = "/uploads/" + localFile.getName(); // Merge Upload
+			response = webfs.merge(uploadPath);
+			if(response.status != WebResponse.SUCCESS) {
+				String msg = "Error Merging Upload: " + response.message;
+				JOptionPane.showMessageDialog(contentPane, msg);
+				L.debug(msg);
+				return false;
+			}
+			response = webfs.clean(uploadPath); // Clean upload
+			if(response.status != WebResponse.SUCCESS) {
+				String msg = "Error Cleaning Upload: " + response.message;
+				JOptionPane.showMessageDialog(contentPane, msg);
+				L.debug(msg);
+				return false;
+			}
+			response = webfs.chmod(uploadPath, webfs.getCredentials().getUsername(), 6); // Clean upload
+			if(response.status != WebResponse.SUCCESS) {
+				String msg = "Error Cleaning Upload: " + response.message;
+				JOptionPane.showMessageDialog(contentPane, msg);
+				L.debug(msg);
+				return false;
+			}
+			response = webfs.move(uploadPath, metadata.path); // Move to final location
+			if(response.status != WebResponse.SUCCESS) {
+				String msg = "Error Moving Upload: " + response.message;
+				JOptionPane.showMessageDialog(contentPane, msg);
+				L.debug(msg);
+				return false;
+			}
+			metadata = serverMetadata;
+			
+			JOptionPane.showMessageDialog(contentPane, "Successfully Checked in Changes.");
+			return true;
+		} catch(Exception e) {
+			String msg = "Error checking in file: " + e.getMessage();
+			JOptionPane.showMessageDialog(contentPane, msg);
+			L.error(msg, e);
+			return false;
+		} finally {
+			if(statWriter != null) {
+				try {
+					statWriter.close();
+				} catch(IOException ioe) {
+					L.error("Error closing statfile writer.", ioe);
+				}
+			}
+		}
+	}
+	
+	private boolean updateStatFile() {
+		if(metadata == null)
+			return false;
+		FileWriter statWriter = null;
+		try {
+			WebResponse response = webfs.stat(metadata.path);
+			if(response.status != WebResponse.SUCCESS) {
+				JOptionPane.showMessageDialog(contentPane, "Could not get file information: " + response.message);
+				return false;
+			}
+			metadata = response.metadata;
+			localFile = new File((new File(metadata.path)).getName());
+			statfile = new File(localFile.getName() + ".meta");
+			statWriter = new FileWriter(statfile);
+			statWriter.write(response.message);
+			statWriter.flush();statWriter.close();
+			return true;
+		} catch(Exception e) {
+			String msg = "Could not update file info.";
+			JOptionPane.showMessageDialog(contentPane, msg);
+			L.error(msg, e);
+			return false;
+		} finally {
+			if(statWriter != null) {
+				try {
+				statWriter.close();
+				} catch(IOException ioe) {
+					L.error("Error closing stat file", ioe);
+				}
+			}
+		}
+	}
+	
 }

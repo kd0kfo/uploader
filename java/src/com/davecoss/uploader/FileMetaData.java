@@ -107,4 +107,27 @@ public class FileMetaData {
 		}
 		return fromJSON((JSONObject)JSONValue.parse(sb.toString()));
 	}
+	
+	public Integer getLastRevision() {
+		if(revisionList.isEmpty()) {
+			return null;
+		}
+		Iterator<Integer> revids = revisionList.keySet().iterator();
+		Integer max = null;
+		while(revids.hasNext()) {
+			if(max == null) {
+				max = revids.next();
+			}
+			else {
+				Integer revid = revids.next();
+				if(revid.compareTo(max) > 0)
+					max = revid;
+			}
+		}
+		return max;
+	}
+	
+	public FileRevision getRevision(Integer revid) {
+		return revisionList.get(revid);
+	}
 }

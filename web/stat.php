@@ -21,6 +21,11 @@ $file = new WebFile($filename);
 if(!$file->exists()) {
 	json_exit("File not found", 1);
 }
-echo $file->get_metadata()->json();
+$metadata = $file->get_metadata();
+$acl = $metadata->acl;
+if(!$acl->can_read($username)) {
+	json_exit("Permission denied.", 1);
+}
+echo $metadata->json();
 
 ?>

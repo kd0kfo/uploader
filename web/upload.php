@@ -1,9 +1,11 @@
 <?php
 
 require_once("includes.php");
+require_once("webfile.php");
 require_once("auth.php");
 
-$auth = new Auth(get_requested_string("username"));
+$username = get_requested_string("username");
+$auth = new Auth($username);
 $signature = get_requested_string("signature");
 if(!$signature) {
 	json_exit("Authentication required.", 1);
@@ -36,6 +38,7 @@ if(isset($_FILES) && count($_FILES) != 0) {
 			global  $upload_error_msgs;
 			$msg .= "Error uploading file:" . $upload_error_msgs[$file["error"]] . "\n";
 			$status = $file["error"];
+			continue;
 		} 			
 		$newpath = $upload_destination . "/";
 		$filename = basename($file["name"]);
@@ -47,13 +50,15 @@ if(isset($_FILES) && count($_FILES) != 0) {
 			} 
 		}
 		$newpath = $newpath . $filename;
-		$msg .= "Uploaded " . $file['tmp_name'] . " to " . $newpath; 
+		$webfile = new WebFile(clear_contentdir($newpath));
+		$msg .= "Uploaded " . $file['tmp_name'] . " to " . $webfile->orig_filename; 
 		if(file_exists($newpath)) {
 			$msg .= " (File overwritten)";
 		}
 		echo $message . "\n";
 		if($file['error'] == 0) {
 			move_uploaded_file($file['tmp_name'], $newpath);
+			$webfile->chmod($username, 6);
 		}
 
 	}

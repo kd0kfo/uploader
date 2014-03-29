@@ -62,7 +62,12 @@ class WebFile {
 	
 	function chmod($user, $permission) {
 		$fileid = $this->get_fileid();
-		$stmt = sql_prepare("insert or replace into fileacls (fileid, username, permission) values (:fileid, :username, :permission);");
+		$stmt = sql_prepare("delete from fileacls where fileid = :fileid and username = :username;");
+		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
+		$stmt->bindValue(":username", $user, SQLITE3_TEXT);
+		$stmt->execute();
+		
+		$stmt = sql_prepare("insert into fileacls (fileid, username, permission) values (:fileid, :username, :permission);");
 		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
 		$stmt->bindValue(":username", $user, SQLITE3_TEXT);
 		$stmt->bindValue(":permission", $permission, SQLITE3_INTEGER);
@@ -94,7 +99,16 @@ class WebFile {
 		$retval = rename($this->filepath, $destination->filepath);
 		if($retval) {
 			$this->clear_metadata();
-			$destination->update_revision(get_requested_string("username"), "move");
+			$newuser = get_requested_string("username");
+			$destination->update_revision($newuser, "move");
+			/* Add default acl if missing */
+			$metadata = $destination->get_metadata();
+			$acl = $metadata->acl;
+			if(empty($acl->access_list)) {
+				if($newuser) {
+					$destination->chmod($newuser, 6);
+				}
+			}
 		}
 		return $retval;
 	}

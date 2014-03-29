@@ -144,6 +144,12 @@ class FileMetaData {
 		if(empty($acllist)) {
 			$acllist = null;
 		}
+		if(empty($revs)) {
+			$revs = null;
+		}
+		if(empty($checkouts)) {
+			$checkouts = null;
+		}
 		return json_encode(array("path" => $this->path, "size" => $this->size, "acl" =>$acllist , "revisions" => $revs, "checkouts" => $checkouts));
 	}
 }

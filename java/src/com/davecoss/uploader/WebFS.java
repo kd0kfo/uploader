@@ -80,6 +80,7 @@ public class WebFS {
 	public void close() throws IOException {
 		if(client != null)
 			client.close();
+		client = null;
 	}
 	
 	public void downloadConfig() throws IOException {
@@ -286,6 +287,34 @@ public class WebFS {
 			return new WebResponse(0, JSONValue.toJSONString(json), metadata);
 		} catch(Exception e) {
 			throw new WebFileException("Error doing file stat", e);
+		}
+	}
+	
+	public WebResponse checkout(String path)  throws IOException, WebFileException, AuthHash.HashException {
+		HashMap<String, String> args = new HashMap<String, String>();
+		if(path.length() != 0) {
+			if(path.charAt(0) != '/')
+				path = "/" + path;
+		}
+		args.put("filename", path);
+		try {
+			return WebResponse.fromJSON(jsonGet("checkout.php", args, signData(path)));
+		} catch(Exception e) {
+			throw new WebFileException("Error doing file checkout", e);
+		}
+	}
+	
+	public WebResponse checkin(String path)  throws IOException, WebFileException, AuthHash.HashException {
+		HashMap<String, String> args = new HashMap<String, String>();
+		if(path.length() != 0) {
+			if(path.charAt(0) != '/')
+				path = "/" + path;
+		}
+		args.put("filename", path);
+		try {
+			return WebResponse.fromJSON(jsonGet("checkin.php", args, signData(path)));
+		} catch(Exception e) {
+			throw new WebFileException("Error doing file checkin", e);
 		}
 	}
 	
