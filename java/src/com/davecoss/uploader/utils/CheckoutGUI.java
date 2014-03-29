@@ -372,7 +372,11 @@ public class CheckoutGUI extends JFrame {
 			JOptionPane.showMessageDialog(contentPane, "Not yet logged on.");
 			return;
 		}
-		String path = (String)JOptionPane.showInputDialog(contentPane, "File Path");
+		String path = null;
+		if(metadata == null)
+			path = (String)JOptionPane.showInputDialog(contentPane, "File Path");
+		else
+			path = metadata.path;
 		if(path == null)
 			return;
 		String message = "";
@@ -450,9 +454,8 @@ public class CheckoutGUI extends JFrame {
 			
 			Integer serverRevId = serverMetadata.getLastRevision();
 			if(currRevId == null) {
-				JOptionPane.showMessageDialog(contentPane, "Cannot upload changes. Check revision number");
-				L.debug("Current metadata has no revision number. Cannot upload changes.");
-				return false;
+				L.debug("Current metadata has no revision number. Assuming original file. Setting revision to -1.");
+				currRevId = -1;
 			}
 			if(serverRevId != null && serverRevId > currRevId) {
 				String msg = "The server has a newer version of this file. Merge contents before uploading.";
