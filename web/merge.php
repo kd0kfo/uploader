@@ -45,7 +45,7 @@ fclose($outfile);
 
 $webfile = new WebFile($orig_filename);
 if($webfile) {
-	$webfile->update_revision($username);
+	$webfile->update_revision($username, "merge");
 }
 json_exit("Merged $orig_filename", 0);
 
