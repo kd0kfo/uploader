@@ -72,6 +72,8 @@ public class CheckoutGUI extends JFrame {
 	private JPanel contentPane;
 	private JTextArea txtContent;
 	private String baseuri = null;
+	private String keystoreFilename = null;
+	private char[] keystorePassphrase = null;
 	protected File last_dialog_dir = null;
 	protected WebFS webfs;
 	protected File statfile = null;
@@ -280,7 +282,11 @@ public class CheckoutGUI extends JFrame {
 			throw new Exception("Missing Base URI");
 		CredentialPair creds = null;
 		try {
-			ConsoleHTTPSClient client = new ConsoleHTTPSClient();
+			ConsoleHTTPSClient client = null;
+			if(keystoreFilename == null || keystorePassphrase == null)
+				client = new ConsoleHTTPSClient();
+			else
+				client = new ConsoleHTTPSClient(keystoreFilename, keystorePassphrase);
 			Credentials webfsCreds = null;
 			URI uri = new URI(baseuri);
 			client.startClient();
@@ -348,6 +354,12 @@ public class CheckoutGUI extends JFrame {
 				return;
 			if(props.containsKey("baseuri")) {
 				this.baseuri = props.getProperty("baseuri");
+			}
+			if(props.containsKey("keystore")) {
+				this.keystoreFilename = props.getProperty("keystore");
+			}
+			if(props.containsKey("keystorepassphrase")) {
+				this.keystorePassphrase = props.getProperty("keystorepassphrase").toCharArray();
 			}
 			L.info("Loaded default properties.");
 		} catch(Exception e) {
