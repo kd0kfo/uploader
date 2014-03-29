@@ -16,7 +16,7 @@ public class WebFSTask implements Callable<WebResponse> {
 	
 	static Logger L = Logger.getInstance();
 	
-	public enum Commands {BASE64, CLEAN, RM, GET, LS, MD5, MERGE, MKDIR, MV, PUT, POSTSTREAM, SERVERINFO};
+	public enum Commands {BASE64, CHMOD, CLEAN, RM, GET, LS, MD5, MERGE, MKDIR, MV, PUT, POSTSTREAM, SERVERINFO, STAT};
 	
 	private final WebFS webfs;
 	private final Commands task;
@@ -87,6 +87,20 @@ public class WebFSTask implements Callable<WebResponse> {
 				return new WebResponse(1, "Missing file");
 			boolean encode = getBooleanArgument("encode", false);
 			return webfs.base64(paths.get(0), encode);
+		}
+		case CHMOD:
+		{
+			if(paths.size() == 0)
+				return new WebResponse(1, "Missing file");
+			int permission = getIntegerArgument("permission", -1);
+			if(permission == -1) {
+				return new WebResponse(1, "Missing permission.");
+			}
+			String user = getStringArgument("user");
+			if(user == null) {
+				return new WebResponse(1, "Missing user");
+			}
+			return webfs.chmod(paths.get(0), user, permission);
 		}
 		case CLEAN:
 		{
@@ -168,6 +182,15 @@ public class WebFSTask implements Callable<WebResponse> {
 		{
 			return new WebResponse(0, WebFS.parseServerInfo(webfs.getServerInfo()));
 		}
+		case STAT:
+		{
+			String path;
+			if(paths.size() == 0)
+				path = "/";
+			else
+				path = paths.get(0);
+			return webfs.stat(path);
+		}
 		}
 		return new WebResponse(1, "Invalid task state");
 	}
@@ -177,6 +200,20 @@ public class WebFSTask implements Callable<WebResponse> {
 		if(val != null && Boolean.class.isInstance(val))
 			return ((Boolean)val).booleanValue();
 		return defaultValue;
+	}
+	
+	private int getIntegerArgument(String key, int defaultValue) {
+		Object val = args.get(key);
+		if(val != null && Integer.class.isInstance(val))
+			return ((Integer)val).intValue();
+		return defaultValue;
+	}
+	
+	private String getStringArgument(String key) {
+		Object val = args.get(key);
+		if(val != null && String.class.isInstance(val))
+			return (String)val;
+		return null;
 	}
 
 	/**
@@ -196,6 +233,8 @@ public class WebFSTask implements Callable<WebResponse> {
 		switch(command) {
 		case BASE64:
 			return "Encode/Decode file using Base 64 encoding";
+		case CHMOD:
+			return "Change file permission";
 		case CLEAN:
 			return "Remove segment files.";
 		case RM:
@@ -218,6 +257,8 @@ public class WebFSTask implements Callable<WebResponse> {
 			return "Post a stream.";
 		case SERVERINFO:
 			return "Prints information about the server";
+		case STAT:
+			return "Get detailed file status information";
 		}
 
 		return null;

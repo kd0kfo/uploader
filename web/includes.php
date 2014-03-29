@@ -33,7 +33,7 @@ function json_error($msg, $status) {
 
 function json_exit($msg, $status) {
 	json_error($msg, $status);
-	exit($status);
+	exit(0);
 }
 
 function get_post_get($key) {

@@ -3,6 +3,7 @@
 require_once("includes.php");
 require_once("classes.php");
 require_once("auth.php");
+require_once("webfile.php");
 
 $username = get_requested_string("username");
 $auth = new Auth($username);
@@ -49,6 +50,7 @@ else {
 	fwrite($fh, base64_decode($data));
 }
 fclose($fh);
+$file->update_revision($username, "base64_$action");
 
 $msg = "Base64 ";
 if($action == "encode") {

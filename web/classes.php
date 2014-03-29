@@ -1,106 +1,156 @@
 <?php
 
 require_once("includes.php");
+require_once("webfile.php");
 
-class WebFile {
-
-	var $filepath;
-	var $orig_filename;
-	var $base_dir;
-
-	function WebFile($relative_path) {
-		$this->orig_filename = $relative_path;
-		$dir = dirname($relative_path);
-		if($dir == ".") {
-			$dir = "/";
+class ACL {
+	var $access_list = array();
+	
+	function ACL($arr) {
+		$this->access_list = $arr;
+	}
+	
+	function get_permission($user) {
+		if(!array_key_exists($user, $this->access_list)) {
+			return 0;
 		}
-		$this->base_dir = resolve_dir($dir);
-		$this->filepath = append_path($this->base_dir, basename($this->orig_filename));
+		return $this->access_list[$user];
 	}
 	
-	function is_file() {
-		return is_file($this->filepath);
+	function can_read($user) {
+		$perm = $this->get_permission($user);
+		return ($perm & 4) != 0;
 	}
 	
-	function is_dir() {
-		return is_dir($this->filepath);
+	function can_write($user) {
+		$perm = $this->get_permission($user);
+		return ($perm & 2) != 0;
 	}
 	
-	function exists() {
-		return file_exists($this->filepath);
+	function get_acl_list() {
+		return $this->access_list;
 	}
+}
 
-	function size() {
-		if(!$this->exists()) {
+class FileRevision {
+	var $creator;
+	var $timestamp;
+	var $command;
+	
+	function FileRevision($creator, $command) {
+		$this->creator = $creator;
+		$this->timestamp = time();
+		$this->command = $command;
+	}
+	
+	function time() {
+		return $this->timestamp;
+	}
+	
+	function set_time($time) {
+		$this->timestamp = $time;
+	}
+	
+	function get_creator() {
+		return $this->creator;
+	}
+	
+	function get_command() {
+		return $this->command;
+	}
+}
+
+class FileCheckout {
+	var $user;
+	var $timestamp;
+	
+	function FileCheckout($user, $timestamp) {
+		$this->user = $user;
+		$this->timestamp = $timestamp;
+	}
+	
+	function who() {
+		return $this->user;		
+	}
+	
+	function when() {
+		return $this->timestamp;
+	}
+}
+
+class FileMetaData {
+	var $acl;
+	var $revision_list;
+	var $checkout_list;
+	var $size;
+	var $path;
+	
+	function FileMetaData($path, $size, $revision_list, $acl) {
+		$this->path = $path;
+		$this->size = $size;
+		$this->revision_list = $revision_list;
+		$this->acl = $acl;
+		$this->checkout_list = array();
+	}
+	
+	function current_revision() {
+		if(empty($this->revision_list)) {
 			return -1;
 		}
-		if($this->is_file()) {
-			return filesize($this->filepath);
-		}
-		$count = 0;
-		$dh = opendir($this->filepath);
-		if($dh) {
-			while(($dirent = readdir($dh)) !== false) {
-				$count++;
-			}	
-			closedir($dh);
-		}
-		return $count - 2;
-	}
-
-	function unlink() {
-		if($this->is_dir()) {
-			return rmdir($this->filepath);
-		}
-		return unlink($this->filepath);
-	}
-
-	function get_base_dir() {
-		return $this->base_dir;
+		$newest_revision = max(array_keys($this->revision_list));
+		return $newest_revision;
 	}
 	
-	function move_to($destination) {
-		return rename($this->filepath, $destination->filepath);
+	function get_revision($rev) {
+		if(!access_key_exists($rev)) {
+			return null;
+		}
+		$rev = $this->revision_list[$rev];
+		return $rev->get_creator();
 	}
-
-	function type() {
-		if($this->is_dir()) {
-			return "d";
-		}
-		return "f";
+	
+	function get_acl() {
+		return $this->acl;
 	}
-
-	function get_json() {
-		global $contentdir;
-		
-		if(!file_exists($this->filepath)) {
-			json_exit("Missing file: " . $this->orig_filename, 1);
+	
+	function get_owner() {
+		$revision = $this->current_revision();
+		if($revision == -1) {
+			return "root";
 		}
-
-		$parent = clear_contentdir($this->base_dir);
-		if(strlen($parent) == 0) {
-			$parent = "/";
+		return $this->revision_list[$revision]->creator;
+	}
+	
+	function checkout($user) {
+		$this->checkout_list[$user] = new FileCheckout($user, time());
+	}
+	
+	function checkin($user) {
+		if($this->checkout_list[$user]) {
+			unset($this->checkout_list[$user]);
 		}
-		$info = array("name" => basename($this->orig_filename), "type" => $this->type(), "size" => $this->size(), "parent" => $parent);
-		if($this->is_dir()) {
-			$dir_arr = array();
-			$web_dirname = dirname($this->orig_filename);
-			if($web_dirname == ".") {
-				$web_dirname = "";
-			}
-			if($dh = opendir($this->filepath)) {
-			  while(($dirent = readdir($dh)) !== FALSE) {
-			    if($dirent == "." || $dirent == "..") {
-			      continue;
-			    }
-			    $childfile = new WebFile($this->orig_filename . "/" . $dirent);
-			    $dir_arr[] = array("name" => basename($childfile->orig_filename), "type" => $childfile->type(), "size" => $childfile->size());
-			  }
-			  closedir($dh);
-			 }	
-			$info["dirents"] = $dir_arr;
+	}
+	
+	function json() {
+		$revs = array();
+		$checkouts = array();
+		foreach($this->revision_list as $id => $val) {
+			$revs[$id] = array("creator" => $val->creator, "timestamp" => $val->timestamp, "command" => $val->command);
 		}
-		return json_encode($info);
+		foreach($this->checkout_list as $user => $val) {
+			$checkouts[$user] = array("user" => $val->who(), "timestamp" => $val->when());
+		}
+		$acllist = $this->acl->get_acl_list();
+		if(empty($acllist)) {
+			$acllist = null;
+		}
+		if(empty($revs)) {
+			$revs = null;
+		}
+		if(empty($checkouts)) {
+			$checkouts = null;
+		}
+		return json_encode(array("path" => $this->path, "size" => $this->size, "acl" =>$acllist , "revisions" => $revs, "checkouts" => $checkouts));
 	}
 }
 

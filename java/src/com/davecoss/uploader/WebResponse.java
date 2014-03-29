@@ -17,12 +17,14 @@ public class WebResponse {
 	public final String message;
 	public final WebFile webfile;
 	public final File localfile;
+	public final FileMetaData metadata;
 	
 	public WebResponse(int status, String message) {
 		this.status = status;
 		this.message = message;
 		this.webfile = null;
 		this.localfile = null;
+		this.metadata = null;
 	}
 	
 	public WebResponse(int status, WebFile webfile) {
@@ -30,6 +32,7 @@ public class WebResponse {
 		this.message = webfile.name;
 		this.webfile = webfile;
 		this.localfile = null;
+		this.metadata = null;
 	}
 	
 	public WebResponse(int status, File localfile) {
@@ -37,11 +40,20 @@ public class WebResponse {
 		this.message = localfile.getName();
 		this.webfile = null;
 		this.localfile = localfile;
+		this.metadata = null;
+	}
+	
+	public WebResponse(int status, String message, FileMetaData metadata) {
+		this.status = status;
+		this.message = message;
+		this.webfile = null;
+		this.localfile = null;
+		this.metadata = metadata;
 	}
 	
 	public static WebResponse fromJSON(JSONObject json) throws IOException {
 		if(json == null)
-			return new WebResponse(1, "No json data provided.");
+			throw new IOException("No json data provided.");
 		if(!json.containsKey("status"))
 			throw new IOException("Missing status field in JSONObject to be casted to a WebResponse");
 		int status = ((Long)json.get("status")).intValue();
