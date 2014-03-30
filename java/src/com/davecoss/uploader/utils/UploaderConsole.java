@@ -2,7 +2,9 @@ package com.davecoss.uploader.utils;
 
 import java.io.Console;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -89,6 +91,7 @@ public class UploaderConsole {
     	
     	String[] args = cmd.getArgs();
     	URI uri = new URI(args[0]);
+    	Properties properties = loadProperties();
 	
 		printVersionInfo(uri);
 		System.out.println("Run \"help\" to get a list of commands.");
@@ -127,13 +130,16 @@ public class UploaderConsole {
     	HTTPSClient client = null;
     	
     	if(keystoreFilename != null) {
-	    	System.out.print("Keystore Passphrase? ");
+    		System.out.print("Keystore Passphrase? ");
 	    	char[] passphrase = console.readPassword();
 	    	
 	    	client = new ConsoleHTTPSClient(keystoreFilename, passphrase);
 	    	for(int i = 0;i<passphrase.length;i++)
 	    		passphrase[i] = 0;
-    	} else {
+    	} else if(properties.containsKey("keystore") && properties.containsKey("keystorepassphrase")) {
+    		client = new ConsoleHTTPSClient(properties.getProperty("keystore"),
+    				properties.getProperty("keystorepassphrase").toCharArray());
+        } else {
     		client = new ConsoleHTTPSClient();
     	}
     	
@@ -535,5 +541,33 @@ public class UploaderConsole {
 			retval = null;
 		}
 		return retval;
+	}
+	
+	private static Properties loadProperties() {
+		try {
+			String homedir = System.getProperty("user.home");
+			if(homedir == null) {
+				L.debug("user.home not defined.");
+				return null;
+			}
+			File propfile = new File(homedir, ".uploaderrc");
+			if(!propfile.exists())
+				return null;
+			
+			InputStream input = null;
+			Properties props = null;
+			try {
+				input = new FileInputStream(propfile);
+				props = new Properties();
+				props.load(input);
+			} finally {
+				if(input != null)
+					input.close();
+			}
+			return props;
+		} catch(Exception e) {
+			L.error("Error loading properties.", e);
+			return null;
+		}
 	}
 }
