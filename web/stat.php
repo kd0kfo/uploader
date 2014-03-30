@@ -26,6 +26,13 @@ $acl = $metadata->acl;
 if(!$acl->can_read($username)) {
 	json_exit("Permission denied.", 1);
 }
+
+if(isset($_GET['download']) || isset($_POST['download'])) {
+header('Content-type: application/json');
+
+// It will be called downloaded.pdf
+header('Content-Disposition: attachment; filename="' . basename($filename) . '.meta"');
+}
 echo $metadata->json();
 
 ?>
