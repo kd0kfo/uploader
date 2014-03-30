@@ -49,7 +49,7 @@ $(document).ready(function() {
 				message += "<p><a href=\"clean.php" + clean_query + "\">Clean contents</a></p>\n";
 				message += "<p><a href=\"base64.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "&action=decode\">Base64 Decode contents</a></p>\n";
 				message += "<p><a href=\"stat.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">File Stat</a></p>\n";
-				message += "<p><a href=\"checkout.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Check out</a></p>\n";
+				message += "<p><a href=\"checkout.php?download&filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Check out</a></p>\n";
 				message += "<p><a href=\"checkin.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Check in</a></p>\n";
 				message += "<p><a href=\"stream.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">View File</a></p>\n";
 			}

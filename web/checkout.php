@@ -28,7 +28,12 @@ if(!$acl->can_read($username)) {
 	json_exit("Cannot read $filename", 1);
 }
 if($file->checkout($username)) {
-	json_exit("Checked out $filename", 0);
+	if(isset($_GET['download']) || isset($_POST['download'])) {
+                include_once("stat.php");
+        }
+        else {
+                json_exit("Checked out $filename", 0);
+        }
 } else {
 	json_exit("Could not check out file $filename", 1);
 }
