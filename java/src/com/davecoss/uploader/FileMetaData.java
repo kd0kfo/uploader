@@ -21,14 +21,17 @@ public class FileMetaData {
 	private static Logger L = Logger.getInstance();
 	
 	public final String path;
+	public final String owner;
 	public final Map<Integer, FileRevision> revisionList;
 	public final Map<String, Long> checkouts;
 	public final ACL acl;
 	public final long size;
 	
-	public FileMetaData(String path, long size, Map<Integer, FileRevision> revisionList, ACL acl,
+	public FileMetaData(String path, long size, String owner,
+			Map<Integer, FileRevision> revisionList, ACL acl,
 			Map<String, Long> checkouts) {
 		this.path = path;
+		this.owner = owner;
 		this.acl = acl;
 		this.revisionList = revisionList;
 		this.size = size;
@@ -48,7 +51,10 @@ public class FileMetaData {
 				throw new WebFileException((String)json.get("message"));
 			}
 		}
-		if(!json.containsKey("path") || !json.containsKey("size") || !json.containsKey("acl") || !json.containsKey("revisions"))
+		if(!json.containsKey("owner") || !json.containsKey("path") ||
+				!json.containsKey("size")
+				|| !json.containsKey("acl")
+				|| !json.containsKey("revisions"))
 			throw new  WebFileException("Missing WebFile JSON Element");
 		
 		JSONObject acllist = (JSONObject)json.get("acl");
@@ -59,6 +65,7 @@ public class FileMetaData {
 			size = (Long)json.get("size");
 		}
 		String path = (String)json.get("path");
+		String owner = (String)json.get("owner");
 		
 		ACL acl = new ACL();
 		if(acllist != null) {
@@ -94,7 +101,7 @@ public class FileMetaData {
 			}
 		}
 		
-		return new FileMetaData(path, size, revisionList, acl, checkouts);
+		return new FileMetaData(path, size, owner, revisionList, acl, checkouts);
 	}
 	
 	public static FileMetaData fromFile(File file) throws WebFileException, IOException {

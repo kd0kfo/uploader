@@ -55,10 +55,10 @@ if(isset($_FILES) && count($_FILES) != 0) {
 		if(file_exists($newpath)) {
 			$msg .= " (File overwritten)";
 		}
-		echo $message . "\n";
 		if($file['error'] == 0) {
 			move_uploaded_file($file['tmp_name'], $newpath);
 			$webfile->chmod($username, 6);
+			$webfile->chown($username);
 		}
 
 	}

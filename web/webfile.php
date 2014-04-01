@@ -74,6 +74,14 @@ class WebFile {
 		return $stmt->execute();
 	}
 	
+	function chown($user) {
+		$fileid = $this->get_fileid();
+		$stmt = sql_prepare("update filemetadata set owner = :owner where id = :id ;");
+		$stmt->bindValue(":owner", $user, SQLITE3_TEXT);
+		$stmt->bindValue(":id", $fileid, SQLITE3_INTEGER);
+		return $stmt->execute();
+	}
+	
 	function checkout($user) {
 		$fileid = $this->get_fileid();
 		$stmt = sql_prepare("insert or replace into filecheckouts (fileid, username, timestamp) values (:fileid, :username, :timestamp);");
@@ -96,6 +104,8 @@ class WebFile {
 	}
 
 	function move_to($destination) {
+		$source_owner = $this->get_owner();
+		$new_destination = !$destination->exists();
 		$retval = rename($this->filepath, $destination->filepath);
 		if($retval) {
 			$this->clear_metadata();
@@ -108,6 +118,9 @@ class WebFile {
 				if($newuser) {
 					$destination->chmod($newuser, 6);
 				}
+			}
+			if($new_destination) {
+				$destination->chown($source_owner);
 			}
 		}
 		return $retval;
@@ -159,7 +172,7 @@ class WebFile {
 		$result = $stmt->execute();
 		$row = $result->fetchArray();
 		if(!$row ) {
-			$stmt = sql_prepare("insert into filemetadata (id, filepath) values (NULL, :filepath);");
+			$stmt = sql_prepare("insert into filemetadata (id, filepath, owner) values (NULL, :filepath, 'root');");
 			$stmt->bindValue(":filepath", $this->filepath, SQLITE3_TEXT);
 			$stmt->execute() || json_exit("Could not update meta data", 1);
 		} else {
@@ -175,8 +188,20 @@ class WebFile {
 		return $row['id'];
 	}
 
+	function get_owner() {
+		$stmt = sql_prepare("select owner from filemetadata where filepath = :filepath ;");
+		$stmt->bindValue(":filepath", $this->filepath, SQLITE3_TEXT);
+		$result = $stmt->execute();
+		$row = $result->fetchArray();
+		if(!$row ) {
+			return "root";
+		}
+		return $row['owner'];
+	}
+
 	function get_metadata() {
 		$fileid = $this->get_fileid();
+		$fileowner = $this->get_owner();
 		$stmt = sql_prepare("select id, creator, timestamp, command from filerevisions where fileid = :fileid;");
 		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
 		$result = $stmt->execute();
@@ -195,7 +220,7 @@ class WebFile {
 			$acllist[$row['username']] = $row['permission'];
 		}
 		
-		$retval = new FileMetaData($this->orig_filename, $this->size(), $revisions, new ACL($acllist));
+		$retval = new FileMetaData($this->orig_filename, $this->size(), $fileowner, $revisions, new ACL($acllist));
 		$stmt = sql_prepare("select username, timestamp from filecheckouts where fileid = :fileid;");
 		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
 		$result = $stmt->execute();
@@ -223,6 +248,9 @@ class WebFile {
 		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
 		$result = $stmt->execute();
 		$stmt = sql_prepare("delete from fileacls where fileid = :fileid;");
+		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
+		$result = $stmt->execute();
+		$stmt = sql_prepare("delete from filecheckouts where fileid = :fileid;");
 		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
 		$result = $stmt->execute();
 		$stmt = sql_prepare("delete from filemetadata where id = :fileid;");

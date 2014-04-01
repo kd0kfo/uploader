@@ -146,10 +146,13 @@ public class UploaderConsole {
     	if(credsProvider != null)
     		client.startClient(credsProvider, uri);
     	
+    	// Setup WebFS
     	uc.webfs = new WebFS(client);
     	uc.webfs.setBaseURI(uri);
     	L.debug("Downloading config");
     	uc.webfs.downloadConfig();
+    	if(properties.containsKey("buffersize"))
+    		uc.webfs.setUploadBufferSize(Integer.parseInt(properties.getProperty("buffersize")));
     	
     	String username = console.readLine("WebFS Username: ");
     	char[] passphrase = console.readPassword("WebFS Passphrase: ");
@@ -238,7 +241,7 @@ public class UploaderConsole {
 			{
 				msg += String.format("Set size of buffer used to store bytes until posted to web. (Default: %d)", 
 						UploadOutputStream.DEFAULT_BUFFER_SIZE);
-								
+				break;	
 			}
 			case DEBUG:
 			{

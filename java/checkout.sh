@@ -1,8 +1,12 @@
 #!/bin/sh
 
-CLASSPATH="build/jar/uploader-1.0.a.jar"
+if [[ -z $UPLOADER_HOME ]];then
+	UPLOADER_HOME=$PWD
+fi
 
-for lib in lib/*.jar;do
+CLASSPATH="$UPLOADER_HOME/build/jar/uploader-1.0.a.jar"
+
+for lib in $UPLOADER_HOME/lib/*.jar;do
 	CLASSPATH=$lib:$CLASSPATH
 done
 CLASSPATH=${CLASSPATH}

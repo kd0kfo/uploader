@@ -84,10 +84,12 @@ class FileMetaData {
 	var $checkout_list;
 	var $size;
 	var $path;
+	var $owner;
 	
-	function FileMetaData($path, $size, $revision_list, $acl) {
+	function FileMetaData($path, $size, $owner, $revision_list, $acl) {
 		$this->path = $path;
 		$this->size = $size;
+		$this->owner = $owner;
 		$this->revision_list = $revision_list;
 		$this->acl = $acl;
 		$this->checkout_list = array();
@@ -114,11 +116,7 @@ class FileMetaData {
 	}
 	
 	function get_owner() {
-		$revision = $this->current_revision();
-		if($revision == -1) {
-			return "root";
-		}
-		return $this->revision_list[$revision]->creator;
+		return $this->owner;
 	}
 	
 	function checkout($user) {
@@ -150,7 +148,7 @@ class FileMetaData {
 		if(empty($checkouts)) {
 			$checkouts = null;
 		}
-		return json_encode(array("path" => $this->path, "size" => $this->size, "acl" =>$acllist , "revisions" => $revs, "checkouts" => $checkouts));
+		return json_encode(array("path" => $this->path, "size" => $this->size, "owner" => $this->owner, "acl" =>$acllist , "revisions" => $revs, "checkouts" => $checkouts));
 	}
 }
 

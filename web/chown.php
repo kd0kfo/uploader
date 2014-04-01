@@ -16,21 +16,27 @@ if(!$auth->authenticate($filename, get_requested_string("signature"))) {
 	json_exit("Invalid authentication", 1);
 }
 
+$user = get_requested_string("user");
+if(!$user) {
+	json_exit("Missing user", 1);
+}
+
 $file = new WebFile($filename);
 
 if(!$file->exists()) {
 	json_exit("File not found", 1);
 }
-$metadata = $file->get_metadata();
-$acl = $metadata->acl;
-if(!$acl->can_read($username)) {
-	json_exit("Permission denied.", 1);
-}
 
-if(isset($_GET['download']) || isset($_POST['download'])) {
-	header('Content-type: application/json');
-	header('Content-Disposition: attachment; filename="' . basename($filename) . '.meta"');
+$metadata = $file->get_metadata();
+$owner = $metadata->get_owner();
+if($owner != $username) {
+	json_exit("Cannot change owner for file $filename. Not Owner ($owner) " . count($metadata->revision_list), 1);
 }
-echo $metadata->json();
+if($file->chown($user)) {
+	json_exit("Owner changed to $user on file $filename", 0);
+} else {
+	json_exit("Could not change owner to $user on file $filename", 1);
+}
 
 ?>
+

@@ -16,11 +16,6 @@ if(!$auth->authenticate($filename, get_requested_string("signature"))) {
 	json_exit("Invalid authentication", 1);
 }
 
-$action = get_requested_string("action");
-if(!$action) {
-	$action = "decode";
-}
-
 $file = new WebFile($filename);
 if(!$file->exists()) {
 	json_exit("File $filename does not exist.", 1);
@@ -34,6 +29,16 @@ if(!$acl->can_read($username)) {
 
 /* Load data */
 ob_clean();
+$finfo = finfo_open(FILEINFO_MIME_TYPE);
+$themime = finfo_file($finfo, $file->filepath);
+if($themime) {
+	header('Content-type: ' . $themime);
+}
+finfo_close($finfo);
+
+if(isset($_GET['download']) || isset($_POST['download'])) {
+	header('Content-Disposition: attachment; filename="' . basename($filename) . '"'); 
+}
 readfile($file->filepath);
 
 ?>
