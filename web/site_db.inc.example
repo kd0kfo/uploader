@@ -7,5 +7,6 @@ $db->exec("create table if not exists filemetadata (id INTEGER PRIMARY KEY, file
 $db->exec("create table if not exists filerevisions (id INTEGER PRIMARY KEY, fileid INTEGER NOT NULL, creator STRING NOT NULL, timestamp INTEGER, command STRING, FOREIGN KEY(fileid) REFERENCES filemetadata(id));") || die ("Could not setup revision table.");
 $db->exec("create table if not exists fileacls (id INTEGER PRIMARY KEY, fileid INTEGER NOT NULL, username STRING NOT NULL, permission INTEGER, FOREIGN KEY(fileid) REFERENCES filemetadata(id));") || die ("Could not setup acl table.");
 $db->exec("create table if not exists filecheckouts (id INTEGER PRIMARY KEY, fileid INTEGER NOT NULL, username STRING NOT NULL, timestamp INTEGER, FOREIGN KEY(fileid) REFERENCES filemetadata(id));") || die ("Could not create checkout table");
+$db->exec("create table if not exists fileshares (id INTEGER PRIMARY KEY, fileid INTEGER UNIQUE NOT NULL, shareid STRING UNIQUE NOT NULL);") || die ("Could not create share table");
 
 ?>

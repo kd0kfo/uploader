@@ -256,8 +256,21 @@ class WebFile {
 		$stmt = sql_prepare("delete from filemetadata where id = :fileid;");
 		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
 		$result = $stmt->execute();
+		$stmt = sql_prepare("delete from fileshares where fileid = :fileid;");
+		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
+		$result = $stmt->execute();
 	}
 }
 
+function WebFileFromID($fileid) {
+	$stmt = sql_prepare("select filepath from filemetadata where id = :fileid ;");
+	$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
+	$result = $stmt->execute();
+	$row = $result->fetchArray();
+	if(!$row) {
+		return null;
+	}
+	return new WebFile(clear_contentdir($row['filepath']));
+}
 
 ?>

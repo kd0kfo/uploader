@@ -119,4 +119,60 @@ function sql_prepare($sql) {
 	return $db->prepare($sql);
 }
 
+function get_shared_fileid($shareid) {
+	$stmt = sql_prepare("select fileid from fileshares where shareid = :shareid ;");
+	$stmt->bindValue(":shareid", $shareid, SQLITE3_TEXT);
+	$result = $stmt->execute();
+	$row = $result->fetchArray();
+	if(!$row) {
+		return null;
+	}
+	return $row['fileid'];
+}
+
+function get_share($fileid) {
+	$stmt = sql_prepare("select shareid from fileshares where fileid = :fileid ;");
+	$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
+	$result = $stmt->execute();
+	$row = $result->fetchArray();
+	if(!$row) {
+		$shareid = uniqid();
+		usleep(5);
+		$stmt = sql_prepare("insert or replace into fileshares (fileid, shareid) values (:fileid, :shareid);");
+		$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
+		$stmt->bindValue(":shareid", $shareid, SQLITE3_TEXT);
+		$result = $stmt->execute();
+	}
+	$stmt = sql_prepare("select shareid from fileshares where fileid = :fileid ;");
+	$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
+	$result = $stmt->execute();
+	$row = $result->fetchArray();
+	if(!$row) {
+		json_exit("Error getting share id from database", 1);
+	}
+	return $row['shareid'];
+}
+
+function remove_share($fileid) {
+	$stmt = sql_prepare("delete from fileshares where fileid = :fileid;");
+	$stmt->bindValue(":fileid", $fileid, SQLITE3_INTEGER);
+	return $stmt->execute();
+}
+
+function stream_file($filepath, $do_download) {
+	/* Load data */
+	ob_clean();
+	$finfo = finfo_open(FILEINFO_MIME_TYPE);
+	$themime = finfo_file($finfo, $file->filepath);
+	if($themime) {
+		header('Content-type: ' . $themime);
+	}
+	finfo_close($finfo);
+	
+	if($do_download) {
+		header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
+	}
+	readfile($filepath);
+}
+
 ?>

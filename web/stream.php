@@ -27,18 +27,7 @@ if(!$acl->can_read($username)) {
 	json_exit("Permission denied.", 1);
 }
 
-/* Load data */
-ob_clean();
-$finfo = finfo_open(FILEINFO_MIME_TYPE);
-$themime = finfo_file($finfo, $file->filepath);
-if($themime) {
-	header('Content-type: ' . $themime);
-}
-finfo_close($finfo);
-
-if(isset($_GET['download']) || isset($_POST['download'])) {
-	header('Content-Disposition: attachment; filename="' . basename($filename) . '"'); 
-}
-readfile($file->filepath);
+$do_download = (isset($_GET['download']) || isset($_POST['download']));
+stream_file($file->filepath, $do_download);
 
 ?>
