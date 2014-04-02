@@ -19,6 +19,9 @@ if(!$auth->verify_user($hmac)) {
 $sessionkey = $auth->get_session_key();
 if($sessionkey === null || !$sessionkey) {
 	$sessionkey = $auth->create_session_key();
+	if($sessionkey === null) {
+		json_exit("Error logon on", 1);
+	}
 }
 
 echo json_encode(array("sessionkey" => $sessionkey, "status" => 0, "message" => "Login successful"));
