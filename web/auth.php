@@ -2,6 +2,7 @@
 
 require_once("includes.php");
 require_once("site_db.inc");
+require_once("googleauth.php");
 
 class Auth {
 
@@ -18,20 +19,23 @@ class Auth {
 		return $retval;
 	}
 
-	function verify_user($hmac) {
+	function verify_user($hmac, $totp_token) {
 		if($this->excessive_failed_logins($this->username)) {
 			json_exit("Maximum failed logins.", 1);
 		}
 
 		$passhash = $this->get_passwordhash();
-		$retval = (auth_hash("logon", $passhash) == $hmac);
-		if(!$retval) {
-			$this->increment_failed_logins();
-		} else {
+		$hash_works = (auth_hash("logon", $passhash) == $hmac);
+		$totp_valid = ($this->validate_totp($totp_token));
+		if($hash_works && $totp_valid) {
 			$this->reset_failed_logins();
+			return true;
 		}
+
+		// If here, auth failed.
+		$this->increment_failed_logins();
 		
-		return $retval;
+		return false;
 	}
 	
 	function get_passwordhash() {
@@ -46,6 +50,20 @@ class Auth {
 			return null;
 		}
 		return $row['passhash'];
+	}
+	
+	function validate_totp($totp_token) {
+		$stmt = sql_prepare("select key from totp_keys where username = :username;");
+		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
+		$result = $stmt->execute();
+		if(!$result) {
+			return false;
+		}
+		$row = $result->fetchArray();
+		if(!$row || !$row['key']) {
+			return false;
+		}
+		return GoogleAuth::verify_key($row['key'], $totp_token);
 	}
 
 	/**

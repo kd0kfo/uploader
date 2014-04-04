@@ -5,14 +5,15 @@ require_once("auth.php");
 
 $username = get_requested_string("username");
 $hmac = get_requested_string("hmac");
+$totp_token = get_requested_string("totp");
 
-if(!$username || !$hmac) {
+if(!$username || !$hmac || !$totp_token) {
 	json_exit("Login failed.", 1);
 }
 
 $auth = new Auth($username);
 
-if(!$auth->verify_user($hmac)) {
+if(!$auth->verify_user($hmac, $totp_token)) {
 	json_exit("Username and/or password do not match", 1);
 }
 

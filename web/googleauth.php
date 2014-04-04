@@ -1,4 +1,4 @@
-<?
+<?php
 /**
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  * @author Phil
  **/
 
-class Google2FA {
+class GoogleAuth {
 
 	const keyRegeneration 	= 30;	// Interval between key regeneration
 	const otpLength		= 6;	// Length of the Token generated
@@ -127,7 +127,7 @@ class Google2FA {
 	 * @param boolean $useTimeStamp
 	 * @return boolean
 	 **/
-	public static function verify_key($b32seed, $key, $window = 4, $useTimeStamp = true) {
+	public static function verify_key($b32seed, $key, $window = 3, $useTimeStamp = true) {
 
 		$timeStamp = self::get_timestamp();
 
