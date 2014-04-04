@@ -16,6 +16,15 @@ if(!$auth->authenticate($filename, get_requested_string("signature"))) {
 }
 
 $orig_filename = $filename;
+$webfile = new WebFile($orig_filename);
+$should_chown = false;
+if($webfile->exists()) {
+	if(!$webfile->can_write()) {
+		json_exit("Authorization Denied.", 1);
+	}
+} else {
+	$should_chown = true;
+}
 $filename = $contentdir . "/" . $filename;
 
 $files = glob($filename . ".*");
@@ -43,9 +52,12 @@ for($i = 0;$i < $filecount;$i++) {
 }
 fclose($outfile);
 
-$webfile = new WebFile($orig_filename);
 if($webfile) {
 	$webfile->update_revision($username, "merge");
+	if($should_chown) {
+		$webfile->chown($username);
+		$webfile->chmod($username, 6);
+	}
 }
 json_exit("Merged $orig_filename", 0);
 
