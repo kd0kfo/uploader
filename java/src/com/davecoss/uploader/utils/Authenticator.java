@@ -8,6 +8,7 @@ import com.davecoss.java.Logger;
 import com.davecoss.uploader.auth.AuthHash;
 import com.davecoss.uploader.auth.Credentials;
 
+// TODO: Update with TOTP
 public class Authenticator {
  
 	private static Logger L = ConsoleLog.getInstance("Authenticator");

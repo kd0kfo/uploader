@@ -156,9 +156,11 @@ public class UploaderConsole {
     	
     	String username = console.readLine("WebFS Username: ");
     	char[] passphrase = console.readPassword("WebFS Passphrase: ");
+    	String totpString = console.readLine("WebFS One Time Passcode: ");
+    	int totpToken = Integer.parseInt(totpString);
     	String serverSalt = (String)uc.webfs.getServerInfo().get("salt");
     	uc.webfs.setCredentials(new Credentials(username, passphrase, serverSalt));
-    	WebResponse logonResponse = uc.webfs.logon();
+    	WebResponse logonResponse = uc.webfs.logon(totpToken);
     	if(logonResponse.status != WebResponse.SUCCESS)
     	{
     		System.err.println("Error logon on");

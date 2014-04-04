@@ -126,12 +126,14 @@ public class DownloadReader {
 	    	
 	    	String username = console.readLine("WebFS Username: ");
 	    	char[] passphrase = console.readPassword("WebFS Passphrase: ");
+	    	String totpString = console.readLine("WebFS One Time Passcode: ");
+	    	int totpToken = Integer.parseInt(totpString);
 	    	WebFS webfs = new WebFS(client);
 	    	webfs.setBaseURI(uri);
 	    	webfs.downloadConfig();
     		String serverSalt = (String)webfs.getServerInfo().get("salt");
     		webfs.setCredentials(new Credentials(username, passphrase, serverSalt));
-	    	WebResponse logonResponse = webfs.logon();
+	    	WebResponse logonResponse = webfs.logon(totpToken);
 	    	if(logonResponse.status != WebResponse.SUCCESS)
 	    	{
 	    		System.err.println("Error logon on");

@@ -152,7 +152,15 @@ public class Plugin implements StoragePlugin {
 			creds = JDialogCredentialPair.showInputDialog(parent);
 			webfsCreds = new Credentials(creds.getUsername(), creds.getPassphrase(), (String)webfs.getServerInfo().get("salt"));
 			webfs.setCredentials(webfsCreds);
-			webfs.logon();
+			// Get TOTP token
+			String totpTokenStr = (String)JOptionPane.showInputDialog(parent, "Enter Base URL", JOptionPane.PLAIN_MESSAGE);
+			int totpToken = -1;
+			try {
+				totpToken = Integer.parseInt(totpTokenStr);
+			} catch (NumberFormatException nfe) {
+				throw new PluginInitException("Invalid One Time Password. Need number: " + totpTokenStr);
+			}
+			webfs.logon(totpToken);
 			L.info("Logged onto " + uri.toString());
 		} catch (Exception e) {
 			throw new PluginInitException("Error starting WebFS", e);

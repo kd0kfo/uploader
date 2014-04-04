@@ -226,7 +226,7 @@ public class WebFS {
 		return client.jsonGet(currURL);
 	}
 	
-	public WebResponse logon() throws IOException {
+	public WebResponse logon(int totpToken) throws IOException {
 		if(credentials == null)
 			throw new IOException("Cannot log on. Missing credentials.");
 		
@@ -237,8 +237,8 @@ public class WebFS {
 			throw new IOException("Error generating logon key", e);
 		}
 		
-		String logonURL = String.format("%s/logon.php?username=%s&hmac=%s",
-				baseURI.toString(), credentials.getUsername(), logonkey.toURLEncoded());
+		String logonURL = String.format("%s/logon.php?username=%s&hmac=%s&totp=%d",
+				baseURI.toString(), credentials.getUsername(), logonkey.toURLEncoded(), totpToken);
 		JSONObject json = client.jsonGet(logonURL);
 		WebResponse retval = WebResponse.fromJSON(json);
 		long status = (Long)json.get("status");
