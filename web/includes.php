@@ -159,20 +159,6 @@ function remove_share($fileid) {
 	return $stmt->execute();
 }
 
-function stream_file($filepath, $do_download) {
-	/* Load data */
-	ob_clean();
-	$finfo = finfo_open(FILEINFO_MIME_TYPE);
-	$themime = finfo_file($finfo, $filepath);
-	if($themime) {
-		header('Content-type: ' . $themime);
-	}
-	finfo_close($finfo);
-	
-	if($do_download) {
-		header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
-	}
-	readfile($filepath);
-}
+
 
 ?>
