@@ -2,8 +2,8 @@ language: java
 java:
     - oraclejdk7
 script:
-	- cd java
-	- cd core
-	- mvn -Dwebfscore.repo.path=$PWD/../corerepo compile deploy
-	- cd ../console
-	- mvn -Dwebfscore.repo.path=$PWD/../corerepo compile 
+    - cd java
+    - cd core
+    - mvn -Dwebfscore.repo.path=$PWD/../corerepo compile deploy
+    - cd ../console
+    - mvn -Dwebfscore.repo.path=$PWD/../corerepo compile 
