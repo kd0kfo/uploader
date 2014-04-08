@@ -5,14 +5,52 @@
   <artifactId>webfscore</artifactId>
   <packaging>jar</packaging>
   <version>1.0.a</version>
-  <name>webfscore</name>
-  <url>http://maven.apache.org</url>
+  <name>WebFS Core</name>
+  <url>https://github.com/kd0kfo/webfs</url>
+  <licenses>
+    <license>
+      <name>GNU Public License, Version 3</name>
+      <url>https://www.gnu.org/copyleft/gpl.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <organization>
+    <name>David Coss</name>
+    <url>http://davecoss.com</url>
+  </organization>
+  <developers>
+    <developer>
+      <id>kd0kfo</id>
+      <name>David Coss</name>
+      <url>http://davecoss.com</url>
+      <roles>
+        <role>architect</role>
+        <role>developer</role>
+      </roles>
+    </developer>
+  </developers>
+  <issueManagement>
+    <system>Github</system>
+    <url>https://github.com/kd0kfo/webfs/issues</url>
+  </issueManagement>
+  <distributionManagement>
+	  <repository>
+			  <id>local</id>
+			  <url>file://${webfscore.repo.path}</url>
+		</repository>
+	</distributionManagement>
   <repositories>
   	<repository>
 		<id>javalib</id>
 		<url>http://kd0kfo.github.io/javalib/mvn-repo</url>
 	</repository>
   </repositories>
+  <scm>
+    <connection>scm:git:https://github.com/kd0kfo/webfs.git</connection>
+    <developerConnection>scm:git:https://github.com/kd0kfo/webfs.git</developerConnection>
+    <tag>master</tag>
+    <url>https://github.com/kd0kfo/webfs</url>
+  </scm> 
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
