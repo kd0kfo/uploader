@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CredentialPair;
-import com.davecoss.uploader.utils.CommonsBase64;
 
 public class Credentials extends CredentialPair {
 

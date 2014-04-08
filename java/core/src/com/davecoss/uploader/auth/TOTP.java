@@ -1,6 +1,6 @@
 package com.davecoss.uploader.auth;
 
-import org.apache.commons.codec.binary.Base32;
+import org.apache.commons.codec.binary.Base32; // TODO: Replace with GenericBaseN from javalib
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Date;
@@ -11,8 +11,10 @@ import java.security.InvalidKeyException;
 import javax.crypto.spec.SecretKeySpec;
 
 public class TOTP {
+	
+	public static final int DEFAULT_SECRET_SIZE = 10;
 
-	private static int generateToken(byte[] key, long t)
+	public static int generateToken(byte[] key, long t)
 			throws NoSuchAlgorithmException, InvalidKeyException {
 		byte[] data = new byte[8];
 		long value = t;
@@ -40,7 +42,7 @@ public class TOTP {
 		return (int) truncatedHash;
 	}
 
-	private static boolean validateToken(String secret, long code, long t)
+	public static boolean validateToken(String secret, long code, long t)
 			throws NoSuchAlgorithmException, InvalidKeyException {
 		Base32 codec = new Base32();
 		byte[] decodedKey = codec.decode(secret);
@@ -57,7 +59,7 @@ public class TOTP {
 		return false;
 	}
 
-	private static byte[] generateCodes(int secretSize, int numScratches) {
+	public static byte[] generateCodes(int secretSize, int numScratches) {
 		byte[] codes = new byte[secretSize + numScratches * secretSize];
 
 		Random randy = new Random();
@@ -65,7 +67,7 @@ public class TOTP {
 		return codes;
 	}
 
-	private static void printKeyInfo(PrintStream output, String user, String host, byte[] buffer,
+	public static void printKeyInfo(PrintStream output, String user, String host, byte[] buffer,
 			int secretSize) {
 		// Getting the key and converting it to Base32
 		Base32 codec = new Base32();
@@ -98,7 +100,7 @@ public class TOTP {
 				System.out.println("-time : Outputs time as a human readable string and unix time.");
 			} else if (args[0].equals("-generate")) {
 				assertArgs(args, 2);
-				int secretSize = 10;
+				int secretSize = DEFAULT_SECRET_SIZE;
 				byte[] codes = generateCodes(secretSize, 0);
 				printKeyInfo(System.out, args[1], args[2], codes, secretSize);
 			} else if (args[0].equals("-validate")) {

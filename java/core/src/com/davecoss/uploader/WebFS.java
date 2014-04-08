@@ -5,7 +5,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -19,6 +21,8 @@ import org.json.simple.JSONValue;
 
 public class WebFS {
 	static Logger L = Logger.getInstance();
+	
+	public static final String URL_ENCODE_TYPE = "UTF-8";
 	
 	private URI baseURI = null;
 	private JSONObject serverInfo = null;
@@ -105,13 +109,7 @@ public class WebFS {
 		try {
 			AuthHash signature = signData(source);
 			String sourceURL = String.format("%s/stream.php?filename=%s&signature=%s&username=%s",
-					baseURI.toString(), source, signature.toURLEncoded(), credentials.getUsername());
-			/*String sourceURL = String.format("%s/ls.php?filename=%s&signature=%s&username=%s",
-					baseURI.toString(), source, signature.toURLEncoded(), credentials.getUsername());
-			WebFile fileInfo = WebFile.fromJSON(client.jsonGet(sourceURL));
-			if(!fileInfo.type.equals("f"))
-				throw new IOException("Cannot download " + source);
-			sourceURL = baseURI.toString() + WebFile.join(contentdir, fileInfo.getAbsolutePath());/**/
+					baseURI.toString(), urlEncode(source), signature.toURLEncoded(), urlEncode(credentials.getUsername()));
 			System.out.println("Path: " + sourceURL); // TODO: replace with Logger
 			
 			// Download content.
@@ -123,10 +121,6 @@ public class WebFS {
 			int amountRead = -1;
 			while((amountRead = input.read(buffer, 0, 4096)) != -1)
 				output.write(buffer,0, amountRead);
-		/*} catch(WebFileException wfe) {
-			String msg = "Error getting file information";
-			L.error(msg, wfe);
-			throw new IOException(msg, wfe);*/
 		} catch (AuthHash.HashException ahhe) {
 			String msg = "Error generating signature";
 			L.error(msg, ahhe);
@@ -147,7 +141,7 @@ public class WebFS {
 		
 		AuthHash signature = signData("upload");
 		String postURL = String.format("%s/upload.php?username=%s&signature=%s",
-				baseURI.toString(), credentials.getUsername(), signature.toURLEncoded());
+				baseURI.toString(), urlEncode(credentials.getUsername()), signature.toURLEncoded());
 		return client.postFile(postURL, file);
 	}
 	
@@ -180,7 +174,16 @@ public class WebFS {
 	}
 	
 	public DownloadInputStream openDownloadStream(String path) throws IOException {
-		String uri = String.format("%s/%s%s", baseURI.toString(), (String)serverInfo.get("contentdir"), path);
+		AuthHash signature = null;
+		try {
+			signature = signData(path);
+		} catch (AuthHash.HashException ahhe) {
+			String msg = "Error generating signature for " + path;
+			L.error(msg, ahhe);
+			throw new IOException(msg, ahhe);
+		}
+		String uri = String.format("%s/stream.php?username=%s&signature=%s&filename=%s",
+				baseURI.toString(), urlEncode(credentials.getUsername()), signature.toURLEncoded(), path);
 		return new DownloadInputStream(client, uri);
 	}
 	
@@ -194,7 +197,7 @@ public class WebFS {
 			throw new IOException(msg, ahhe);
 		}
 		String uploadURL = String.format("%s/upload.php?username=%s&signature=%s",
-				baseURI.toString(), credentials.getUsername(), signature.toURLEncoded());
+				baseURI.toString(), urlEncode(credentials.getUsername()), signature.toURLEncoded());
 		UploadOutputStream retval = new UploadOutputStream(filename, client, uploadURL);
 		retval.setBufferSize(this.uploadBufferSize);
 		return retval;
@@ -214,10 +217,10 @@ public class WebFS {
 				String val = args.get(key);
 				if(val == null)
 					val = "";
-				currURL += String.format(fmt, key, val);
+				currURL += String.format(fmt, urlEncode(key), urlEncode(val));
 			}
 			if(signature != null) {
-				currURL += String.format("username=%s&signature=%s", credentials.getUsername(), signature.toURLEncoded());
+				currURL += String.format("username=%s&signature=%s", urlEncode(credentials.getUsername()), signature.toURLEncoded());
 			}
 			if(currURL.charAt(currURL.length() - 1) == '&')
 				currURL = currURL.substring(0, currURL.length() - 1);
@@ -238,7 +241,7 @@ public class WebFS {
 		}
 		
 		String logonURL = String.format("%s/logon.php?username=%s&hmac=%s&totp=%d",
-				baseURI.toString(), credentials.getUsername(), logonkey.toURLEncoded(), totpToken);
+				baseURI.toString(), urlEncode(credentials.getUsername()), logonkey.toURLEncoded(), totpToken);
 		JSONObject json = client.jsonGet(logonURL);
 		WebResponse retval = WebResponse.fromJSON(json);
 		long status = (Long)json.get("status");
@@ -414,5 +417,13 @@ public class WebFS {
 	
 	public AuthHash signData(String data) throws AuthHash.HashException {
 		return AuthHash.getInstance(data, signingkey);
+	}
+	
+	public String urlEncode(String data) throws IOException {
+		try {
+			return URLEncoder.encode(data, URL_ENCODE_TYPE);
+		} catch(UnsupportedEncodingException uee) {
+			throw new IOException("Error encoding string: " + uee.getMessage(), uee);
+		}
 	}
 }

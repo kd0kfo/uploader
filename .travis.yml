@@ -1,6 +1,7 @@
 language: java
 install:
-    - cd java/lib
+    - cd java
+    - cd core/lib
     - sh download_tested_libs.sh
     - cd ../../
     - git clone https://github.com/kd0kfo/javalib.git
@@ -8,6 +9,14 @@ install:
     - ant jar
     - cd ../
     - cp javalib/build/jar/javalib*.jar java/lib/
+    - cp javalib/build/jar/javalib*.jar console/lib/
+    - cd console/lib
+    - sh download_tested_libs.sh
+    - cd ../..
 script:
-    - cd java
+    - cd core
+    - ant jar
+    - cd ..
+    - cp core/build/jar/*.jar console/lib/
+    - cd console
     - ant jar

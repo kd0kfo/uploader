@@ -32,6 +32,8 @@ if($dirobj != null) {
 }
 
 $dirobj->update_revision($username, "mkdir");
+$dirobj->chown($username);
+$dirobj->chmod($username, 7);
 json_exit("Created " . $dirname, 0);
 
 ?>
