@@ -8,7 +8,7 @@ install:
     - cd javalib
     - ant jar
     - cd ../
-    - cp javalib/build/jar/javalib*.jar java/lib/
+    - cp javalib/build/jar/javalib*.jar core/lib/
     - cp javalib/build/jar/javalib*.jar console/lib/
     - cd console/lib
     - sh download_tested_libs.sh
