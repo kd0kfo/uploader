@@ -4,12 +4,18 @@ install:
     - cd core/lib
     - sh download_tested_libs.sh
     - cd ../../
+    - git clone https://github.com/kd0kfo/pgp.git
     - git clone https://github.com/kd0kfo/javalib.git
     - cd javalib
     - ant jar
     - cd ../
     - cp javalib/build/jar/javalib*.jar core/lib/
     - cp javalib/build/jar/javalib*.jar console/lib/
+    - cp javalib/build/jar/javalib*.jar pgp/lib/
+    - cd pgp
+    - ant jar
+    - cd ..
+    - cp pgp/build/jar/pgp*.jar console/lib/
     - cd console/lib
     - sh download_tested_libs.sh
     - cd ../..
