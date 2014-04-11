@@ -523,7 +523,7 @@ public class UploaderConsole {
 	}
 
 	public static void printVersionInfo(URI uri) {
-		BuildInfo bi = new BuildInfo(HTTPSClient.class);
+		BuildInfo bi = new BuildInfo(UploaderConsole.class);
 		String msg = "Running Uploader Console version " + bi.get_version();
 
 		Properties props = bi.get_build_properties();

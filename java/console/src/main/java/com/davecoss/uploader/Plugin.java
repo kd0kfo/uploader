@@ -30,7 +30,7 @@ import com.davecoss.uploader.auth.AuthHash;
 import com.davecoss.uploader.auth.Credentials;
 import com.davecoss.uploader.auth.AuthHash.HashException;
 
-public class Plugin implements StoragePlugin {
+public class Plugin extends StoragePlugin {
 	
 	static Logger L = Logger.getInstance();
 	
@@ -38,6 +38,10 @@ public class Plugin implements StoragePlugin {
 	private File jarfile = null;
 	private String baseURI = "";
 	private ArrayList<String> tempFiles = new ArrayList<String>();
+	
+	public Plugin() {
+		
+	}
 	
 	static {
 		AuthHash.init(new CommonsBase64());
@@ -97,14 +101,6 @@ public class Plugin implements StoragePlugin {
 			baseURI = baseURI.substring(0, baseURI.length() - 1);
 	}
 	
-	@Override
-	@Deprecated
-	public void init(PrintStream output, InputStream input)
-			throws PluginInitException {
-		// TODO Auto-generated method stub
-
-	}
-
 	@Override
 	public void init(JDialog parent) throws PluginInitException {
 		baseURI = (String)JOptionPane.showInputDialog(parent, "Enter Base URL", JOptionPane.PLAIN_MESSAGE);
@@ -206,12 +202,12 @@ public class Plugin implements StoragePlugin {
 	}
 
 	@Override
-	public File get_jarfile() {
+	public File getJarfile() {
 		return jarfile;
 	}
 
 	@Override
-	public File set_jarfile(File file) {
+	public File setJarfile(File file) {
 		jarfile = file;
 		return jarfile;
 	}

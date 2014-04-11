@@ -196,7 +196,7 @@ public class CheckoutGUI extends JFrame {
 		JMenuItem mntmAbout = new JMenuItem("About");
 		mntmAbout.addActionListener(new ActionListener() {
 			 public void actionPerformed(ActionEvent arg0) {
-				 BuildInfo buildinfo = new BuildInfo(HTTPSClient.class);
+				 BuildInfo buildinfo = new BuildInfo(this.getClass());
 				 Properties build_props = buildinfo.get_build_properties();
 				 String aboutstring = "Web File Checkout GUI\nAuthor: David Coss";
 				 String version = buildinfo.get_version();
