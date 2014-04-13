@@ -1,5 +1,4 @@
 function init_fs() {
-	localStorage['contentdir'] = '/content';
 }
 
 function site_footer() {
