@@ -79,7 +79,7 @@ function stream_file($filepath, $do_download) {
 		header('Content-type: ' . $themime);
 	}
 
-	if($do_download) {
+	if($do_download || $themime == "application/octet-stream") {
 		header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
 	}
 	readfile($filepath);

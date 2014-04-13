@@ -1,11 +1,19 @@
 package com.davecoss.uploader.utils;
 
 import java.io.Console;
+import java.io.File;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
 import com.davecoss.java.ConsoleLog;
 import com.davecoss.java.GenericBase64;
 import com.davecoss.java.Logger;
+import com.davecoss.java.plugin.NamedOutputStream;
+import com.davecoss.java.plugin.Plugin;
+import com.davecoss.java.plugin.PluginUtils;
+import com.davecoss.java.plugin.Types;
 import com.davecoss.java.utils.CLIOptionTuple;
 import com.davecoss.java.utils.CredentialPair;
 import com.davecoss.uploader.auth.AuthHash;
@@ -32,6 +40,7 @@ public class UploadWriter {
 		new CLIOptionTuple("basic", false, "Use basic authentication. (Default: off)"),
 		new CLIOptionTuple("d", true, "Set Debug Level (Default:  ERROR)"),
 		new CLIOptionTuple("help", false, "Usage information."),
+		new CLIOptionTuple("plugin", true, "Provide a path to the plugin through which output will be written. (Default: off)"),
 		new CLIOptionTuple("ssl", true, "Specify Keystore")};
 	
 	public static CommandLine parseCommandLine(String[] cli_args, CLIOptionTuple[] optionArray) throws ParseException {
@@ -138,6 +147,30 @@ public class UploadWriter {
 	    	consoleUploader = webfs.openUploadStream(filename);
 	    	outputStream = consoleUploader;
 			
+	    	if(cmd.hasOption("plugin")) {
+	    		// Add jar to class loader
+	    		File newjar = new File(cmd.getOptionValue("plugin"));
+	    		URL u = new URL("jar", "", "file:" + newjar.getPath() + "!/");
+	    		URLClassLoader urlcl = (URLClassLoader)ClassLoader.getSystemClassLoader();
+	    		@SuppressWarnings("rawtypes")
+	    		Class urladder = URLClassLoader.class;
+	    		@SuppressWarnings("unchecked")
+	    		Method urlmethod = urladder.getDeclaredMethod("addURL",new Class[] {URL.class});
+	    		urlmethod.setAccessible(true);
+	    		urlmethod.invoke(urlcl, new Object[]{u});
+
+	    		// Get main class for plugin and return it
+	    		String class_name = PluginUtils.get_main_classname(newjar);
+	    		L.info("Loading Plugin class " + class_name);
+	    		@SuppressWarnings("rawtypes")
+	    		Class c = urlcl.loadClass(class_name);
+	    		Plugin mainPlugin = (Plugin)c.newInstance();
+	    		NamedOutputStream streamPlugin = (NamedOutputStream)mainPlugin.getPluginByType(Types.PluginTypes.NAMED_OUTPUT_STREAM).newInstance();
+	    		streamPlugin.init(console);
+	    		outputStream = streamPlugin.getOutputStream(outputStream, filename);
+	    	}
+	    	
+	    	
 	    	if(cmd.hasOption("base64")) {
 	    		outputStream = client.getEncoder().encodeOutputStream(outputStream);
 	    	}
