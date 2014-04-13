@@ -65,6 +65,7 @@ function stream_file($filepath, $do_download) {
 	ob_clean();
 
 	/* Get and send mime type */
+	$filename = basename($filepath);
 	$extension = strtolower(array_pop(explode('.',$filename)));
 	$themime = "application/octet-stream";
 	if(function_exists('finfo_open')){
@@ -78,7 +79,7 @@ function stream_file($filepath, $do_download) {
 		header('Content-type: ' . $themime);
 	}
 
-	if($do_download) {
+	if($do_download || $themime == "application/octet-stream") {
 		header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
 	}
 	readfile($filepath);
