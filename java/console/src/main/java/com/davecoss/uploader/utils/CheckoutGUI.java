@@ -301,7 +301,7 @@ public class CheckoutGUI extends JFrame {
 			webfs.setCredentials(webfsCreds);
 			
 			// TOTP
-			String totpString = (String)JOptionPane.showInputDialog(contentPane, "One Time Pass", "Enter One Time Passcode");
+			String totpString = (String)JOptionPane.showInputDialog(contentPane, "One Time Pass");
 			int totpToken = Integer.parseInt(totpString);
 			webfs.logon(totpToken);
 			L.info("Logged onto " + uri.toString());
