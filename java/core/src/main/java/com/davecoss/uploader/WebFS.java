@@ -89,8 +89,6 @@ public class WebFS {
 	
 	public void downloadConfig() throws IOException {
 		this.serverInfo = client.jsonGet(baseURI.toString() + "/info.php");
-		if(!this.serverInfo.containsKey("contentdir"))
-			throw new IOException("Unable to get a valid server configuration.");
 	}
 	
 	public WebResponse downloadFile(String source, File dest) throws IOException {
@@ -103,7 +101,6 @@ public class WebFS {
 		
 		L.debug("Downloading " + source);
 		// Get info for file and verify that it is a file.
-		String contentdir = (String)serverInfo.get("contentdir");
 		DownloadInputStream input = null;
 		FileOutputStream output = null;
 		try {
