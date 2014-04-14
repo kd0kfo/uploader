@@ -1,7 +1,7 @@
 <?php
 
 require_once("includes.php");
-require_once("webfile.php");
+require_once("includes/webfile.php");
 
 class ACL {
 	var $access_list = array();
