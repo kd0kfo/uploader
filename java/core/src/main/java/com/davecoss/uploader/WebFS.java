@@ -251,7 +251,6 @@ public class WebFS {
 			AuthHash signingHash = credentials.createSigningKey(key);
 			signingkey = signingHash.bytes();
 			credentials.destroyPassphrase(); // If there is a signing key, there is no need for the pass phrase. Destroy it.
-			L.info("Signing Key: " + signingHash.hash);
 		} catch (Exception e) {
 			throw new IOException("Error generating signing key", e);
 		}
