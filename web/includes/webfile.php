@@ -111,6 +111,9 @@ class WebFile {
 			$this->clear_metadata();
 			$newuser = get_requested_string("username");
 			$destination->update_revision($newuser, "move");
+			if($this->is_dir()) {
+				move_dir_in_db($this);
+			}
 			/* Add default acl if missing */
 			$metadata = $destination->get_metadata();
 			$acl = $metadata->acl;
@@ -271,6 +274,16 @@ function WebFileFromID($fileid) {
 		return null;
 	}
 	return new WebFile(clear_contentdir($row['filepath']));
+}
+
+function move_dir_in_db($srcdir, $destdir) {
+	if(!$srcdir || !$destdir || !$srcdir->filepath || !$destdir->filepath) {
+		return;
+	}
+	$stmt = sql_prepare("UPDATE filemetadata SET filepath = replace( filepath, :srcdir, :destdir ) WHERE filepath LIKE ':srcdir%';");
+	$stmt->bindValue(":srcdir", $srcdir->filepath, SQLITE3_TEXT);
+	$stmt->bindValue(":destdir", $destdir->filepath, SQLITE3_TEXT);
+	$stmt->execute();
 }
 
 ?>
