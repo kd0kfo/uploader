@@ -18,15 +18,15 @@ cd repo/web
 for i in *.example;do
 	cp $i ${i/\.example/}
 done
-\cp $(git ls-files .) /var/www/html/
-\cp site* /var/www/html/
+\cp -R . /var/www/html/
 cd /var/www/html
 mkdir content
 chown apache content
 mkdir content/uploads
 chown apache content/uploads
+cat site_db.inc.example |sed 's/test.sqlite/\/tmp\/webfs.db/' > site_db.inc
 php site_db.inc
-sqlite3 /tmp/uploader.php "insert into users values ('foo', 'oFK9VQlmV8FA4U1QP4lq9M/JPcRDERWWpZNE/b12PPg=', NULL, NULL, 0);"
+sqlite3 /tmp/webfs.db "insert into users values ('foo', 'oFK9VQlmV8FA4U1QP4lq9M/JPcRDERWWpZNE/b12PPg=', NULL, NULL, 0);"
 
 CREATETAG=$(echo This machine was setup using vagrant on $(date +"%Y-%m-%d %H:%M"))
 CREATEFILE=/etc/hostinfo.created
