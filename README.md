@@ -18,6 +18,10 @@ Requires Apache Common and HttpComponents libraries. See java/lib/README.md for 
 
 Requires my utility java library, javalib, which can be found at https://github.com/kd0kfo/javalib.
 
+Uses
+----
+
+* dropzone.js -- a very nice drap-and-drop library for javascript. May be found at https://github.com/enyo/dropzone and is released under the terms of MIT License.
 
 Build
 -----

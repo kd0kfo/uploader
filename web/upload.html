@@ -3,23 +3,25 @@
 <head>
 <script src="//code.jquery.com/jquery-1.10.2.min.js" language="javascript"></script>
 <script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/rollups/hmac-sha256.js"></script><script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/components/enc-base64-min.js"></script>
+<script src="dropzone.min.js" language="javascript"></script>
 <script src="fs.js" language="javascript"></script>
+<link rel="stylesheet" type="text/css" href="css/dropzone.css"/>
 </head>
 <body>
-<form action="upload.php" method="post"
-enctype="multipart/form-data" id="uploadform">
-<label for="file">Filename:</label>
-<input type="file" name="file" id="file"><br>
-<label for="fanout">Fanout file?</label>
-<input type="checkbox" name="fanout" id="fanout"/>
-<br/>
+<form action="upload.php" method="post" id="uploadform" class="dropzone">
 <input type="hidden" id="signature" name="signature"/>
 <input type="hidden" id="username" name="username"/>
-<input type="submit" name="submit" value="Submit">
 </form>
 <div id="message"></div>
 <script>
 $(document).ready(function() {
+	var serverinfo = get_server_info();
+	var filesize = 2; // MB
+
+	if(serverinfo && serverinfo['max_upload_size']) {
+		filesize = serverinfo['max_upload_size']/(1024*1024);
+	}
+
 	if(!localStorage["username"] || !localStorage["sessionkey"]) {
 		$("#message").html("<p><a href=\"logon.html\">Logon required</a></p>");
 		$("#uploadform").hide();
@@ -28,6 +30,10 @@ $(document).ready(function() {
 		$("#signature").val(hash("upload", localStorage['sessionkey']));
 		$("#username").val(localStorage["username"]);
 	}
+	Dropzone.options.uploadform = {
+		paramName: "file",
+		maxFilesize: filesize
+	};
 });
 </script>
 </body>

@@ -57,6 +57,9 @@ $webfs_mime_types = array(
 		    // open office
 		    'odt' => 'application/vnd.oasis.opendocument.text',
 		    'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
+
+		    // pgp
+		    'asc' => 'text/plain',
 );
 
 function stream_file($filepath, $do_download) {
@@ -79,7 +82,7 @@ function stream_file($filepath, $do_download) {
 		header('Content-type: ' . $themime);
 	}
 
-	if($do_download || $themime == "application/octet-stream") {
+	if($do_download || strpos($themime, "application") !== FALSE) {
 		header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
 	}
 	readfile($filepath);
