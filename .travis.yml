@@ -7,7 +7,3 @@ install:
     - mvn -Dwebfscore.repo.path=$PWD/../corerepo compile deploy
     - cd ../console
     - mvn -Dwebfscore.repo.path=$PWD/../corerepo compile 
-    - cd ../..
-    - cd web
-    - pip install jinja2
-    - ./build_pages.sh build
