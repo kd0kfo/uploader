@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-yum -y install postgresql-server httpd perl php php-pdo sqlite sqlite-devel python vim-enhanced emacs elinks gcc gcc-c++ java java-devel make git subversion
+yum -y install postgresql-server httpd perl php php-pdo sqlite sqlite-devel python python-pip vim-enhanced emacs elinks gcc gcc-c++ java java-devel make git subversion
 
 chkconfig postgresql on
 service postgresql initdb
@@ -27,6 +27,7 @@ chown apache content/uploads
 cat site_db.inc.example |sed 's/test.sqlite/\/tmp\/webfs.db/' > site_db.inc
 php site_db.inc
 sqlite3 /tmp/webfs.db "insert into users values ('foo', 'oFK9VQlmV8FA4U1QP4lq9M/JPcRDERWWpZNE/b12PPg=', NULL, NULL, 0);"
+./build_pages.sh
 
 CREATETAG=$(echo This machine was setup using vagrant on $(date +"%Y-%m-%d %H:%M"))
 CREATEFILE=/etc/hostinfo.created

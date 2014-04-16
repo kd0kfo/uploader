@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+from jinja2 import Environment, FileSystemLoader
+from sys import argv, stdout
+from os.path import basename, dirname
+from getopt import getopt, GetoptError
+import yaml
+
+try:
+    (opts, args) = getopt(argv[1:], "ho:p:", ["help", "output=", "parameters=" ])
+except GetoptError as ge:
+    from sys import stderr
+    stderr.write("Invalid argument")
+    raise ge
+
+template_path = "templates/index.html"
+output = stdout
+params = {}
+for (opt, optarg) in opts:
+    while opt[0] == "-":
+        opt = opt[1:]
+    if opt in ["h", "help"]:
+        print("Options:")
+        print("-h, --help\t\tThis help Dialog")
+        print("    --template PATH\tPath to template file"
+              " (Default: templates/index.html")
+        exit(0)
+    elif opt in ["o", "output"]:
+        output = open(optarg, "w")
+    elif opt in ["p", "parameters"]:
+        params = yaml.load(open(optarg, "r"))
+
+if args:
+    template_path = args[0]
+
+env = Environment(loader=FileSystemLoader(dirname(template_path)))
+template = env.get_template(basename(template_path))
+
+
+output.write(template.render(params))
+
+output.close()

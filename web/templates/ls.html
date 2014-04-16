@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div id="heading"></div>
+<div id="contents"></div>
+<div id="debug"></div>
+<div id="footer"></div>
+{% endblock %}
+{% block pagescript %}
+$(document).ready(function() {
+	init_fs();
+	var dirname = loadPageVar("filename");
+	if(dirname == "") {
+	    dirname = "/";
+	}
+	window.document.title = dirname;
+	if(!localStorage['sessionkey'] || !localStorage['username']) {
+		$("#debug").text("Login Required");
+		return;
+	}
+	updateDir(dirname, localStorage['username'], localStorage['sessionkey']);
+	$("#footer").html(site_footer());
+        $("#lsmenu").addClass("active");
+});// End of document.ready
+
+{% endblock %}

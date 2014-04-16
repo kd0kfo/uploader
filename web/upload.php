@@ -56,9 +56,13 @@ if(isset($_FILES) && count($_FILES) != 0) {
 			$msg .= " (File overwritten)";
 		}
 		if($file['error'] == 0) {
-			move_uploaded_file($file['tmp_name'], $newpath);
-			$webfile->chmod($username, 6);
-			$webfile->chown($username);
+			if(move_uploaded_file($file['tmp_name'], $newpath)) {
+				$webfile->chmod($username, 6);
+				$webfile->chown($username);
+			} else {
+				$msg = "Failed to upload " . $webfile->orig_filename;
+				$status = 1;
+			}
 		}
 
 	}

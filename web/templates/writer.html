@@ -1,13 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-<script src="//code.jquery.com/jquery-1.10.2.min.js" language="javascript"></script>
-<script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/rollups/hmac-sha256.js"></script><script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/components/enc-base64-min.js"></script>
-<script src="fs.js" language="javascript"></script>
-<script src="site.js" language="javascript"></script>
-</head>
-<body>
-<div id="message"></div>
+{% extends "base.html" %}
+{% block content %}
 <div id="result"></div>
 <form action="postdata.php" id="writerform">
 <label for="filename">Filename:</label><input type="text" name="filename" id="filename"/>
@@ -16,8 +8,9 @@
 <textarea id="data" rows="50" cols="100"></textarea>
 </br>
 </form>
+{% endblock %}
 <div id="footer"></div>
-<script>
+{% block pagescript %}
 function dopost(event) {
 	event.preventDefault();
 	var username = localStorage['username']
@@ -41,9 +34,7 @@ $(document).ready(function() {
 	}	
 	$("#writerform").submit(function(event){dopost(event);});
 	$("#footer").html(site_footer());
+        $("#writermenu").addClass("active");
 });
 
-
-</script>
-</body>
-</html>
+{% endblock %}

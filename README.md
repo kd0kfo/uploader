@@ -18,10 +18,14 @@ Requires Apache Common and HttpComponents libraries. See java/lib/README.md for 
 
 Requires my utility java library, javalib, which can be found at https://github.com/kd0kfo/javalib.
 
+Build static page requires python package Jinja2.
+
 Uses
 ----
 
 * dropzone.js -- a very nice drap-and-drop library for javascript. May be found at https://github.com/enyo/dropzone and is released under the terms of MIT License.
+* bootstrap -- Web frontend framework. Released with MIT License. Found at http://getbootstrap.com
+
 
 Build
 -----
