@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 HTML_FILES="file.html index.html ls.html upload.html writer.html"
 

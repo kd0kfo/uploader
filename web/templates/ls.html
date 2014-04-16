@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 <div id="heading"></div>
-<div id="contents"></div>
 <div id="debug"></div>
 <div id="footer"></div>
 {% endblock %}
@@ -19,7 +18,5 @@ $(document).ready(function() {
 	}
 	updateDir(dirname, localStorage['username'], localStorage['sessionkey']);
 	$("#footer").html(site_footer());
-        $("#lsmenu").addClass("active");
 });// End of document.ready
-
 {% endblock %}

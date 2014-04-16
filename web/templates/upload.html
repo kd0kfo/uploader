@@ -1,15 +1,16 @@
 {% extends "base.html" %}
 {% block head %}
-<link rel="stylesheet" type="text/css" href="css/dropzone.css"/>
 <script src="dropzone.min.js" language="javascript"></script>
+<link rel="stylesheet" type="text/css" href="css/dropzone.css"/>
 {% endblock %}
 {% block content %}
 <form action="upload.php" method="post" id="uploadform" class="dropzone">
 <input type="hidden" id="signature" name="signature"/>
 <input type="hidden" id="username" name="username"/>
 </form>
+<div id="message"></div>
 {% endblock %}
-{% block script %}
+{% block pagescript %}
 $(document).ready(function() {
 	var serverinfo = get_server_info();
 	var filesize = 2; // MB
@@ -28,17 +29,7 @@ $(document).ready(function() {
 	}
 	Dropzone.options.uploadform = {
 		paramName: "file",
-		maxFilesize: filesize,
-		init: function() {
-			this.on("success", function(fileObj, response) {
-				json = $.parseJSON(response)
-				if(json['status'] != "0") {
-					fileObj.previewElement.classList.add("dz-error");
-				        fileObj.previewElement.querySelector("[data-dz-errormessage]").textContent = json['message'];
-				}
-			});
-		}
+		maxFilesize: filesize
 	};
-        $("#uploadmenu").addClass("active");
 });
 {% endblock %}

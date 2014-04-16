@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+<div id="message"></div>
 <div id="result"></div>
 <form action="postdata.php" id="writerform">
 <label for="filename">Filename:</label><input type="text" name="filename" id="filename"/>
@@ -9,7 +10,6 @@
 </br>
 </form>
 {% endblock %}
-<div id="footer"></div>
 {% block pagescript %}
 function dopost(event) {
 	event.preventDefault();
@@ -34,7 +34,5 @@ $(document).ready(function() {
 	}	
 	$("#writerform").submit(function(event){dopost(event);});
 	$("#footer").html(site_footer());
-        $("#writermenu").addClass("active");
 });
-
 {% endblock %}
