@@ -42,7 +42,7 @@ else {
 }
 
 $amount_written = fwrite($fh, $data);
-fclose($h);
+fclose($fh);
 if(!$file->chmod($username, 6)) {
 	json_exit("Unable to set permissions on uploaded file.", 1);
 }
