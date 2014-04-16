@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block dropdownmenu %}{% include "dropdown.html" %}{% endblock %}
 {% block pagescript %}
 $(document).ready(function() {
 	var filename = loadPageVar("filename");
@@ -30,25 +31,26 @@ $(document).ready(function() {
 			message += "</p>\n";
 			message += "<p>Size: " + data['size'] + " bytes</p>\n";
 			message += "Parent Directory: " + data['parent'] + "</p>\n";
-
-			message += "<br/>";
+                        content.html(message);
 			if(data['type'] != 'd') {
+              			message = "";
+              			var dropdownmenu = $("#dropdown-menu");
 				var clean_filename = filename.substring(0, filename.lastIndexOf('.'));
 				var clean_signature = hash(clean_filename, localStorage['sessionkey']);
 				var clean_query = "?filename=" + clean_filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(clean_signature);
-				message += "<p><a href=\"merge.php" + clean_query + "\">Merge contents</a></p>\n";
-				message += "<p><a href=\"clean.php" + clean_query + "\">Clean contents</a></p>\n";
-				message += "<p><a href=\"base64.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "&action=decode\">Base64 Decode contents</a></p>\n";
-				message += "<p><a href=\"stat.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">File Stat</a></p>\n";
-				message += "<p><a href=\"checkout.php?download&filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Check out</a></p>\n";
-				message += "<p><a href=\"checkin.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Check in</a></p>\n";
-				message += "<p><a href=\"stream.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">View File</a></p>\n";
-				message += "<p><a href=\"share.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Share File</a></p>\n";
-				message += "<p><a href=\"share.php?action=remove&filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Unshare File</a></p>\n";
-	
+				message += "<li><a href=\"merge.php" + clean_query + "\">Merge contents</a></li>\n";
+				message += "<li><a href=\"clean.php" + clean_query + "\">Clean contents</a></li>\n";
+				message += "<li><a href=\"base64.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "&action=decode\">Base64 Decode contents</a></li>\n";
+				message += "<li><a href=\"stat.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">File Stat</a></li>\n";
+				message += "<li><a href=\"checkout.php?download&filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Check out</a></li>\n";
+				message += "<li><a href=\"checkin.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Check in</a></li>\n";
+				message += "<li><a href=\"stream.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">View File</a></li>\n";
+				message += "<li><a href=\"share.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Share File</a></li>\n";
+				message += "<li><a href=\"share.php?action=remove&filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Unshare File</a></li>\n";
+      			        dropdownmenu.html(message);
 			}
-			content.html(message);
 		}
 	);
+   $("#content").addClass("well");
 });
 {% endblock %}

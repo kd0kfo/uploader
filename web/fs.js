@@ -24,12 +24,12 @@ function updateDir(thedirname, username, sessionkey) {
     var signature = hash(thedirname, sessionkey);
     $.getJSON("ls.php", {"filename": thedirname, "username": username, "signature": signature},
     	function(data) {
-	    $("#contents").text("");
+	    $("#content").text("");
 	    if(data['status'] && data['status'] != 0) {
-	    	$("#contents").text("ERROR: " + data['message']);
+	    	$("#content").text("ERROR: " + data['message']);
 	    }
 	    else if(data['type'] == "f") {
-	    	$("#contents").text("File: " + data['name']);
+	    	$("#content").text("File: " + data['name']);
 	    }
 	    else if(data['type'] == "d") {
 			if(thedirname != "/") {
@@ -38,7 +38,7 @@ function updateDir(thedirname, username, sessionkey) {
 			    parentdir.click(function() {updateDir(data["parent"], username, sessionkey);});
 			    parentdir.hover(hoverin,
 					    hoverout);
-			    $("#contents").append(parentdir);
+			    $("#content").append(parentdir);
 			}
 			var debug = $("#debug");
 			$.each(data['dirents'], function(key, val) {
@@ -58,7 +58,7 @@ function updateDir(thedirname, username, sessionkey) {
 				    dirent.click(function() {window.location="file.html?filename=" + text;});
 				}
 				dirent.hover(hoverin, hoverout);
-				$("#contents").append(dirent);
+				$("#content").append(dirent);
 			});
 	    }
 	});

@@ -1,15 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="David Coss">
 <title>{% block title %}{% endblock %}</title>
 <script src="//code.jquery.com/jquery-1.10.2.min.js" language="javascript"></script>
+<script src="js/bootstrap.min.js" language="javascript"></script>
 <script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/rollups/hmac-sha256.js"></script><script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/components/enc-base64-min.js"></script>
 <script src="site.js" language="javascript"></script>
 <script src="fs.js" language="javascript"></script>
+<link href="css/bootstrap.min.css" rel="stylesheet">
 {% block head %}
 {% endblock %}
 </head>
 <body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">{{ brand }}</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li id="lsmenu"><a href="ls.html">Browse</a></li>
+        <li id="uploadmenu"><a href="upload.html">Upload</a></li>
+	<li id="writemenu"><a href="writer.html">Write</a></li>
+	{% block dropdownmenu %}{% endblock %}
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+	<li id="logoutmenu"><a href="logout.html">Logout</a></li>
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
 <div id="content">{% block content %}{% endblock %}</div>
 <script>
 {% block pagescript %}
