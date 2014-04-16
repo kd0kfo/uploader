@@ -79,10 +79,10 @@ class Auth {
 	}
 
 	function create_session_key() {
-		global $site_secret;
 		$data = base64_encode(openssl_random_pseudo_bytes(64));
+		$hash_key = base64_encode(openssl_random_pseudo_bytes(64)) . base64_encode(openssl_random_pseudo_bytes(64));
 		$now = time();
-		$sessionkey = auth_hash($data, $site_secret);
+		$sessionkey = auth_hash($data, $hash_key);
 		$stmt = sql_prepare("update users set sessionkey = '" . $sessionkey . "', sessionstart = ". $now . " where username = :username ;");
 		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
 		$stmt->execute();
