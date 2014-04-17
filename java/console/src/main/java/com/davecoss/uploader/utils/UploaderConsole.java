@@ -555,7 +555,7 @@ public class UploaderConsole {
 				L.debug("user.home not defined.");
 				return null;
 			}
-			File propfile = new File(homedir, ".uploaderrc");
+			File propfile = new File(homedir, ".webfsrc");
 			if(!propfile.exists())
 				return null;
 			
