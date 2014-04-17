@@ -1,6 +1,33 @@
 {% extends "base.html" %}
 {% block dropdownmenu %}{% include "dropdown.html" %}{% endblock %}
+{% block extras %}
+<!-- Modal -->
+<div class="modal fade" id="confirm_delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalTitle">Confirm Delete</h4>
+      </div>
+      <div class="modal-body">
+      Do you really want to delete this file?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" id="do_delete">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
 {% block pagescript %}
+
+function doDelete(username, filename, signature) {
+    $.getJSON("delete.php", {"filename": filename, "username": username, "signature": signature},
+        function(data) {$("#content").text(data['message']);}
+    );
+}
+
 $(document).ready(function() {
 	var filename = loadPageVar("filename");
 	if(filename == "") {
@@ -16,6 +43,9 @@ $(document).ready(function() {
 	$.getJSON("ls.php", {"filename": filename, "username": localStorage['username'], "signature": signature},
 	        function(data) {
 			var content = $("#content");
+                        var clean_filename = filename.substring(0, filename.lastIndexOf('.'));
+			var clean_signature = hash(clean_filename, localStorage['sessionkey']);
+			var clean_query = "?filename=" + clean_filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(clean_signature);
 			var message = "";
 			if(data['status'] && data['status'] != 0) {
 				content.text(data['message']);
@@ -30,14 +60,13 @@ $(document).ready(function() {
 			}
 			message += "</p>\n";
 			message += "<p>Size: " + data['size'] + " bytes</p>\n";
-			message += "Parent Directory: " + data['parent'] + "</p>\n";
+			message += "Parent Directory: <a href=\"file.html?filename=" + data['parent'] + "\">" +  data['parent'] + "</a></p>\n";
+                        message += "<button class=\"btn btn-primary btn-lg\" data-toggle=\"modal\" data-target=\"#confirm_delete\">Delete</button>";
                         content.html(message);
 			if(data['type'] != 'd') {
               			message = "";
               			var dropdownmenu = $("#dropdown-menu");
-				var clean_filename = filename.substring(0, filename.lastIndexOf('.'));
-				var clean_signature = hash(clean_filename, localStorage['sessionkey']);
-				var clean_query = "?filename=" + clean_filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(clean_signature);
+
 				message += "<li><a href=\"merge.php" + clean_query + "\">Merge contents</a></li>\n";
 				message += "<li><a href=\"clean.php" + clean_query + "\">Clean contents</a></li>\n";
 				message += "<li><a href=\"base64.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "&action=decode\">Base64 Decode contents</a></li>\n";
@@ -47,8 +76,8 @@ $(document).ready(function() {
 				message += "<li><a href=\"stream.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">View File</a></li>\n";
 				message += "<li><a href=\"share.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Share File</a></li>\n";
 				message += "<li><a href=\"share.php?action=remove&filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Unshare File</a></li>\n";
-				message += "<li><a href=\"delete.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Delete File</a></li>\n";
-      			        dropdownmenu.html(message);
+				dropdownmenu.html(message);
+                                $("#do_delete").click(function(){doDelete(localStorage['username'], filename, signature);});
 			}
 		}
 	);
