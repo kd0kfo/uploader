@@ -60,7 +60,7 @@ $(document).ready(function() {
 			}
 			message += "</p>\n";
 			message += "<p>Size: " + data['size'] + " bytes</p>\n";
-			message += "Parent Directory: <a href=\"file.html?filename=" + data['parent'] + "\">" +  data['parent'] + "</a></p>\n";
+			message += "Parent Directory: <a href=\"ls.html?filename=" + data['parent'] + "\">" +  data['parent'] + "</a></p>\n";
                         message += "<button class=\"btn btn-primary btn-lg\" data-toggle=\"modal\" data-target=\"#confirm_delete\">Delete</button>";
                         content.html(message);
 			if(data['type'] != 'd') {
