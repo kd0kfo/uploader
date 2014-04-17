@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Logon</title>
-<script src="//code.jquery.com/jquery-1.10.2.min.js" language="javascript"></script>
-<script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/rollups/hmac-sha256.js"></script><script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/components/enc-base64-min.js"></script>
-<script src="site.js" language="javascript"></script>
-<script src="fs.js" language="javascript"></script>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Logon{% endblock %}
+{% block content %}
 <form action="logon.php" id="logonAction">
 <label for="username">User Name:</label>
 <input type="text" name="username" id="username"><br>
@@ -20,8 +13,8 @@
 </form>
 <div id="result"></div>
 <div id="footer"></div>
-</body>
-<script>
+{% endblock %}
+{% block pagescript %}
 $("#footer").html(site_footer());
 $("#logonAction").submit(function(event) {
 	event.preventDefault();
@@ -54,6 +47,4 @@ $(document).ready(function() {
 		$("#salt").val(server_info['salt']);
 	}
 });
-</script>
-</html>
-
+{% endblock %}
