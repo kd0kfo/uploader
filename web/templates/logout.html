@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Logout{% endblock %}
+{% block content %}
+<h4>Confirm Logout</h4>
+<a href="index.html" class="btn btn-primary btn-info" id="cancel">Cancel</a>
+<button class="btn btn-primary btn-danger" id="logout_btn">Logout</button>
+{% endblock %}
+{% block pagescript %}
+$(document).ready(function() {
+	if(localStorage['username']) {
+		$("#prompt").text("Click submit to log out, " + localStorage['username']);
+	} else {
+		$("#prompt").text("Not logged on.");
+		$("#submitbutton").hide();
+	}
+});
+
+$("#footer").html(site_footer());
+$("#logout_btn").click(function(event) {
+	var username = localStorage['username']
+	var result = $.post("logout.php", {username: username});
+
+	result.done(function(data) {
+		var json = jQuery.parseJSON(data);
+		$("#content").empty().append(json.message);
+		delete localStorage['username'];
+		delete localStorage['sessionkey'];
+	});
+
+
+});
+{% endblock %}

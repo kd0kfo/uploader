@@ -1,6 +1,6 @@
 #!/bin/bash
 
-HTML_FILES="file.html index.html ls.html upload.html writer.html"
+HTML_FILES="file.html index.html logout.html ls.html upload.html writer.html"
 
 case $1 in 
 build)
