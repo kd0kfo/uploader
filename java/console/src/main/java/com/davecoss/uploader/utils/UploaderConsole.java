@@ -548,16 +548,22 @@ public class UploaderConsole {
 		return retval;
 	}
 	
+	/**
+	 * Attempts to load .webfsrc from the home directory. If that file does not exist, or is not a valid properties file,
+	 * an empty Properties object is returned.
+	 * 
+	 * @return Map<String, String>
+	 */
 	private static Properties loadProperties() {
 		try {
 			String homedir = System.getProperty("user.home");
 			if(homedir == null) {
 				L.debug("user.home not defined.");
-				return null;
+				return new Properties();
 			}
 			File propfile = new File(homedir, ".webfsrc");
 			if(!propfile.exists())
-				return null;
+				return new Properties();
 			
 			InputStream input = null;
 			Properties props = null;
@@ -572,7 +578,7 @@ public class UploaderConsole {
 			return props;
 		} catch(Exception e) {
 			L.error("Error loading properties.", e);
-			return null;
+			return new Properties();
 		}
 	}
 }
