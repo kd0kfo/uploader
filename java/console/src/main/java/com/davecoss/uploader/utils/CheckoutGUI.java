@@ -340,7 +340,7 @@ public class CheckoutGUI extends JFrame {
 				L.debug("user.home not defined.");
 				return;
 			}
-			File propfile = new File(homedir, ".uploaderrc");
+			File propfile = new File(homedir, ".webfsrc");
 			if(!propfile.exists())
 				return;
 			
