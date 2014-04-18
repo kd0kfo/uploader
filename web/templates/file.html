@@ -71,6 +71,7 @@ $(document).ready(function() {
 				message += "<li><a href=\"clean.php" + clean_query + "\">Clean contents</a></li>\n";
 				message += "<li><a href=\"base64.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "&action=decode\">Base64 Decode contents</a></li>\n";
 				message += "<li><a href=\"stat.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">File Stat</a></li>\n";
+				message += "<li><a href=\"javascript:void(0)\" id=\"doMD5\">MD5</a></li>\n";
 				message += "<li><a href=\"checkout.php?download&filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Check out</a></li>\n";
 				message += "<li><a href=\"checkin.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Check in</a></li>\n";
 				message += "<li><a href=\"stream.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">View File</a></li>\n";
@@ -78,9 +79,21 @@ $(document).ready(function() {
 				message += "<li><a href=\"share.php?action=remove&filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Unshare File</a></li>\n";
 				dropdownmenu.html(message);
                                 $("#do_delete").click(function(){doDelete(localStorage['username'], filename, signature);});
+				$("#doMD5").click(function(){md5File(filename, localStorage['username'], signature);});
 			}
 		}
 	);
    $("#content").addClass("well");
-});
+
+function md5File(filename, username, signature) {
+	$.getJSON("md5.php", {"filename": filename, "username": username, "signature": signature},
+		function(result) {
+			if(result['md5']) {
+				$("#content").text(result['md5']);
+			} else {
+				$("#content").text(result['message']);
+			}
+		}
+	);
+}});
 {% endblock %}
