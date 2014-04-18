@@ -13,7 +13,7 @@ $(document).ready(function() {
 	}
 	window.document.title = dirname;
 	if(!localStorage['sessionkey'] || !localStorage['username']) {
-		$("#debug").text("Login Required");
+		$("#debug").html("<p><a href=\"logon.html\">Login</a> Required</p>");
 		return;
 	}
 	updateDir(dirname, localStorage['username'], localStorage['sessionkey']);
