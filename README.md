@@ -3,6 +3,16 @@ WebFS
 
 Simple Web File Storage System
 
+License
+=======
+
+This software is free to be used under the terms of the GNU General Public License. For details, see the COPYING file or visit https://www.gnu.org/copyleft/gpl.html.
+
+Warranty and Disclaimer
+=======================
+
+There is no warranty for use of this software. It is solely for my own use and experimentation with techniques, algorithms and file systems. Do not use this in a production system. Only use this system if you can provide a secure network. Pull prequests welcomed, if the GPL license is agreeable.
+
 Web
 ===
 
