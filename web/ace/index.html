@@ -270,7 +270,7 @@ function postContents() {
 	var data = session.doc.getValue();
 	data = data.replace(/\\/g, "\\\\");
 	var username = localStorage['username'];
-	var url = "http://localhost/static/webfs/web/postdata.php";
+	var url = "../postdata.php";
 	var filename = $("#saveas").val();
 	var signature = hash(filename, localStorage['sessionkey']);
 	var result = $.post(url, {filename: filename, username: username, data: data, signature: signature});
