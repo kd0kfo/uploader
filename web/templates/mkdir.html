@@ -1,22 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Make a directory</title>
-<script src="//code.jquery.com/jquery-1.10.2.min.js" language="javascript"></script>
-<script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/rollups/hmac-sha256.js"></script><script type="text/javascript" src="//crypto-js.googlecode.com/svn/tags/3.0.2/build/components/enc-base64-min.js"></script>
-<script src="site.js" language="javascript"></script>
-<script src="fs.js" language="javascript"></script>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
+<div id="result"></div>
 <form action="mkdir.php" id="mkdirAction">
 <label for="file">Directory Name:</label>
 <input type="text" name="dirname" id="dirname"><br>
-<input type="submit" name="submit" value="Submit" id="submitbutton"/>
+<input class="btn" type="submit" name="submit" value="Create" id="submitbutton"/>
 </form>
-<div id="result"></div>
 <div id="footer"></div>
 </body>
-<script>
+{% endblock %}
+{% block pagescript %}
 $(document).ready(function() {
 	if(!localStorage['username'] || !localStorage['sessionkey']) {
 		$("#mkdirAction").hide();
@@ -44,6 +37,5 @@ $("#mkdirAction").submit(function(event) {
 	});
 
 });
-</script>
-</html>
 
+{% endblock %}
