@@ -46,6 +46,7 @@ The following web code is included:
 
 * dropzone.js -- a very nice drap-and-drop library for javascript. May be found at https://github.com/enyo/dropzone and is released under the terms of MIT License.
 * bootstrap -- Web frontend framework. Released with MIT License. Found at http://getbootstrap.com
+* ACE -- Javascript code editor that may be found at http://ace.c9.io. Used under their own open source license that may be found in web/ace/LICENSE.
 
 
 Build Status
