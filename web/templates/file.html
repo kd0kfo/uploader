@@ -46,7 +46,7 @@ $(document).ready(function() {
                         var clean_filename = filename.substring(0, filename.lastIndexOf('.'));
 			var clean_signature = hash(clean_filename, localStorage['sessionkey']);
 			var clean_query = "?filename=" + clean_filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(clean_signature);
-			var message = "";
+			var message = "<div id=\"result\"></div>\n";
 			if(data['status'] && data['status'] != 0) {
 				content.text(data['message']);
 				return;
@@ -61,6 +61,7 @@ $(document).ready(function() {
 			message += "</p>\n";
 			message += "<p>Size: " + data['size'] + " bytes</p>\n";
 			message += "Parent Directory: <a href=\"ls.html?filename=" + data['parent'] + "\">" +  data['parent'] + "</a></p>\n";
+			message += "<p><label for=\"move\">Move to: </label><input type=\"text\" id=\"move\"/><button class=\"btn\" id=\"movebtn\"\">Move</button></p>\n";
                         message += "<button class=\"btn btn-primary btn-lg\" data-toggle=\"modal\" data-target=\"#confirm_delete\">Delete</button>";
                         content.html(message);
 			if(data['type'] != 'd') {
@@ -80,10 +81,22 @@ $(document).ready(function() {
 				dropdownmenu.html(message);
                                 $("#do_delete").click(function(){doDelete(localStorage['username'], filename, signature);});
 				$("#doMD5").click(function(){md5File(filename, localStorage['username'], signature);});
+				$("#movebtn").click(function() {doMove();});
 			}
 		}
 	);
    $("#content").addClass("well");
+
+function doMove() {
+	var filename = loadPageVar("filename");
+	var dest = $("#move").val();
+	var signature = hash(filename+dest, localStorage['sessionkey']);
+	$.getJSON("mv.php", {"source": filename, "destination": dest, "username": localStorage['username'], "signature": signature},
+		function(result) {
+			$("#result").text(result['message']);
+		}
+	);
+}
 
 function md5File(filename, username, signature) {
 	$.getJSON("md5.php", {"filename": filename, "username": username, "signature": signature},

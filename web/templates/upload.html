@@ -29,7 +29,16 @@ $(document).ready(function() {
 	}
 	Dropzone.options.uploadform = {
 		paramName: "file",
-		maxFilesize: filesize
+		maxFilesize: filesize,
+		init: function() {
+			this.on("success", function(fileObj, response) {
+			json = $.parseJSON(response)
+		   	if(json['status'] != "0") {
+				fileObj.previewElement.classList.add("dz-error");
+		     	        fileObj.previewElement.querySelector("[data-dz-errormessage]").textContent = json['message'];
+		      	}
+			});
+		}
 	};
 });
 {% endblock %}

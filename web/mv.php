@@ -37,9 +37,9 @@ foreach(array($source, $destination) as $F) {
 
 $retval = $source->move_to($destination);
 if(!$retval) {
-	json_exit("Could not move " . $source->filepath . " to " . $destination->filepath, 1);
+	json_exit("Could not move " . $source->orig_filename . " to " . $destination->orig_filename, 1);
 } else {
-	json_exit("Moved " . $source->filepath . " to " . $destination->filepath, 0);
+	json_exit("Moved " . $source->orig_filename . " to " . $destination->orig_filename, 0);
 }
 
 ?>

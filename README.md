@@ -3,6 +3,16 @@ WebFS
 
 Simple Web File Storage System
 
+License
+=======
+
+This software is free to be used under the terms of the GNU General Public License. For details, see the COPYING file or visit https://www.gnu.org/copyleft/gpl.html.
+
+Warranty and Disclaimer
+=======================
+
+There is no warranty for use of this software. It is solely for my own use and experimentation with techniques, algorithms and file systems. Do not use this in a production system. Only use this system if you can provide a secure network. Pull prequests welcomed, if the GPL license is agreeable.
+
 Web
 ===
 
@@ -36,6 +46,7 @@ The following web code is included:
 
 * dropzone.js -- a very nice drap-and-drop library for javascript. May be found at https://github.com/enyo/dropzone and is released under the terms of MIT License.
 * bootstrap -- Web frontend framework. Released with MIT License. Found at http://getbootstrap.com
+* ACE -- Javascript code editor that may be found at http://ace.c9.io. Used under their own open source license that may be found in web/ace/LICENSE.
 
 
 Build Status
