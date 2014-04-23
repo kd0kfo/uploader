@@ -413,6 +413,7 @@ public class UploaderConsole {
 			webfsTask.addArgument("base64", true);
 			webfsTask.addFile(new File(path));
 			response = WebFSTask.blockingRun(webfsTask);
+			break;
 		}
 		case LS:
 		{
