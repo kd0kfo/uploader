@@ -79,10 +79,11 @@ $(document).ready(function() {
 				message += "<li><a href=\"share.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Share File</a></li>\n";
 				message += "<li><a href=\"share.php?action=remove&filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Unshare File</a></li>\n";
 				dropdownmenu.html(message);
-                                $("#do_delete").click(function(){doDelete(localStorage['username'], filename, signature);});
-				$("#doMD5").click(function(){md5File(filename, localStorage['username'], signature);});
-				$("#movebtn").click(function() {doMove();});
 			}
+			$("#do_delete").click(function(){doDelete(localStorage['username'], filename, signature);});
+			$("#doMD5").click(function(){md5File(filename, localStorage['username'], signature);});
+			$("#movebtn").click(function() {doMove();});
+	
 		}
 	);
    $("#content").addClass("well");
