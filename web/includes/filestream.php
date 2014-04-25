@@ -71,12 +71,12 @@ function stream_file($filepath, $do_download) {
 	$filename = basename($filepath);
 	$extension = strtolower(array_pop(explode('.',$filename)));
 	$themime = "application/octet-stream";
-	if(function_exists('finfo_open')){
+	if(array_key_exists($extension, $webfs_mime_types)) {
+		$themime = $webfs_mime_types[$extension];
+	} else if(function_exists('finfo_open')) {
 		$finfo = finfo_open(FILEINFO_MIME_TYPE);
 		$themime = finfo_file($finfo, $filepath);
 		finfo_close($finfo);
-	} elseif(array_key_exists($extension, $webfs_mime_types)) {
-		$themime = $webfs_mime_types[$extension];
 	}
 	if($themime) {
 		header('Content-type: ' . $themime);
