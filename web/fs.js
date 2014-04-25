@@ -2,6 +2,10 @@ function loadPageVar (sVar) {
   return decodeURI(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(sVar).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
 }
 
+function basename(path) {
+	return path.split(/[\\/]/).pop();
+}
+
 function hoverin() {
     $(this).css("font-style", "italic").css("color", "red");
 }
