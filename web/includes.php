@@ -32,6 +32,11 @@ function json_error($msg, $status) {
 }
 
 function json_exit($msg, $status) {
+	if($status == 0) {
+		header("HTTP/1.0 200 Good");
+	} else {
+		header("HTTP/1.0 400 Bad Request");
+	}
 	json_error($msg, $status);
 	exit(0);
 }
