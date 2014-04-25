@@ -291,14 +291,21 @@ function postContents() {
 $(document).ready(function() {
 
 	var filename = loadPageVar("filename");
-	if(filename && localStorage['username'] && localStorage['sessionkey']) {
-		var username = localStorage['username'];
-		var signature = hash(filename, localStorage['sessionkey']);
-		var result = $.post("../stream.php", {filename: filename, username: username, signature: signature});
-		result.done(function(data){
-			session.doc.setValue(data);
-			$("#saveas").val(basename(filename));
-		});
+	if(filename) {
+		if(localStorage['username'] && localStorage['sessionkey']) {
+			var username = localStorage['username'];
+			var signature = hash(filename, localStorage['sessionkey']);
+			var result = $.post("../stream.php", {filename: filename, username: username, signature: signature});
+			result.done(function(data){
+				session.doc.setValue(data);
+				$("#saveas").val(basename(filename));
+			});
+			result.fail(function() {
+				alert("Failed to load contents of " + filename);
+			});
+		} else {	
+			alert("Login required to edit file.");
+		};
 	}
 
 });
