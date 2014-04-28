@@ -30,7 +30,7 @@ $("#logonAction").submit(function(event) {
 	var logon_hash = hash("logon", h);
 	var result = $.post(url, {username: username, hmac: logon_hash, totp: totp_token});
 
-	result.done(function(data) {
+	result.always(function(data) {
 		var json = jQuery.parseJSON(data);
 		$("#result").empty().append(json.message);
 		if(json.sessionkey) {

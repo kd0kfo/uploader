@@ -31,7 +31,7 @@ $("#mkdirAction").submit(function(event) {
 
 	var result = $.post(url, {dirname: dirname, username: username, signature: sig});
 
-	result.done(function(data) {
+	result.always(function(data) {
 		var json = jQuery.parseJSON(data);
 		$("#result").empty().append(json.message);
 	});

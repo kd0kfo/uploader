@@ -65,6 +65,9 @@ function updateDir(thedirname, username, sessionkey) {
 				$("#content").append(dirent);
 			});
 	    }
+	}).fail(function(data){
+		var json = $.parseJSON(data.responseText);
+		$("#content").text("Error: " + json['message']);
 	});
 }
 
