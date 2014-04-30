@@ -27,7 +27,7 @@ $("#mkdirAction").submit(function(event) {
 
 	var username = localStorage['username'];
 	var sessionkey = localStorage['sessionkey'];
-	var sig = hash(dirname, sessionkey);
+	var sig = sign_data(dirname);
 
 	var result = $.post(url, {dirname: dirname, username: username, signature: sig});
 

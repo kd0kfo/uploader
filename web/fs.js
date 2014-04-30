@@ -71,8 +71,17 @@ function updateDir(thedirname, username, sessionkey) {
 	});
 }
 
+function unixtime() {
+	return Math.round(+new Date()/1000);
+}
+
 function hash(data, key) {
 	var hash = CryptoJS.HmacSHA256(data, key);
 	return CryptoJS.enc.Base64.stringify(hash);
 }
 
+function sign_data(data) {
+	if(!localStorage['sessionkey'])
+		throw "Login required";
+	return hash(data + unixtime().toString(), localStorage['sessionkey']);
+}	

@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -412,7 +413,8 @@ public class WebFS {
 	}
 	
 	public AuthHash signData(String data) throws AuthHash.HashException {
-		return AuthHash.getInstance(data, signingkey);
+		long now = (new Date()).getTime() / 1000L;
+		return AuthHash.getInstance(data + Long.toString(now), signingkey);
 	}
 	
 	public String urlEncode(String data) throws IOException {

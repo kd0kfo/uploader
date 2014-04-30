@@ -22,7 +22,8 @@
 {% endblock %}
 {% block pagescript %}
 
-function doDelete(username, filename, signature) {
+function doDelete(username, filename) {
+    var signature = sign_data(filename);
     $.getJSON("delete.php", {"filename": filename, "username": username, "signature": signature},
         function(data) {$("#content").text(data['message']);}
     );
@@ -39,12 +40,12 @@ $(document).ready(function() {
 		$("#content").html("<p><a href=\"logon.html\">Login</a> Required</p>");
 		return;
 	}
-	var signature = hash(filename, localStorage['sessionkey']);
+	var signature = sign_data(filename);
 	$.getJSON("ls.php", {"filename": filename, "username": localStorage['username'], "signature": signature},
 	        function(data) {
 			var content = $("#content");
                         var clean_filename = filename.substring(0, filename.lastIndexOf('.'));
-			var clean_signature = hash(clean_filename, localStorage['sessionkey']);
+			var clean_signature = sign_data(clean_filename, username, localStorage['sessionkey']);
 			var clean_query = "?filename=" + clean_filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(clean_signature);
 			var message = "<div id=\"result\"></div>\n";
 			if(data['status'] && data['status'] != 0) {
@@ -80,8 +81,8 @@ $(document).ready(function() {
 				message += "<li><a href=\"share.php?action=remove&filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Unshare File</a></li>\n";
 				dropdownmenu.html(message);
 			}
-			$("#do_delete").click(function(){doDelete(localStorage['username'], filename, signature);});
-			$("#doMD5").click(function(){md5File(filename, localStorage['username'], signature);});
+			$("#do_delete").click(function(){doDelete(localStorage['username'], filename);});
+			$("#doMD5").click(function(){md5File(filename, localStorage['username']);});
 			$("#movebtn").click(function() {doMove();});
 	
 		}
@@ -91,7 +92,7 @@ $(document).ready(function() {
 function doMove() {
 	var filename = loadPageVar("filename");
 	var dest = $("#move").val();
-	var signature = hash(filename+dest, localStorage['sessionkey']);
+	var signature = sign_data(filename+dest);
 	$.getJSON("mv.php", {"source": filename, "destination": dest, "username": localStorage['username'], "signature": signature},
 		function(result) {
 			$("#result").text(result['message']);

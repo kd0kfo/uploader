@@ -24,7 +24,6 @@ $(document).ready(function() {
 		$("#uploadform").hide();
 	}	
 	else {
-		$("#signature").val(hash("upload", localStorage['sessionkey']));
 		$("#username").val(localStorage["username"]);
 	}
 	Dropzone.options.uploadform = {
@@ -32,11 +31,14 @@ $(document).ready(function() {
 		maxFilesize: filesize,
 		init: function() {
 			this.on("success", function(fileObj, response) {
-			json = $.parseJSON(response)
-		   	if(json['status'] != "0") {
-				fileObj.previewElement.classList.add("dz-error");
-		     	        fileObj.previewElement.querySelector("[data-dz-errormessage]").textContent = json['message'];
-		      	}
+				json = $.parseJSON(response)
+				if(json['status'] != "0") {
+					fileObj.previewElement.classList.add("dz-error");
+					fileObj.previewElement.querySelector("[data-dz-errormessage]").textContent = json['message'];
+				}
+			});
+			this.on("sending", function(xhrobj, formData) {
+				formData.append("signature", sign_data("upload"));
 			});
 		}
 	};
