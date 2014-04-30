@@ -1,4 +1,5 @@
 package com.davecoss.uploader;
+import java.text.SimpleDateFormat;
 
 public class FileRevision {
 	
@@ -13,7 +14,9 @@ public class FileRevision {
 	}
 	
 	public String toString() {
-		return this.command + " run by " + this.creator + " at " + this.timestamp;
+		SimpleDateFormat df = new SimpleDateFormat("E, MMM d, YYYY kk:mm");
+		String dateString = df.format(this.timestamp * 1000L);
+		return this.command + " run by " + this.creator + " at " + dateString;
 	}
 	
 }
