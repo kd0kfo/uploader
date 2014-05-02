@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import com.davecoss.java.ConsoleLog;
-import com.davecoss.java.GenericBase64;
+import com.davecoss.java.GenericBaseN;
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CLIOptionTuple;
 import com.davecoss.java.utils.CredentialPair;

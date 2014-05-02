@@ -8,7 +8,7 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import com.davecoss.java.ConsoleLog;
-import com.davecoss.java.GenericBase64;
+import com.davecoss.java.GenericBaseN;
 import com.davecoss.java.Logger;
 import com.davecoss.java.plugin.NamedOutputStream;
 import com.davecoss.java.plugin.Plugin;

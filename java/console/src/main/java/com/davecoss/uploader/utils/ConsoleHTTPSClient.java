@@ -18,7 +18,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
-import com.davecoss.java.GenericBase64;
+import com.davecoss.java.GenericBaseN;
 import com.davecoss.java.Logger;
 import com.davecoss.java.utils.CredentialPair;
 import com.davecoss.uploader.HTTPSClient;
@@ -314,7 +314,7 @@ public class ConsoleHTTPSClient implements HTTPSClient {
 	}
 	
 	@Override
-	public GenericBase64 getEncoder() {
+	public GenericBaseN getEncoder() {
 		return ConsoleHTTPSClient.encoder;
 	}
 
