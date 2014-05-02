@@ -66,7 +66,7 @@
     <dependency>
 	<groupId>com.davecoss.java</groupId>
 	<artifactId>javalib</artifactId>
-	<version>1.0.b</version>
+	<version>1.0.0</version>
     </dependency>
     <dependency>
     	<groupId>org.apache.httpcomponents</groupId>
