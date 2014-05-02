@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block head %}
+<script src="js/file.js" language="javascript"></script>
+{% endblock %}
 {% block dropdownmenu %}{% include "dropdown.html" %}{% endblock %}
 {% block extras %}
 <!-- Modal -->
@@ -22,12 +25,11 @@
 {% endblock %}
 {% block pagescript %}
 
-function doDelete(username, filename) {
-    var signature = sign_data(filename);
-    $.getJSON("delete.php", {"filename": filename, "username": username, "signature": signature},
-        function(data) {$("#content").text(data['message']);}
-    );
+function get_signature_query(filename) {
+	var clean_signature = sign_data(filename);
+	return "filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(clean_signature);
 }
+
 
 $(document).ready(function() {
 	var filename = loadPageVar("filename");
@@ -45,7 +47,7 @@ $(document).ready(function() {
 	        function(data) {
 			var content = $("#content");
                         var clean_filename = filename.substring(0, filename.lastIndexOf('.'));
-			var clean_signature = sign_data(clean_filename, username, localStorage['sessionkey']);
+			var clean_signature = sign_data(clean_filename);
 			var clean_query = "?filename=" + clean_filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(clean_signature);
 			var message = "<div id=\"result\"></div>\n";
 			if(data['status'] && data['status'] != 0) {
@@ -69,46 +71,34 @@ $(document).ready(function() {
               			message = "";
               			var dropdownmenu = $("#dropdown-menu");
 
-				message += "<li><a href=\"merge.php" + clean_query + "\">Merge contents</a></li>\n";
-				message += "<li><a href=\"clean.php" + clean_query + "\">Clean contents</a></li>\n";
-				message += "<li><a href=\"base64.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "&action=decode\">Base64 Decode contents</a></li>\n";
-				message += "<li><a href=\"stat.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">File Stat</a></li>\n";
+				message += "<li><a href=\"javascript:void(0)\" id=\"mergelink\">Merge contents</a></li>\n";
+				message += "<li><a href=\"javascript:void(0)\" id=\"cleanlink\">Clean contents</a></li>\n";
+				message += "<li><a href=\"javascript:void(0)\" id=\"base64link\">Base64 Decode contents</a></li>\n";
+				message += "<li><a href=\"javascript:void(0)\" id=\"statlink\">File Stat</a></li>\n";
 				message += "<li><a href=\"javascript:void(0)\" id=\"doMD5\">MD5</a></li>\n";
-				message += "<li><a href=\"checkout.php?download&filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Check out</a></li>\n";
-				message += "<li><a href=\"checkin.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Check in</a></li>\n";
-				message += "<li><a href=\"stream.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">View File</a></li>\n";
-				message += "<li><a href=\"share.php?filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Share File</a></li>\n";
-				message += "<li><a href=\"share.php?action=remove&filename=" + filename + "&username=" + localStorage['username'] + "&signature=" + encodeURIComponent(signature) + "\">Unshare File</a></li>\n";
+				message += "<li><a href=\"javascript:void(0)\" id=\"checkoutlink\">Check out</a></li>\n";
+				message += "<li><a href=\"javascript:void(0)\" id=\"checkinlink\">Check in</a></li>\n";
+				message += "<li><a href=\"javascript:void(0)\" id=\"viewlink\">View File</a></li>\n";
+				message += "<li><a href=\"ace/index.html?filename=" + encodeURIComponent(filename) + "\">Edit File</a></li>\n";
+				message += "<li><a href=\"javascript:void(0)\" id=\"sharelink\">Share File</a></li>\n";
+				message += "<li><a href=\"javascript:void(0)\" id=\"unsharelink\">Unshare File</a></li>\n";
 				dropdownmenu.html(message);
 			}
-			$("#do_delete").click(function(){doDelete(localStorage['username'], filename);});
-			$("#doMD5").click(function(){md5File(filename, localStorage['username']);});
+			$("#do_delete").click(function(){doPost("delete.php");});
+			$("#doMD5").click(function(){doMD5();});
 			$("#movebtn").click(function() {doMove();});
-	
+			$("#viewlink").click(function(){doView();});
+			$("#mergelink").click(function(){cleanPost("merge.php");});
+			$("#cleanlink").click(function(){cleanPost("clean.php");});
+			$("#base64link").click(function(){doPost("base64.php");});
+			$("#statlink").click(function(){doStat();});
+			$("#checkoutlink").click(function(){doPost("checkout.php");});
+			$("#checkinlink").click(function(){doPost("checkin.php");});
+			$("#sharelink").click(function(){sharePost();});
+			$("#unsharelink").click(function(){unsharePost();});
 		}
-	);
+	); // end of getJSON
    $("#content").addClass("well");
+}); // end of document.ready
 
-function doMove() {
-	var filename = loadPageVar("filename");
-	var dest = $("#move").val();
-	var signature = sign_data(filename+dest);
-	$.getJSON("mv.php", {"source": filename, "destination": dest, "username": localStorage['username'], "signature": signature},
-		function(result) {
-			$("#result").text(result['message']);
-		}
-	);
-}
-
-function md5File(filename, username, signature) {
-	$.getJSON("md5.php", {"filename": filename, "username": username, "signature": signature},
-		function(result) {
-			if(result['md5']) {
-				$("#content").text(result['md5']);
-			} else {
-				$("#content").text(result['message']);
-			}
-		}
-	);
-}});
 {% endblock %}

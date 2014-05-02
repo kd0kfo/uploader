@@ -22,11 +22,24 @@ function get_server_info() {
   return $.parseJSON(server_info);
 }
 
+function display_json_message(data) {
+	var json = jQuery.parseJSON(data);
+	$("#result").empty().append(json.message);
+}
+	
+function json2ul(json) {
+	var ul = $('<ul>');
+	$.each(json, function(key, val) {
+		ul.append($('<li>').text(key + ": " + val));
+	});
+	return ul;		
+}
+
 function updateDir(thedirname, username, sessionkey) {
     window.document.title = thedirname;
     $("#heading").text("Contents of " + thedirname);
-    var signature = hash(thedirname, sessionkey);
-    $.getJSON("ls.php", {"filename": thedirname, "username": username, "signature": signature},
+    var signature = sign_data(thedirname);
+    $.getJSON("ls.php", {"filename": thedirname, "username": username, "signature": signature,"debugtime": thedirname + unixtime().toString()},
     	function(data) {
 	    $("#content").text("");
 	    if(data['status'] && data['status'] != 0) {

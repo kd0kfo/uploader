@@ -5,7 +5,6 @@
 {% endblock %}
 {% block content %}
 <form action="upload.php" method="post" id="uploadform" class="dropzone">
-<input type="hidden" id="signature" name="signature"/>
 <input type="hidden" id="username" name="username"/>
 </form>
 <div id="message"></div>
@@ -37,7 +36,7 @@ $(document).ready(function() {
 					fileObj.previewElement.querySelector("[data-dz-errormessage]").textContent = json['message'];
 				}
 			});
-			this.on("sending", function(xhrobj, formData) {
+			this.on("sending", function(file, xhrobj, formData) {
 				formData.append("signature", sign_data("upload"));
 			});
 		}

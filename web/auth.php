@@ -169,11 +169,12 @@ class Auth {
 		}
 		$signingkey = create_signing_key($passhash, $sessionkey);
 		// Check signature with a window around the current timestamp
-		$timeStamp = GoogleAuth::get_timestamp();
+		$timeStamp = time();
 		$window = 3;
+		$retval = false;
 		for ($ts = $timeStamp - $window; $ts <= $timeStamp + $window; $ts++)
 		{
-			$realhash = auth_hash($data+strval($timeStamp), $signingkey);
+			$realhash = auth_hash($data . strval($ts), $signingkey);
 			$retval = ($signature == $realhash);
 			if($retval) {
 				break;
