@@ -3,7 +3,7 @@ package com.davecoss.uploader.auth;
 /**
  * Abstraction of HMAC usage of Uploader System.
  * 
- * Note: MUST initialize the base64 encoder by calling init with a GenericBase64 implementation object.
+ * Note: MUST initialize the base64 encoder by calling init with a GenericBaseN implementation object.
  */
 
 import java.io.UnsupportedEncodingException;
@@ -17,23 +17,23 @@ import java.util.Arrays;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.davecoss.java.GenericBase64;
+import com.davecoss.java.GenericBaseN;
 
 public class AuthHash {
 
 	public final String hash;
-	private static GenericBase64 encoder = null;
+	private static GenericBaseN encoder = null;
 	static final String URL_ENCODE_TYPE = "UTF-8";
 	
 	public AuthHash(String hash) {
 		this.hash = hash;
 	}
 	
-	public static void init(GenericBase64 encoder) {
+	public static void init(GenericBaseN encoder) {
 		AuthHash.encoder = encoder;
 	}
 	
-	public static GenericBase64 getEncoder() {
+	public static GenericBaseN getEncoder() {
 		return encoder;
 	}
 	

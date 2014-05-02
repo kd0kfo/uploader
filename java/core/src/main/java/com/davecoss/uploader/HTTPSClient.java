@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 
-import com.davecoss.java.GenericBase64;
+import com.davecoss.java.GenericBaseN;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.CredentialsProvider;
@@ -39,7 +39,7 @@ public interface HTTPSClient {
 	
 	public WebResponse postFile(String url, File thefile) throws IOException;
 	
-	public GenericBase64 getEncoder();
+	public GenericBaseN getEncoder();
 	
 	public void close() throws IOException;
 	

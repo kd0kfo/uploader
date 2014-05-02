@@ -3,13 +3,13 @@ package com.davecoss.uploader.utils;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.davecoss.java.GenericBase64;
+import com.davecoss.java.GenericBaseN;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.codec.binary.Base64OutputStream;
 
-public class CommonsBase64 implements GenericBase64 {
+public class CommonsBase64 implements GenericBaseN {
 
 	public CommonsBase64() {
 	}
