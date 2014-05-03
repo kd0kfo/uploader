@@ -278,7 +278,7 @@ function postContents() {
 	var username = localStorage['username'];
 	var url = "../postdata.php";
 	var filename = $("#saveas").val();
-	var signature = hash(filename, localStorage['sessionkey']);
+	var signature = sign_data(filename);
 	var result = $.post(url, {filename: filename, username: username, data: data, signature: signature});
 
 	result.done(function(data) {
