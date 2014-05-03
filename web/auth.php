@@ -167,8 +167,19 @@ class Auth {
 		if(!$passhash) {
 			return false;
 		}
-		$realhash = auth_hash($data, create_signing_key($passhash, $sessionkey));
-		$retval = ($signature == $realhash);
+		$signingkey = create_signing_key($passhash, $sessionkey);
+		// Check signature with a window around the current timestamp
+		$timeStamp = time();
+		$window = 3;
+		$retval = false;
+		for ($ts = $timeStamp - $window; $ts <= $timeStamp + $window; $ts++)
+		{
+			$realhash = auth_hash($data . strval($ts), $signingkey);
+			$retval = ($signature == $realhash);
+			if($retval) {
+				break;
+			}
+		}
 		if(!$retval) {
 			$this->increment_failed_logins();
 		}

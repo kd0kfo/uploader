@@ -30,13 +30,16 @@ $("#logonAction").submit(function(event) {
 	var logon_hash = hash("logon", h);
 	var result = $.post(url, {username: username, hmac: logon_hash, totp: totp_token});
 
-	result.always(function(data) {
-		var json = jQuery.parseJSON(data);
-		$("#result").empty().append(json.message);
+	result.done(function(data) {
+		display_json_message(data);
+		var json = $.parseJSON(data);
 		if(json.sessionkey) {
 			localStorage['username'] = username;
 			localStorage['sessionkey'] = hash(h + json.sessionkey, h);
 		}
+	});
+	result.fail(function(jqXHR) {
+		display_json_message(jqXHR.responseText);
 	});
 
 

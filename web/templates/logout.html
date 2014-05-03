@@ -15,18 +15,25 @@ $(document).ready(function() {
 	}
 });
 
+function display_message(data) {
+	var json = jQuery.parseJSON(data);
+	$("#content").empty().append(json.message);
+	delete localStorage['username'];
+	delete localStorage['sessionkey'];
+}
+
 $("#footer").html(site_footer());
 $("#logout_btn").click(function(event) {
 	var username = localStorage['username']
 	var result = $.post("logout.php", {username: username});
 
-	result.always(function(data) {
-		var json = jQuery.parseJSON(data);
-		$("#content").empty().append(json.message);
-		delete localStorage['username'];
-		delete localStorage['sessionkey'];
+	result.done(function(data) {
+		display_message(data);
 	});
 
+	result.fail(function(jqXHR) {
+		display_message(jqXHR.responseText);
+	});
 
 });
 {% endblock %}
