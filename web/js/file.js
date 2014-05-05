@@ -1,14 +1,5 @@
 
-function doMove() {
-	var filename = loadPageVar("filename");
-	var dest = $("#move").val();
-	var signature = sign_data(filename+dest);
-	$.getJSON("mv.php", {"source": filename, "destination": dest, "username": localStorage['username'], "signature": encodeURIComponent(signature)},
-		function(result) {
-			$("#result").text(result['message']);
-		}
-	);
-}
+
 
 function doView() {
 	var filename = loadPageVar("filename");
@@ -104,4 +95,12 @@ function doEdit() {
 	var filename = loadPageVar("filename");
 	var url = 'ace/index.html?filename=' + encodeURIComponent(filename) + "&signature=" + encodeURIComponent(sign_data(filename)) + "&username=" + encodeURIComponent(localStorage['username']);
 	window.location=url;
+}
+
+function doMove() {
+	var filename = loadPageVar("filename");
+	var dest = $("#move").val();
+	var signature = sign_data(filename+dest);
+	var json = {"source": filename, "destination": dest, "username": localStorage['username'], "signature": signature};
+	doPostWithJSON("mv.php", json);
 }
