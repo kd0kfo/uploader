@@ -49,5 +49,8 @@ $(document).ready(function() {
 	if(server_info['salt']) {
 		$("#salt").val(server_info['salt']);
 	}
+	if(server_info['time']) {
+		localStorage['offset'] = server_info['time'] - unixtime();
+	}
 });
 {% endblock %}

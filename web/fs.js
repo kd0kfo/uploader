@@ -39,8 +39,9 @@ function updateDir(thedirname, username, sessionkey) {
     window.document.title = thedirname;
     $("#heading").text("Contents of " + thedirname);
     var signature = sign_data(thedirname);
-    $.getJSON("ls.php", {"filename": thedirname, "username": username, "signature": signature,"debugtime": thedirname + unixtime().toString()},
-    	function(data) {
+    var result = $.post("ls.php", {"filename": thedirname, "username": username, "signature": signature,"debugtime": thedirname + unixtime().toString()});
+    result.done(function(responsetext) {
+	    var data = $.parseJSON(responsetext);
 	    $("#content").text("");
 	    if(data['status'] && data['status'] != 0) {
 	    	$("#content").text("ERROR: " + data['message']);
@@ -78,8 +79,9 @@ function updateDir(thedirname, username, sessionkey) {
 				$("#content").append(dirent);
 			});
 	    }
-	}).fail(function(data){
-		var json = $.parseJSON(data.responseText);
+	});
+	result.fail(function(jqXHR){
+		var json = $.parseJSON(jqXHR.responseText);
 		$("#content").text("Error: " + json['message']);
 	});
 }
@@ -96,5 +98,9 @@ function hash(data, key) {
 function sign_data(data) {
 	if(!localStorage['sessionkey'])
 		throw "Login required";
-	return hash(data + unixtime().toString(), localStorage['sessionkey']);
+	var timestamp = unixtime();
+	if(localStorage['offset']) {
+		timestamp = timestamp + localStorage['offset']*1;
+	}
+	return hash(data + timestamp.toString(), localStorage['sessionkey']);
 }	
