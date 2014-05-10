@@ -42,7 +42,7 @@ $(document).ready(function() {
 		$("#content").html("<p><a href=\"logon.html\">Login</a> Required</p>");
 		return;
 	}
-	var signature = sign_data(filename);
+	var signature = encodeURIComponent(sign_data(filename));
 	$.getJSON("ls.php", {"filename": filename, "username": localStorage['username'], "signature": signature},
 	        function(data) {
 			var content = $("#content");

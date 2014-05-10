@@ -45,7 +45,7 @@ function get_post_get($key) {
 	$retval = "";
 
 	if(isset($_GET[$key])) {
-		$retval = decodeURIComponent($_GET[$key]);
+		$retval = urldecode($_GET[$key]);
 	}
 	if(isset($_POST[$key])) {
 		$retval = $_POST[$key];
