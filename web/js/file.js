@@ -53,7 +53,8 @@ function sharePost() {
 		var json = $.parseJSON(data);
 		var path = location.href.substring(0,location.href.lastIndexOf('?'));
 		path = path.substring(0,path.lastIndexOf('/'));
-		$("#result").text("To share this file, use the URL: " + path + "/share.php?id=" + json.message);
+		var shareurl = path + "/share.php?id=" + json.message;
+		$("#result").html("To share this file, use the URL: <a href=\"" + shareurl + "\">" + shareurl + "</a>");
 	});
 	result.fail(function(jqXHR){display_json_message(jqXHR.responseText);});
 }
