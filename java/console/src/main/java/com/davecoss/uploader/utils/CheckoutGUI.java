@@ -92,10 +92,15 @@ public class CheckoutGUI extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				L.info("Starting GUI.");
+				for(String arg : args) {
+					if(arg.equals("-d")) {
+						L.setLevel(LogHandler.Level.DEBUG);
+					}
+				}
 				try {
 					File statfile = null;
 					if(args.length != 0) {
-						statfile = new File(args[0]); 
+						statfile = new File(args[args.length - 1]); 
 					}
 					CheckoutGUI frame = new CheckoutGUI();
 					frame.loadProperties();

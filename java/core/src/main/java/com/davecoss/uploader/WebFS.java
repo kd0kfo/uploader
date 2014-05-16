@@ -231,6 +231,7 @@ public class WebFS {
 		if(credentials == null)
 			throw new IOException("Cannot log on. Missing credentials.");
 		
+		
 		AuthHash logonkey = null;
 		try {
 			logonkey = credentials.generateLogonKey();
@@ -243,12 +244,17 @@ public class WebFS {
 		JSONObject json = client.jsonGet(logonURL);
 		WebResponse retval = WebResponse.fromJSON(json);
 		long status = (Long)json.get("status");
-		if(status != WebResponse.SUCCESS)
+		if(status != WebResponse.SUCCESS) {
+			if(json.containsKey("message"))
+				L.error((String)json.get("message"));
 			return retval;
+		}
 		
 		// Generate signing key
 		try {
 			String key = (String)json.get("sessionkey");
+			if(key == null)
+				L.warn("Null signing key.");
 			AuthHash signingHash = credentials.createSigningKey(key);
 			signingkey = signingHash.bytes();
 			credentials.destroyPassphrase(); // If there is a signing key, there is no need for the pass phrase. Destroy it.
