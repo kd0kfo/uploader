@@ -27,8 +27,8 @@ $("#logonAction").submit(function(event) {
 	var url = form.attr("action");
 
 	var h = hash(username, password+salt);
-	var logon_hash = hash("logon", h);
-	var result = $.post(url, {username: username, hmac: logon_hash, totp: totp_token});
+	var logon_hash = hash("logon" + totp_token, h);
+	var result = $.post(url, {username: username, signature: logon_hash});
 
 	result.done(function(data) {
 		display_json_message(data);

@@ -87,7 +87,7 @@ function doStat() {
 		var json = $.parseJSON(data);
 		var list = $("<p>").text("In-depth File Information:");
 		list.append(json2ul(json));
-		$("#result").append(list);
+		$("#result").html(list);
 	});
 	result.fail(function(jqXHR){display_json_message(jqXHR.responseText);});
 }

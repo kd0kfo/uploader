@@ -13,21 +13,37 @@ class Auth {
 	}
 	
 	function verify_logon() {
-		$hmac = get_requested_string("hmac");
-
-		$retval = $this->verify_user($hmac);	
+		$signature = get_requested_string("signature");
+		$retval = $this->verify_user($signature);
 		return $retval;
 	}
 
-	function verify_user($hmac, $totp_token) {
+	function verify_user($signature) {
+		$window = 3;
 		if($this->excessive_failed_logins($this->username)) {
 			json_exit("Maximum failed logins.", 1);
 		}
 
 		$passhash = $this->get_passwordhash();
-		$hash_works = (auth_hash("logon", $passhash) == $hmac);
-		$totp_valid = ($this->validate_totp($totp_token));
-		if($hash_works && $totp_valid) {
+		
+		$logon_success = false;
+		$totp_key = $this->get_totp_key();
+		if($totp_key == null) {
+			return false;
+		}
+		$binarySeed = GoogleAuth::base32_decode($totp_key);
+		$timeStamp = GoogleAuth::get_timestamp();
+		
+		for ($ts = $timeStamp - $window; $ts <= $timeStamp + $window; $ts++) {
+			$totp = GoogleAuth::oath_hotp($binarySeed, $ts);
+			$real_logon_token = auth_hash("logon" . strval($totp), $passhash);
+			if($real_logon_token == $signature) {
+				$logon_success = true;
+				break;
+			}
+		}
+				
+		if($logon_success) {
 			$this->reset_failed_logins();
 			return true;
 		}
@@ -52,18 +68,26 @@ class Auth {
 		return $row['passhash'];
 	}
 	
-	function validate_totp($totp_token) {
+	function get_totp_key() {
 		$stmt = sql_prepare("select key from totp_keys where username = :username;");
 		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
 		$result = $stmt->execute();
 		if(!$result) {
-			return false;
+			return null;
 		}
 		$row = $result->fetchArray();
 		if(!$row || !$row['key']) {
+			return null;
+		}
+		return $row['key'];
+	}
+	
+	function validate_totp($totp_token) {
+		$totp_key = $this->get_totp_key();
+		if($totp_key == null) {
 			return false;
 		}
-		return GoogleAuth::verify_key($row['key'], $totp_token);
+		return GoogleAuth::verify_key($totp_key, $totp_token);
 	}
 
 	/**
@@ -150,8 +174,8 @@ class Auth {
 	/**
 	 * Authentication scheme is hmac(data + passwordhash, sessionkey)
 	 * 
-	 * @param unknown $data
-	 * @param unknown $signature
+	 * @param data $data
+	 * @param signature $signature
 	 * @return boolean
 	 */
 	function authenticate($data, $signature) {

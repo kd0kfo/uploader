@@ -135,10 +135,10 @@ class GoogleAuth {
 
 		$binarySeed = self::base32_decode($b32seed);
 
-		for ($ts = $timeStamp - $window; $ts <= $timeStamp + $window; $ts++)
+		for ($ts = $timeStamp - $window; $ts <= $timeStamp + $window; $ts++) {
 			if (self::oath_hotp($binarySeed, $ts) == $key)
 				return true;
-
+		}
 		return false;
 
 	}

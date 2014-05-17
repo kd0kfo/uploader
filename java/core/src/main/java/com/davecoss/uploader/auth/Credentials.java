@@ -54,8 +54,8 @@ public class Credentials extends CredentialPair {
 		return generatePassHash(username, passphrase, null);
 	}
 	
-	public AuthHash generateLogonKey() throws Exception {
-		return AuthHash.getInstance("logon", passhash.bytes());
+	public AuthHash generateLogonKey(int totpToken) throws Exception {
+		return AuthHash.getInstance("logon" + Integer.toString(totpToken), passhash.bytes());
 	}
 	
 	public AuthHash createSigningKey(String sessionkey) throws Exception {

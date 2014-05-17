@@ -234,13 +234,13 @@ public class WebFS {
 		
 		AuthHash logonkey = null;
 		try {
-			logonkey = credentials.generateLogonKey();
+			logonkey = credentials.generateLogonKey(totpToken);
 		} catch (Exception e) {
 			throw new IOException("Error generating logon key", e);
 		}
 		
-		String logonURL = String.format("%s/logon.php?username=%s&hmac=%s&totp=%d",
-				baseURI.toString(), urlEncode(credentials.getUsername()), logonkey.toURLEncoded(), totpToken);
+		String logonURL = String.format("%s/logon.php?username=%s&signature=%s",
+				baseURI.toString(), urlEncode(credentials.getUsername()), logonkey.toURLEncoded());
 		JSONObject json = client.jsonGet(logonURL);
 		WebResponse retval = WebResponse.fromJSON(json);
 		long status = (Long)json.get("status");

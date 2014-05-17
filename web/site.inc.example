@@ -1,5 +1,10 @@
 <?php
 
+// Logging Setup
+require_once("includes/logger.php");
+WebFSLog::init("/path/to/logs/webfs.log");
+WebFSLog::set_level(WebFSLog::WARN);
+
 $contentdir = "/path/to/content"; // Path on Server where content is stored
 $uploaddir = "/uploads"; // Subdirectory for uploads within $contentdir
 $default_dir_mode = 0700; // File mode used on Server
