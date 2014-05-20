@@ -13,7 +13,7 @@ $auth = new Auth($username);
 
 $filename = get_requested_filename();
 if(!$auth->authenticate($filename, get_requested_string("signature"))) {
-	json_exit("Access denied.", 1);
+	json_exit("Access denied.", WebFSError::ACCESS_DENIED);
 }
 // If file, dump file JSON data. Otherwise use directory setup.
 if(strlen($filename) == 0) {

@@ -1,6 +1,4 @@
 
-
-
 function doView() {
 	var filename = loadPageVar("filename");
 	window.location="stream.php?" + get_signature_query(filename);
@@ -105,3 +103,14 @@ function doMove() {
 	var json = {"source": filename, "destination": dest, "username": localStorage['username'], "signature": signature};
 	doPostWithJSON("mv.php", json);
 }
+
+function checkoutFile() {
+	var filename = loadPageVar("filename");
+	var json = {
+		'filename': filename,
+		'signature': sign_data(filename),
+		'username': localStorage['username'],
+		'download': 1
+	};
+	doPostWithJSON("checkout.php", json);
+}	

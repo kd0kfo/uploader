@@ -1,3 +1,11 @@
+var webfs = webfs || {};
+webfs.error = {
+	SUCCESS : 0,
+	CLIENT_ERROR : 1,
+	DEBUG_BREAK : 2,
+	ACCESS_DENIED : 3
+};
+
 function loadPageVar (sVar) {
   return decodeURI(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURI(sVar).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
 }
@@ -82,6 +90,9 @@ function updateDir(thedirname, username, sessionkey) {
 	});
 	result.fail(function(jqXHR){
 		var json = $.parseJSON(jqXHR.responseText);
+		if(json['status'] == webfs.error.ACCESS_DENIED) {
+			window.location.assign("logon.html");
+		}
 		$("#content").text("Error: " + json['message']);
 	});
 }
