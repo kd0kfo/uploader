@@ -27,6 +27,7 @@ public class WebFS {
 	
 	private URI baseURI = null;
 	private JSONObject serverInfo = null;
+	private long timeOffset = 0;
 	private HTTPSClient client = null;
 	private Credentials credentials = null;
 	private byte[] signingkey = null;
@@ -90,6 +91,12 @@ public class WebFS {
 	
 	public void downloadConfig() throws IOException {
 		this.serverInfo = client.jsonGet(baseURI.toString() + "/info.php");
+		if(this.serverInfo.containsKey("time")) {
+			long now = getCurrentTime();
+			this.timeOffset = ((Long)this.serverInfo.get("time")) - now;
+		} else {
+			this.timeOffset = 0;
+		}
 	}
 	
 	public WebResponse downloadFile(String source, File dest) throws IOException {
@@ -419,7 +426,7 @@ public class WebFS {
 	}
 	
 	public AuthHash signData(String data) throws AuthHash.HashException {
-		long now = (new Date()).getTime() / 1000L;
+		long now = getCurrentTime() + timeOffset;
 		return AuthHash.getInstance(data + Long.toString(now), signingkey);
 	}
 	
@@ -429,5 +436,9 @@ public class WebFS {
 		} catch(UnsupportedEncodingException uee) {
 			throw new IOException("Error encoding string: " + uee.getMessage(), uee);
 		}
+	}
+
+	private long getCurrentTime() {
+		return (new Date()).getTime() / 1000L;	
 	}
 }
