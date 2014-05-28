@@ -29,13 +29,13 @@ deploy)
 		exit 1
 	fi
 	DEST=$2
-	cp -v -R $HTML_FILES $PHP_FILES $INCLUDE_FILES $JS_FILES $ACE_FILES $CSS_FILES $FONTS_FILES $IMAGE_FILES $DEST/
+	rsync -avz $HTML_FILES $PHP_FILES $INCLUDE_FILES $JS_FILES $ACE_FILES $CSS_FILES $FONTS_FILES $IMAGE_FILES $DEST
 	for SITE_FILE in $SITE_FILES;do
 		if [[ ! -f $SITE_FILE ]];then
 			echo Missing $SITE_FILE, copying default.
-			cp -v $SITE_FILE.example $DEST/
+			cp -v $SITE_FILE.example $DEST/$SITE_FILE
 		else
-			cp -v $SITE_FILE $DEST/
+			rsync -avz $SITE_FILE $DEST
 		fi
 	done
 	;;
