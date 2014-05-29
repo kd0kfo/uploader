@@ -29,6 +29,7 @@ class Auth {
 		$logon_success = false;
 		$totp_key = $this->get_totp_key();
 		if($totp_key == null) {
+			WebFSLog::debug("Login failed for " . $this->username . " because the TOTP key is null");
 			return false;
 		}
 		$binarySeed = GoogleAuth::base32_decode($totp_key);

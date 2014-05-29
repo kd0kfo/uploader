@@ -37,8 +37,11 @@ class WebFSLog {
 	
 	private static function write($msg) {
 		if(self::$logfh) {
-			fwrite(self::$logfh, $msg);
-			fwrite(self::$logfh, "\n");
+			fwrite(self::$logfh, "[");
+                        fwrite(self::$logfh, strftime("%F %X"));
+                        fwrite(self::$logfh, "] ");
+                        fwrite(self::$logfh, $msg);
+                        fwrite(self::$logfh, "\n");
 		}
 	}
 	

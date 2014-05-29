@@ -53,6 +53,7 @@ public class CreateAccount {
 		dataMessage.append("Password Hash: " + passwordHash.hash);
 		dataMessage.append("\n");
 		dataMessage.append("TOTP Key: " + new String(b32.encode(totpKey)));
+		L.debug(dataMessage.toString());
 		
 		ByteArrayInputStream data = new ByteArrayInputStream(dataMessage.toString().getBytes());
 		PGPFoo.encryptStream(output, data, String.format("NewAccount_%s.txt", username),keys,true,true);
@@ -66,6 +67,7 @@ public class CreateAccount {
 		Console console = System.console();
 		
 		Options options = new Options();
+		options.addOption("d", false, "Set Debug Mode");
 		options.addOption("key", true, "Key file (Default: pubkey.asc)");
 		options.addOption("ssl", true, "SSL Keystore (Default: none)");
 		options.addOption("o", true, "Output file for new credential data (Default: Standard Output)");
@@ -92,6 +94,10 @@ public class CreateAccount {
 		} catch(URISyntaxException urise) {
 			L.fatal("Invalid URL: " + args[0]);
 			System.exit(1);
+		}
+		
+		if(cmd.hasOption("d")) {
+			L.setLevel(LogHandler.Level.DEBUG);
 		}
 		
 		String pubkeyFilename = "pubkey.asc";
@@ -168,7 +174,9 @@ public class CreateAccount {
 	    	L.debug("Downloading config");
 	    	webfs.downloadConfig();
 			
-			String serverSalt = (String)webfs.getServerInfo().get("salt"); 
+			String serverSalt = (String)webfs.getServerInfo().get("salt");
+			L.debug("Salt: ");
+			L.debug(serverSalt);
 			
 			// Generate password hash
 			AuthHash passwordHash = Credentials.generatePassHash(username, passphrase, serverSalt);
