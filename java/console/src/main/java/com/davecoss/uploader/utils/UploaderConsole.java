@@ -40,7 +40,7 @@ import com.davecoss.uploader.auth.Credentials;
 
 public class UploaderConsole {
 
-	public enum ConsoleCommands {BUFFERSIZE, DEBUG, EXIT, HELP, HISTORY};
+	public enum ConsoleCommands {BUFFERSIZE, DEBUG, EXIT, HELP, HISTORY, LLS};
 
 	private static Logger L = ConsoleLog.getInstance("UploaderConsole");
 	
@@ -264,6 +264,9 @@ public class UploaderConsole {
 			case HISTORY:
 				msg += "Print list of commands run";
 				break;
+			case LLS:
+				msg += "Local File Listing";
+				break;
 			}
 			output.println(msg);
 		}
@@ -319,6 +322,27 @@ public class UploaderConsole {
 			
 			for(int counter = 0;counter < history.size();counter++)
 				System.out.printf("%d: %s\n", counter, history.get(counter));
+			break;
+		}
+		case LLS:
+		{
+			String path = ".";
+			if(numArgs != 0)
+				path = tokens[1];
+			File dir = new File(path);
+			File[] dirents = dir.listFiles();
+			int i = 0;
+			for(File dirent : dirents) {
+				String name = dirent.getName();
+				if(dirent.isDirectory())
+					name += "/";
+				System.out.printf("%s\t", name);
+				if(i > 0 && i % 3 == 0)
+					System.out.println("");
+				i++;
+			}
+			if(i % 3 != 0)
+				System.out.println();
 			break;
 		}
 		}
