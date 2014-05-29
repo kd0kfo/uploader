@@ -3,6 +3,7 @@ package com.davecoss.uploader.utils;
 import java.io.ByteArrayInputStream;
 import java.io.BufferedOutputStream;
 import java.io.Console;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -104,6 +105,11 @@ public class CreateAccount {
 		if(cmd.hasOption("key")) {
 			pubkeyFilename = cmd.getOptionValue("key");
 		}
+		if(!(new File(pubkeyFilename)).exists()) {
+			L.fatal("Missing public key:");
+			L.fatal(pubkeyFilename);
+			System.exit(1);
+		}
 
 		String keystoreFilename = null;
 		if(cmd.hasOption("ssl")) {
@@ -130,6 +136,19 @@ public class CreateAccount {
 		String username = console.readLine("Username: ");
 		String host = console.readLine("Machine Name (or press enter for none): ");
 		char[] passphrase = console.readPassword("Passphrase: ");
+		char[] passphrase2 = console.readPassword("Confirm Passphrase: ");
+		if(passphrase.length != passphrase2.length) {
+			L.fatal("Passphrase mismatch");
+			System.exit(1);
+		}
+		for(int idx = 0;idx<passphrase.length;idx++) {
+			if(passphrase[idx] != passphrase2[idx]) {
+				L.fatal("Passphrase mismatch");
+				System.exit(1);
+			}
+			passphrase2[idx] = 0;
+		}
+		passphrase2 = null;
 		byte[] totpKey = TOTP.generateCodes(TOTP.DEFAULT_SECRET_SIZE, 0); // Must be zero. Not using spare keys.
 		
 		if(host.length() == 0) {
