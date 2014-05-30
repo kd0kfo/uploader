@@ -91,6 +91,10 @@ public class UploadOutputStream extends OutputStream {
 		L.info("Cleaned up " + newfile.getName());
 		bytesWritten = 0;
 		stream = null;
+
+		if(uploadResponse.status != WebResponse.SUCCESS) {
+			throw new IOException("Error flushing uploader stream: " + uploadResponse.message);
+		}
 	}
 	
 	@Override
