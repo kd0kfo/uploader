@@ -55,6 +55,20 @@ class Auth {
 		return false;
 	}
 	
+	function get_uid() {
+		$stmt = sql_prepare("select uid from users where username = :username;");
+		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
+		$result = $stmt->execute();
+		if(!$result) {
+			return null;
+		}
+		$row = $result->fetchArray();
+		if(!$row || !$row['uid']) {
+			return null;
+		}
+		return $row['uid'];
+	}	
+
 	function get_passwordhash() {
 		$stmt = sql_prepare("select passhash from users where username = :username;");
 		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
@@ -70,8 +84,13 @@ class Auth {
 	}
 	
 	function get_totp_key() {
-		$stmt = sql_prepare("select key from totp_keys where username = :username;");
-		$stmt->bindValue(":username", $this->username, SQLITE3_TEXT);
+		$stmt = sql_prepare("select key from totp_keys where uid = :uid;");
+		$uid = $this->get_uid();
+		if($uid == null) {
+			WebFSLog::fatal("Could not get UID for " . $this->username);
+			return null;
+		}
+		$stmt->bindValue(":uid", $uid, SQLITE3_TEXT);
 		$result = $stmt->execute();
 		if(!$result) {
 			return null;
@@ -224,9 +243,56 @@ class Auth {
 		return auth_hash($data, $pass);
 	}
 
-	
+	function query_upload_token() {
+		$uid = $this->get_uid();
+		if($uid == null) {
+			return null;
+		}
+		$stmt = sql_prepare("select uploadtoken from uploadtokens where uid = :uid;");
+		$stmt->bindValue(":uid", $uid, SQLITE3_INTEGER);
+		$result = $stmt->execute();
+		$row = $result->fetchArray();
+		if($row) {
+			return $row['uploadtoken'];
+		}
+		return null;
+	}
 
-}
+	function get_upload_token() {
+		$uid = $this->get_uid();
+		if($uid == null) {
+			return null;
+		}
+		$uploadtoken = $this->query_upload_token();
+		if($uploadtoken == null) {
+			$uploadtoken = uniqid();
+			usleep(5);
+			$stmt = sql_prepare("insert or replace into uploadtokens (uploadtoken, uid, createtime) values (:uploadtoken, :uid, :currtime);");
+			$stmt->bindValue(":uid", $uid, SQLITE3_INTEGER);
+			$stmt->bindValue(":uploadtoken", $uploadtoken, SQLITE3_TEXT);
+			$stmt->bindValue(":currtime", time(), SQLITE3_INTEGER);
+			$result = $stmt->execute();
+			if($result === FALSE) {
+				WebFSLog::error("Failed to create upload token for " . $this->username);
+				return null;
+			}
+			return $uploadtoken;
+		} else {
+			return $uploadtoken;
+		}
+	}	
+	
+	function remove_upload_token() {
+		$uid = $this->get_uid();
+		if($uid == null) {
+			return;
+		}
+		$stmt = sql_prepare("delete from uploadtokens where uid = :uid;");
+		$stmt->bindValue(":uid", $uid, SQLITE3_INTEGER);
+		$stmt->execute();
+	}	
+
+} // End of Auth class
 
 function auth_hash($data, $secret) {
 	$h = hash_hmac('sha256', $data, $secret, true);

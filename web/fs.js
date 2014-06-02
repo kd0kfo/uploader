@@ -3,7 +3,8 @@ webfs.error = {
 	SUCCESS : 0,
 	CLIENT_ERROR : 1,
 	DEBUG_BREAK : 2,
-	ACCESS_DENIED : 3
+	ACCESS_DENIED : 3,
+	DB_ERROR : 4
 };
 
 function loadPageVar (sVar) {

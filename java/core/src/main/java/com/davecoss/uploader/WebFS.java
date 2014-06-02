@@ -31,6 +31,7 @@ public class WebFS {
 	private HTTPSClient client = null;
 	private Credentials credentials = null;
 	private byte[] signingkey = null;
+	private String uploadToken = null;
 	private int uploadBufferSize;
 	
 	public WebFS(HTTPSClient client) {
@@ -193,16 +194,28 @@ public class WebFS {
 	}
 	
 	public UploadOutputStream openUploadStream(String filename) throws IOException {
-		AuthHash signature = null;
-		try {
-			signature = signData("upload");
-		} catch (AuthHash.HashException ahhe) {
-			String msg = "Error generating signature for " + filename;
-			L.error(msg, ahhe);
-			throw new IOException(msg, ahhe);
+		// If there is no upload token, request one.
+		if(uploadToken == null) {
+			AuthHash signature = null;
+			L.debug("Upload token not yet requested. Sending request now.");
+			try {
+				signature = signData("upload");
+			} catch (AuthHash.HashException ahhe) {
+				String msg = "Error generating signature for " + filename;
+				L.error(msg, ahhe);
+				throw new IOException(msg, ahhe);
+			}
+			JSONObject uploadrequest = client.jsonGet(String.format("%s/requestupload.php?username=%s&signature=%s",baseURI.toString(),urlEncode(credentials.getUsername()), signature.toURLEncoded()));
+			WebResponse uploadresponse = WebResponse.fromJSON(uploadrequest);
+			if(uploadresponse.status != WebResponse.SUCCESS) {
+				throw new IOException("Upload request failed: " + uploadresponse.message);
+			}
+			uploadToken = (String)uploadrequest.get("token");
+			L.debug("Obtained upload token.");
 		}
+
 		String uploadURL = String.format("%s/upload.php?username=%s&signature=%s",
-				baseURI.toString(), urlEncode(credentials.getUsername()), signature.toURLEncoded());
+				baseURI.toString(), urlEncode(credentials.getUsername()), urlEncode(uploadToken));
 		UploadOutputStream retval = new UploadOutputStream(filename, client, uploadURL);
 		retval.setBufferSize(this.uploadBufferSize);
 		return retval;

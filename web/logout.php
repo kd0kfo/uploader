@@ -10,5 +10,6 @@ if(!$username) {
 
 $auth = new Auth($username);
 $auth->clear_session_key($username);
+$auth->remove_upload_token();
 json_exit("Logout successful.", 0);
 ?>

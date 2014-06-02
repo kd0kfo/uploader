@@ -16,5 +16,6 @@ abstract class WebFSError
 	const CLIENT_ERROR = 1;
 	const DEBUG_BREAK = 2;
 	const ACCESS_DENIED = 3;
+	const DB_ERROR = 4;
 }
 

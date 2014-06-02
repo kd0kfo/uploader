@@ -13,6 +13,7 @@
 $(document).ready(function() {
 	var serverinfo = get_server_info();
 	var filesize = 2; // MB
+	var uploadtoken = undefined;
 
 	if(serverinfo && serverinfo['max_upload_size']) {
 		filesize = serverinfo['max_upload_size']/(1024*1024);
@@ -25,6 +26,17 @@ $(document).ready(function() {
 	else {
 		$("#username").val(localStorage["username"]);
 	}
+
+	uploadrequest = $.get("requestupload.php", {"username": localStorage['username'], "signature": sign_data("upload")});
+	uploadrequest.done(function(data) {
+		json = $.parseJSON(data);
+		uploadtoken = json['token'];
+	});
+	uploadrequest.fail(function(jqXHR) {
+		json = $.parseJSON(jqXHR.responsetext);
+		alert("Request to upload file failed: " + json['message']);
+	});	
+
 	Dropzone.options.uploadform = {
 		paramName: "file",
 		maxFilesize: filesize,
@@ -37,7 +49,7 @@ $(document).ready(function() {
 				}
 			});
 			this.on("sending", function(file, xhrobj, formData) {
-				formData.append("signature", sign_data("upload"));
+				formData.append("signature", uploadtoken);
 			});
 		}
 	};

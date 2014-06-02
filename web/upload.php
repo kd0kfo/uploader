@@ -4,13 +4,28 @@ require_once("includes.php");
 require_once("includes/webfile.php");
 require_once("auth.php");
 
+// Remove expired tokens
+if(isset($max_upload_token_age)) {
+	$stmt = sql_prepare("delete from uploadtokens where strftime('%s', 'now') - createtime >= :maxUploadTokenAge ;");
+	$stmt->bindValue(":maxUploadTokenAge", $max_upload_token_age, SQLITE3_INTEGER);
+	$stmt->execute();
+}
+
 $username = get_requested_string("username");
 $auth = new Auth($username);
 $signature = get_requested_string("signature");
 if(!$signature) {
+	WebFSLog::debug("Signature '$signature'");
 	json_exit("Authentication required.", 1);
 }
-if(!$auth->authenticate("upload", $signature)) {
+
+// Authenticate Upload Token
+$uploadtoken = $auth->query_upload_token();
+if($uploadtoken == null) {
+	json_exit("Upload request not granted or expired.", WebFSError::ACCESS_DENIED);
+}
+if($uploadtoken != $signature) {
+	WebFSLog::debug("Expected $uploadtoken got $signature");
 	json_exit("Authorization denied.", 1);
 }
 

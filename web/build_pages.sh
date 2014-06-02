@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HTML_FILES="file.html index.html logon.html logout.html ls.html mkdir.html upload.html"
-PHP_FILES="auth.php base64.php checkin.php checkout.php chmod.php chown.php classes.php clean.php dbase.php delete.php googleauth.php info.php logon.php logout.php ls.php md5.php merge.php mkdir.php mv.php postdata.php share.php stat.php stream.php upload.php"
+PHP_FILES="auth.php base64.php checkin.php checkout.php chmod.php chown.php classes.php clean.php dbase.php delete.php googleauth.php info.php logon.php logout.php ls.php md5.php merge.php mkdir.php mv.php postdata.php requestupload.php share.php stat.php stream.php upload.php"
 INCLUDE_FILES="includes includes.php"
 JS_FILES="js fs.js dropzone.min.js"
 ACE_FILES="ace"
