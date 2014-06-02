@@ -83,6 +83,7 @@ function stream_file($filepath, $do_download) {
 	}
 
 	if($do_download || strpos($themime, "application") !== FALSE) {
+		header('Content-Length: ' . filesize($filepath));
 		header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
 	}
 	readfile($filepath);
