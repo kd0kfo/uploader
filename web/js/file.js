@@ -112,5 +112,10 @@ function checkoutFile() {
 		'username': localStorage['username'],
 		'download': 1
 	};
-	doPostWithJSON("checkout.php", json);
+	var result = $.post("checkout.php", json);
+	result.done(function(data){
+		 $("#result").empty().append('<a download="' + basename(filename) + '.meta" href="data:application/json,'+encodeURIComponent(JSON.stringify(data)) + '">Download Meta Data</a>');
+	});		
+	result.fail(function(jqXHR){display_json_message(jqXHR.responseText);});
+
 }	
