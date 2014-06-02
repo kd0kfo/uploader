@@ -11,6 +11,7 @@ $default_dir_mode = 0700; // File mode used on Server
 $max_failed_logins = 3;
 $site_salt = "SALT USED FOR HASHES IN DATABASE";
 $max_upload_size = 1048576; // Requested max upload size.
+$max_upload_token_age = 7200; // Amount of seconds the upload token is available to be used.
 
 function site_footer() {
 	echo "Site Unique Footer Goes Here";
