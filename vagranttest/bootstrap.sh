@@ -33,10 +33,13 @@ chown apache content/uploads
 # Setup database
 cat site_db.inc.example |sed 's/test.sqlite/\/tmp\/webfs.db/' > site_db.inc
 php site_db.inc
-sqlite3 /tmp/webfs.db "insert into users values ('foo', 'oFK9VQlmV8FA4U1QP4lq9M/JPcRDERWWpZNE/b12PPg=', NULL, NULL, 0);"
+sqlite3 /tmp/webfs.db "insert or ignore into users values (1, 'foo', 'oFK9VQlmV8FA4U1QP4lq9M/JPcRDERWWpZNE/b12PPg=', NULL, NULL, 0);"
+sqlite3 /tmp/webfs.db "insert or ignore into totp_keys values (NULL, 1, 'V4VAOAYVFDGB6UA7');"
+
 
 # Create html files
 ./build_pages.sh build
+./build_pages.sh deplot /var/www/html
 
 # Dump system info
 
