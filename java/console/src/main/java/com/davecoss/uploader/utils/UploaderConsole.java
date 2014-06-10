@@ -49,17 +49,16 @@ public class UploaderConsole {
 		new CLIOptionTuple("d", true, "Set Debug Level (Default:  ERROR)"),
 		new CLIOptionTuple("filename", true, "Write to the console and upload the file name provided as an argument to the -console flag."),
 		new CLIOptionTuple("help", false, "Print help and usage information"),
-		new CLIOptionTuple("ssl", true, "Specify Keystore")};
+		new CLIOptionTuple("ssl", true, "Specify Keystore"),
+		new CLIOptionTuple("version", false, "Get version information")};
 	
 	private ArrayList<String> history = new ArrayList<String>();
 	private WebFS webfs = null;
 	
 	public static void printUsage(PrintStream out) {
-		out.println("Usage: UploaderConsole [-basic] [-d LEVEL] [-ssl KEYSTORE] <URL>");
+		out.println("Usage: UploaderConsole [OPTIONS] <URL>");
 		out.println("Options:");
-		out.println("-basic\t\tUses basic authentication.");
-		out.println("-d LEVEL\tSets the debug level. (Default: ERROR)");
-		out.println("-ssl KEYSTORE\tUses KEYSTORE to validate SSL certficates");
+		CLIOptionTuple.printOptions(System.out, optionTuples);
 	}
 	
 	public static void main(String[] cliArgs) throws Exception {
@@ -81,6 +80,10 @@ public class UploaderConsole {
     			printUsage(System.out);
     			System.exit(0);
     		}
+		if(cmd.hasOption("version")) {
+			com.davecoss.uploader.Plugin.printVersionInfo();
+			System.exit(0);
+		}
     	}
 		catch(ParseException pe)
 		{

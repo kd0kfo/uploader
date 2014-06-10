@@ -17,6 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import com.davecoss.java.BuildInfo;
 import com.davecoss.java.GUIUtils;
 import com.davecoss.java.Logger;
 import com.davecoss.java.plugin.PluginException;
@@ -373,5 +374,17 @@ public class Plugin extends StoragePlugin {
 		JOptionPane.showMessageDialog(parent, textPane);
 		
 		return jPassphrase.getPassword();
+	}
+
+	public static void printVersionInfo() {
+		BuildInfo bi = new BuildInfo(com.davecoss.uploader.utils.UploaderConsole.class);
+		System.out.println("WebFS Tools");
+		System.out.println("Version: " + bi.get_version());
+		if(bi.get_build_properties().containsKey("build_date"))
+			System.out.println("Built on " + bi.get_build_properties().get("build_date"));
+	}
+	
+	public static void main(String[] args) {
+		printVersionInfo();
 	}
 }
