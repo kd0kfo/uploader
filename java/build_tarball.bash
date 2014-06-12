@@ -3,7 +3,7 @@
 set -e
 
 cd core
-mvn deploy
+mvn install
 
 cd ../console
 mvn package

@@ -38,11 +38,7 @@
     <url>https://github.com/kd0kfo/webfs/issues</url>
   </issueManagement>
   <repositories>
-	  <repository>
-			  <id>webfscore</id>
-			  <url>file://${webfscore.repo.path}</url>
-		</repository>
-   <repository>
+		<repository>
 			  <id>pgp</id>
 			  <url>https://kd0kfo.github.io/pgp/mvn-repo</url>
 		</repository>

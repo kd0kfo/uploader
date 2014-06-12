@@ -33,12 +33,6 @@
     <system>Github</system>
     <url>https://github.com/kd0kfo/webfs/issues</url>
   </issueManagement>
-  <distributionManagement>
-	  <repository>
-			  <id>local</id>
-			  <url>file://${webfscore.repo.path}</url>
-		</repository>
-	</distributionManagement>
   <repositories>
   	<repository>
 		<id>javalib</id>
