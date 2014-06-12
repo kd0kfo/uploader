@@ -9,17 +9,8 @@ public class Credentials extends CredentialPair {
 
 	private static Logger L = Logger.getInstance();
 	
-	private String serverSalt = null;
-	protected final AuthHash passhash;
 	public Credentials(String username, char[] passphrase) throws Exception {
 		super(username, passphrase);
-		passhash = generatePassHash(username, passphrase);
-	}
-	
-	public Credentials(String username, char[] passphrase, String salt) throws Exception {
-		super(username, passphrase);
-		this.serverSalt = salt;
-		passhash = generatePassHash(username, passphrase, salt);
 	}
 	
 	public static AuthHash generatePassHash(String username, char[] passphrase, String serverSalt) throws Exception {
@@ -50,15 +41,4 @@ public class Credentials extends CredentialPair {
 		return retval;
 	}
 	
-	public static AuthHash generatePassHash(String username, char[] passphrase) throws Exception {
-		return generatePassHash(username, passphrase, null);
-	}
-	
-	public AuthHash generateLogonKey(int totpToken) throws Exception {
-		return AuthHash.getInstance("logon" + Integer.toString(totpToken), passhash.bytes());
-	}
-	
-	public AuthHash createSigningKey(String sessionkey) throws Exception {
-		return AuthHash.getInstance(passhash.hash + sessionkey, passhash.bytes());
-	}
 }

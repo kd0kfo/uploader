@@ -29,8 +29,6 @@ import com.davecoss.java.LogHandler;
 import com.davecoss.java.Logger;
 import com.davecoss.pgp.PGPFoo;
 import com.davecoss.pgp.PublicKeyEnvelope;
-import com.davecoss.uploader.HTTPSClient;
-import com.davecoss.uploader.WebFS;
 import com.davecoss.uploader.auth.AuthHash;
 import com.davecoss.uploader.auth.Credentials;
 import com.davecoss.uploader.auth.TOTP;
@@ -71,6 +69,7 @@ public class CreateAccount {
 		options.addOption("d", false, "Set Debug Mode");
 		options.addOption("key", true, "Key file (Default: pubkey.asc)");
 		options.addOption("ssl", true, "SSL Keystore (Default: none)");
+		options.addOption("salt", true, "Server Salt (Default: none)");
 		options.addOption("o", true, "Output file for new credential data (Default: Standard Output)");
 		
 		CommandLineParser parser = new GnuParser();
@@ -85,20 +84,14 @@ public class CreateAccount {
 			System.exit(1);
 		}
 		String[] args = cmd.getArgs();
-		if(args.length != 1) {
-			L.fatal("Web FS URL Required");
-			System.exit(1);
-		}
-		URI uri = null;
-		try {
-			uri = new URI(args[0]);
-		} catch(URISyntaxException urise) {
-			L.fatal("Invalid URL: " + args[0]);
-			System.exit(1);
-		}
-		
+		String salt = null;
+
 		if(cmd.hasOption("d")) {
 			L.setLevel(LogHandler.Level.DEBUG);
+		}
+		
+		if(cmd.hasOption("salt")) {
+			salt = cmd.getOptionValue("salt");
 		}
 		
 		String pubkeyFilename = "pubkey.asc";
@@ -114,23 +107,6 @@ public class CreateAccount {
 		String keystoreFilename = null;
 		if(cmd.hasOption("ssl")) {
 			keystoreFilename = cmd.getOptionValue("ssl");
-		}
-		
-		CredentialsProvider credsProvider = null;
-		if(cmd.hasOption("basic")) {
-			CredentialPair creds = null;
-			try {
-				String username = console.readLine("Basic Auth Username: ");
-				char[] passphrase = console.readPassword("Basic Auth Passphrase: ");
-				creds = new CredentialPair(username, passphrase);
-				credsProvider = ConsoleHTTPSClient.createCredentialsProvider(creds, uri);
-			} catch(IOException ioe) {
-				L.fatal("Error loading basic authentication credentials", ioe);
-				System.exit(1);
-			} finally {
-				if(creds != null)
-					creds.destroyCreds();
-			}
 		}
 		
 		String username = console.readLine("Username: ");
@@ -157,48 +133,18 @@ public class CreateAccount {
 		
 		ArrayList<PublicKeyEnvelope> keys = new ArrayList<PublicKeyEnvelope>();
 		OutputStream output = System.out;
-		if(cmd.hasOption("o")) {
-			try {
-				output = new BufferedOutputStream(new FileOutputStream(cmd.getOptionValue("o")));
-			} catch(IOException ioe) {
-				L.fatal("Could not open output file.", ioe);
-				System.exit(1);
-			}
-		}
 		try {
-			// Setting up client to get server info.
-			Properties properties = System.getProperties();
-			HTTPSClient client = null;
-	    	
-	    	if(keystoreFilename != null) {
-	    		System.out.print("Keystore Passphrase? ");
-		    	char[] keystorePassphrase = console.readPassword();
-		    	
-		    	client = new ConsoleHTTPSClient(keystoreFilename, keystorePassphrase);
-		    	for(int i = 0;i<keystorePassphrase.length;i++)
-		    		keystorePassphrase[i] = 0;
-	    	} else if(properties.containsKey("keystore") && properties.containsKey("keystorepassphrase")) {
-	    		client = new ConsoleHTTPSClient(properties.getProperty("keystore"),
-	    				properties.getProperty("keystorepassphrase").toCharArray());
-	        } else {
-	    		client = new ConsoleHTTPSClient();
-	    	}
-	    	
-	    	if(credsProvider != null)
-	    		client.startClient(credsProvider, uri);
-	    	
-	    	// Setup WebFS
-	    	WebFS webfs = new WebFS(client);
-	    	webfs.setBaseURI(uri);
-	    	L.debug("Downloading config");
-	    	webfs.downloadConfig();
-			
-			String serverSalt = (String)webfs.getServerInfo().get("salt");
-			L.debug("Salt: ");
-			L.debug(serverSalt);
+			if(cmd.hasOption("o")) {
+				try {
+					output = new BufferedOutputStream(new FileOutputStream(cmd.getOptionValue("o")));
+				} catch(IOException ioe) {
+					L.fatal("Could not open output file.", ioe);
+					System.exit(1);
+				}
+			}
 			
 			// Generate password hash
-			AuthHash passwordHash = Credentials.generatePassHash(username, passphrase, serverSalt);
+			AuthHash passwordHash = Credentials.generatePassHash(username, passphrase, salt);
 			
 			// Dump credential data
 			keys.add(PublicKeyEnvelope.readPublicKey(pubkeyFilename));
@@ -213,12 +159,19 @@ public class CreateAccount {
 				passphrase[i] = 0;
 			for(int i = 0;i<totpKey.length;i++)
 				totpKey[i] = (byte)0;
-			output.close();
-		} catch(Exception e) {
-			L.fatal("Error creating account information", e);
-			System.exit(1);
+		} catch (Exception e) {
+			System.err.println("Error generating credentials");
+			L.fatal(e.getMessage());
+		} finally {
+			if(output != null && output != System.out) {
+				try {
+					output.close();
+				} catch (IOException ioe) {
+					L.error("Error closing output stream");
+					L.error(ioe.getMessage());
+				}
+			}
 		}
-		
-		
+	
 	}
 }

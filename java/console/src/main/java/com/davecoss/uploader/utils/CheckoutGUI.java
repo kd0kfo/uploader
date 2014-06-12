@@ -302,7 +302,7 @@ public class CheckoutGUI extends JFrame {
 			
 			// Do webfs logon
 			creds = JDialogCredentialPair.showInputDialog(contentPane);
-			webfsCreds = new Credentials(creds.getUsername(), creds.getPassphrase(), (String)webfs.getServerInfo().get("salt"));
+			webfsCreds = new Credentials(creds.getUsername(), creds.getPassphrase());
 			webfs.setCredentials(webfsCreds);
 			
 			// TOTP

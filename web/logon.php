@@ -23,6 +23,30 @@ if($sessionkey === null || !$sessionkey) {
 	}
 }
 
-echo json_encode(array("sessionkey" => $sessionkey, "status" => 0, "message" => "Login successful"));
+if(isset($_GET['webui']) || isset($_POST['webui'])) {
+echo<<<EOF
+<!DOCTYPE html>
+<head>
+<script src="//code.jquery.com/jquery-1.10.2.min.js" language="javascript"></script>
+<title>Logon Successful</title>
+</head>
+<body>
+<script language="javascript">
+$(document).ready(function(){
+EOF;
+echo "
+	localStorage['username'] = \"$username\";
+	localStorage['sessionkey'] = \"$sessionkey\";
+";
+echo<<<EOF
+	window.location = "index.html";
+});
+</script>
+</body>
+</html>
+EOF;
+} else {
+	echo json_encode(array("sessionkey" => $sessionkey, "status" => 0, "message" => "Login successful"));
+}
 
 ?>

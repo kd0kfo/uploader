@@ -132,8 +132,7 @@ public class UploadWriter {
 	    	WebFS webfs = new WebFS(client);
 	    	webfs.setBaseURI(uri);
 	    	webfs.downloadConfig();
-    		String serverSalt = (String)webfs.getServerInfo().get("salt");
-    		webfs.setCredentials(new Credentials(username, passphrase, serverSalt));
+    		webfs.setCredentials(new Credentials(username, passphrase));
 	    	WebResponse logonResponse = webfs.logon(totpToken);
 	    	if(logonResponse.status != WebResponse.SUCCESS)
 	    	{

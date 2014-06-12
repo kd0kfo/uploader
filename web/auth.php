@@ -13,36 +13,22 @@ class Auth {
 	}
 	
 	function verify_logon() {
-		$signature = get_requested_string("signature");
-		$retval = $this->verify_user($signature);
+		global $site_salt;
+		$signature = auth_hash($this->username, get_requested_string("auth") . $site_salt);
+		$totp = get_requested_string("totp");
+		$retval =  $this->verify_user($signature, $totp);
 		return $retval;
 	}
 
-	function verify_user($signature) {
+	function verify_user($signature, $totp) {
 		$window = 3;
 		if($this->excessive_failed_logins($this->username)) {
 			json_exit("Maximum failed logins.", 1);
 		}
 
 		$passhash = $this->get_passwordhash();
-		
-		$logon_success = false;
 		$totp_key = $this->get_totp_key();
-		if($totp_key == null) {
-			WebFSLog::debug("Login failed for " . $this->username . " because the TOTP key is null");
-			return false;
-		}
-		$binarySeed = GoogleAuth::base32_decode($totp_key);
-		$timeStamp = GoogleAuth::get_timestamp();
-		
-		for ($ts = $timeStamp - $window; $ts <= $timeStamp + $window; $ts++) {
-			$totp = GoogleAuth::oath_hotp($binarySeed, $ts);
-			$real_logon_token = auth_hash("logon" . strval($totp), $passhash);
-			if($real_logon_token == $signature) {
-				$logon_success = true;
-				break;
-			}
-		}
+		$logon_success = ($signature == $passhash) && GoogleAuth::verify_key($totp_key, $totp, $window);
 				
 		if($logon_success) {
 			$this->reset_failed_logins();
@@ -207,18 +193,13 @@ class Auth {
 		if(!$sessionkey) {
 			return false;
 		}
-		$passhash = $this->get_passwordhash();
-		if(!$passhash) {
-			return false;
-		}
-		$signingkey = create_signing_key($passhash, $sessionkey);
 		// Check signature with a window around the current timestamp
 		$timeStamp = time();
 		$window = 3;
 		$retval = false;
 		for ($ts = $timeStamp - $window; $ts <= $timeStamp + $window; $ts++)
 		{
-			$realhash = auth_hash($data . strval($ts), $signingkey);
+			$realhash = auth_hash($data . strval($ts), $sessionkey);
 			$retval = ($signature == $realhash);
 			if($retval) {
 				break;

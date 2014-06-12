@@ -20,6 +20,8 @@ import org.json.simple.parser.ParseException;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+
 public class WebFS {
 	static Logger L = Logger.getInstance();
 	
@@ -251,17 +253,12 @@ public class WebFS {
 		if(credentials == null)
 			throw new IOException("Cannot log on. Missing credentials.");
 		
-		
-		AuthHash logonkey = null;
-		try {
-			logonkey = credentials.generateLogonKey(totpToken);
-		} catch (Exception e) {
-			throw new IOException("Error generating logon key", e);
-		}
-		
-		String logonURL = String.format("%s/logon.php?username=%s&signature=%s",
-				baseURI.toString(), urlEncode(credentials.getUsername()), logonkey.toURLEncoded());
-		JSONObject json = client.jsonGet(logonURL);
+		String logonURL = String.format("%s/logon.php", baseURI.toString());
+		MultipartEntityBuilder postContent = MultipartEntityBuilder.create();
+		postContent.addTextBody("username", credentials.getUsername());
+		postContent.addTextBody("auth", new String(credentials.getPassphrase()));
+		postContent.addTextBody("totp", Integer.toString(totpToken));
+		JSONObject json = client.jsonPost(logonURL, postContent.build());
 		WebResponse retval = WebResponse.fromJSON(json);
 		long status = (Long)json.get("status");
 		if(status != WebResponse.SUCCESS) {
@@ -275,8 +272,7 @@ public class WebFS {
 			String key = (String)json.get("sessionkey");
 			if(key == null)
 				L.warn("Null signing key.");
-			AuthHash signingHash = credentials.createSigningKey(key);
-			signingkey = signingHash.bytes();
+			signingkey = key.getBytes();
 			credentials.destroyPassphrase(); // If there is a signing key, there is no need for the pass phrase. Destroy it.
 		} catch (Exception e) {
 			throw new IOException("Error generating signing key", e);

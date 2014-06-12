@@ -147,7 +147,7 @@ public class Plugin extends StoragePlugin {
 			
 			// Do webfs logon
 			creds = JDialogCredentialPair.showInputDialog(parent);
-			webfsCreds = new Credentials(creds.getUsername(), creds.getPassphrase(), (String)webfs.getServerInfo().get("salt"));
+			webfsCreds = new Credentials(creds.getUsername(), creds.getPassphrase());
 			webfs.setCredentials(webfsCreds);
 			// Get TOTP token
 			String totpTokenStr = (String)JOptionPane.showInputDialog(parent, "Enter Base URL", JOptionPane.PLAIN_MESSAGE);
