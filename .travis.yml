@@ -4,6 +4,6 @@ java:
 install:
     - cd java
     - cd core
-    - mvn -Dwebfscore.repo.path=$PWD/../corerepo compile deploy
+    - mvn compile install
     - cd ../console
-    - mvn -Dwebfscore.repo.path=$PWD/../corerepo compile 
+    - mvn compile 
