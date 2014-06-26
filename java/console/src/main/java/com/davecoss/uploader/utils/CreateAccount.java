@@ -9,11 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.StringBuilder;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.security.PublicKey;
 import java.security.Security;
 
 import org.apache.commons.cli.CommandLine;
@@ -21,14 +17,11 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.http.client.CredentialsProvider;
-
-import com.davecoss.java.utils.CredentialPair;
+import com.davecoss.crypttools.PublicKeyReader;
+import com.davecoss.crypttools.AESRSAEncrypt;
 import com.davecoss.java.ConsoleLog;
 import com.davecoss.java.LogHandler;
 import com.davecoss.java.Logger;
-import com.davecoss.pgp.PGPFoo;
-import com.davecoss.pgp.PublicKeyEnvelope;
 import com.davecoss.uploader.auth.AuthHash;
 import com.davecoss.uploader.auth.Credentials;
 import com.davecoss.uploader.auth.TOTP;
@@ -41,7 +34,7 @@ public class CreateAccount {
 	
 	static Logger L = ConsoleLog.getInstance("CreateAccount");
 	
-	public static void streamCredentials(OutputStream output, List<PublicKeyEnvelope> keys,
+	public static void streamCredentials(OutputStream output, PublicKey key,
 			String username, AuthHash passwordHash,
 			byte[] totpKey) throws Exception {
 		Base32 b32 = new Base32();
@@ -55,7 +48,7 @@ public class CreateAccount {
 		L.debug(dataMessage.toString());
 		
 		ByteArrayInputStream data = new ByteArrayInputStream(dataMessage.toString().getBytes());
-		PGPFoo.encryptStream(output, data, String.format("NewAccount_%s.txt", username),keys,true,true);
+		AESRSAEncrypt.encryptStream(data, output, key);
 		data.close();
 	}
 	
@@ -131,7 +124,13 @@ public class CreateAccount {
 			host = "default";
 		}
 		
-		ArrayList<PublicKeyEnvelope> keys = new ArrayList<PublicKeyEnvelope>();
+		PublicKey key = null;
+		try {
+			key = PublicKeyReader.load(pubkeyFilename);
+		} catch (Exception e1) {
+			L.fatal("Could not load public key", e1);
+			System.exit(1);
+		}
 		OutputStream output = System.out;
 		try {
 			if(cmd.hasOption("o")) {
@@ -147,14 +146,13 @@ public class CreateAccount {
 			AuthHash passwordHash = Credentials.generatePassHash(username, passphrase, salt);
 			
 			// Dump credential data
-			keys.add(PublicKeyEnvelope.readPublicKey(pubkeyFilename));
 			Base32 b32 = new Base32();
 			output.write(("\n\nYour one time password key is " + new String(b32.encode(totpKey))).getBytes());
 			output.write("\n\nIf you use the Google Authenticator App, you can use the following information:\n".getBytes());
 			TOTP.printKeyInfo(new PrintStream(output), username, host, totpKey, TOTP.DEFAULT_SECRET_SIZE);
 			
 			output.write("\n\nTo activate your account, send the following text, including lines beginning with \"---\" to your system administrator.\n".getBytes());
-			streamCredentials(output, keys, username, passwordHash, totpKey);
+			streamCredentials(output, key, username, passwordHash, totpKey);
 			for(int i = 0;i<passphrase.length;i++)
 				passphrase[i] = 0;
 			for(int i = 0;i<totpKey.length;i++)
