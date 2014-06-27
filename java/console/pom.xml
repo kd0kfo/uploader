@@ -46,6 +46,11 @@
 		<id>javalib</id>
 		<url>https://kd0kfo.github.io/javalib/mvn-repo</url>
 	</repository>
+	<repository>
+		<id>crypttools</id>
+		<url>https://kd0kfo.github.io/crypttools/mvn-repo</url>
+	</repository>
+
   </repositories>
   <scm>
     <connection>scm:git:https://github.com/kd0kfo/webfs.git</connection>
@@ -75,6 +80,11 @@
 	<artifactId>pgp</artifactId>
 	<version>1.0.b</version>
     </dependency>
+	<dependency>
+	  <groupId>com.davecoss.crypttools</groupId>
+	  <artifactId>crypttools</artifactId>
+	  <version>0.1.0</version>
+	</dependency>
     <dependency>
     	<groupId>org.apache.httpcomponents</groupId>
 	<artifactId>httpcore</artifactId>
